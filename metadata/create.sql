@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS FileBlock (
     file_name VARCHAR(100) NOT NULL,
     block_hash BINARY(32) NOT NULL, /* SHA-256 hash of file block*/
     block_number INT UNSIGNED NOT NULL, /* block order is important for files */
+    time_last_accessed TIMESTAMP NOT NULL
 );
 
 /* This info would be more suited to be stored in something like Redis/Memcached 
