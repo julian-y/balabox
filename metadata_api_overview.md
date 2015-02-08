@@ -1,7 +1,7 @@
 # Metaserver API specification
 
 ## /file_comp
-* url structure: <metaserver-ip>/blockcomp
+* url structure: metaserver_ip/file_comp
 * description: Compares
 * method: GET
 * request body: JSON document with the block list of the file
@@ -14,7 +14,7 @@
   * needed_blocks: a list of SHA-256 block hashes that need to be uploaded to block server  
 
 ## /file_commit
-* url structure: <metaserver-ip>/file_commit
+* url structure: metaserver_ip/file_commit
 * description: Commits 
   * precondition: Client should have previously issued a /file_comp request and uploaded any missing blocks
 * method: POST
