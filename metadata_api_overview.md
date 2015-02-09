@@ -2,9 +2,9 @@
 
 ## /file_comp
 * url structure: metaserver_ip/file_comp
-* description: Compares
+* description: Compares a user's block hashes with the server's block hashes for a given file. 
 * method: GET
-* request body: JSON document with the block list of the file
+* request body: JSON document with the block hashes of the file
   * block_list: list of SHA-256 hash values
 * parameters: 
   * file_name: file to compare
@@ -15,8 +15,8 @@
 
 ## /file_commit
 * url structure: metaserver_ip/file_commit
-* description: Commits 
-  * precondition: Client should have previously issued a /file_comp request and uploaded any missing blocks
+* description: Commits updated block hashes for a file.  
+  * precondition: Client should have previously issued a /file_comp request and uploaded missing blocks to block servers. 
 * method: POST
 * request body: JSON document with the block list of the file
   * block_list: list of SHA-256 hash values
