@@ -27,3 +27,12 @@
   * block_list: 
   * last_modified: time when the update occurred  
 
+## /list
+* url structure: metaserver_ip/list
+* description: Retrieves a list of a users files and the associated block hashes.   
+* method: GET
+* parameters: 
+  * user_id: id of user
+* returns: JSON document containing a users file block hashes 
+  * files: array of files in descending modified time
+    * 'file_name': array of block hashes for a given file
