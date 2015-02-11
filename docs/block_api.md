@@ -19,3 +19,5 @@
 
 ## Note that cache server will have the identical API, but have some different
 logic that communicates with block server and/or other caches and metaserver
+
+## Note that binary data should be stored as vector<char>
