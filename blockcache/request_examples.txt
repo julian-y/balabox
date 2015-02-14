@@ -9,9 +9,9 @@ open balabox.com 80
 GET /example.fcgid?q=test HTTP/1.1
 Host: balabox.com
 Content-Type: application/json; charset=utf-8
-Content-length: 32
+Content-length: 40
 
-{"hash1":"123","hash2":"abcd\0"}
+{"hash1":"123","hash2":"abcd","hash3":"asd\0a"}
 
 
 POST /env_example.fcgid?q=test HTTP/1.1

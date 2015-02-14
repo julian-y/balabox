@@ -44,12 +44,13 @@ int main(void)
             //fwrite(buffer, bytes, sizeof(char), stdout);
         }
 
-        printf("%s", response_body.c_str());
+        printf("%s\n", response_body.c_str());
 
         Json::Value root;
         Json::Reader reader;
 
         bool parsedSuccess = reader.parse(response_body, root, false);
+        printf("Correctly parsed: %d\n", parsedSuccess);
         printf("Json pretty print:\n%s\n ", root.toStyledString().c_str());
         
         //for some reason.. cout doesn't work??
