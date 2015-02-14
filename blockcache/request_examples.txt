@@ -1,0 +1,23 @@
+Use http://string-functions.com/length.aspx to calculate content-length
+Set balabox.com reference at /private/etc/hosts
+    Instructions: http://www.tekrevue.com/tip/edit-hosts-file-mac-os-x/
+
+In telnet:
+
+open balabox.com 80
+
+GET /env_example.fcgid?q=test HTTP/1.1
+Host: balabox.com
+Content-Type: application/json; charset=utf-8
+Content-length: 30
+
+{"hash1":"123","hash2":"abcd"}
+
+
+POST /env_example.fcgid?q=test HTTP/1.1
+Host: balabox.com
+Content-Type: application/json; charset=utf-8
+Content-length: 30
+
+{"hash1":"123","hash2":"abcd"}
+
