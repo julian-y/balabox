@@ -6,12 +6,12 @@ In telnet:
 
 open balabox.com 80
 
-GET /env_example.fcgid?q=test HTTP/1.1
+GET /example.fcgid?q=test HTTP/1.1
 Host: balabox.com
 Content-Type: application/json; charset=utf-8
-Content-length: 30
+Content-length: 32
 
-{"hash1":"123","hash2":"abcd"}
+{"hash1":"123","hash2":"abcd\0"}
 
 
 POST /env_example.fcgid?q=test HTTP/1.1

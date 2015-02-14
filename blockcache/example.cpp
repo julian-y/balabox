@@ -1,12 +1,18 @@
 #include <iostream>
 #include <vector>
 #include <string>
-
-#include "fcgi_stdio.h"
 #include <stdlib.h>
 
+#include <iostream>
+#include <istream>
+#include <ostream>
+#include <iterator>
+
+#include "fcgi_stdio.h"
+#include <jsoncpp/json/json.h>
+
 //using namespace cgicc;
-//using namespace std;
+using namespace std;
 #define BLOCK_SIZE 512
 int main(void)
 {
@@ -30,11 +36,26 @@ int main(void)
         // NOTE: The actual request body is piped into stdin:
         
         //code from http://stackoverflow.com/questions/10129085/read-from-stdin-write-to-stdout-in-c
+        string response_body;
         char buffer[BLOCK_SIZE];
         while(!feof(stdin)) {
             size_t bytes = fread(buffer, sizeof(char), BLOCK_SIZE, stdin);
-            fwrite(buffer, bytes, sizeof(char), stdout);
+            response_body += buffer;
+            //fwrite(buffer, bytes, sizeof(char), stdout);
         }
+
+        printf("%s", response_body.c_str());
+
+        Json::Value root;
+        Json::Reader reader;
+
+        bool parsedSuccess = reader.parse(response_body, root, false);
+        printf("Json pretty print:\n%s\n ", root.toStyledString().c_str());
+        
+        //for some reason.. cout doesn't work??
+        
+        
+        
     }
 
 	return 0;

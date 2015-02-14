@@ -9,9 +9,11 @@ fi
 
 name=$1
 fcgidName="${name}.fcgid"
-
-echo -e "Compiling: g++ ${name}.cpp -o $fcgidName -lfcgi"
-`g++ "${name}.cpp" -o $fcgidName -lfcgi`
+jsonlib="/usr/lib/x86_64-linux-gnu/libjsoncpp.so"
+compile="g++ ${name}.cpp $jsonlib -o $fcgidName -lfcgi"
+echo -e "Compiling: $compile"
+`$compile`
+#`g++ "${name}.cpp" -o $fcgidName -lfcgi`
 `sudo rm "/var/www/html/${fcgidName}"`
 echo -e "...removed old copy at /var/www/html/"
 `sudo cp $fcgidName "/var/www/html/"`
