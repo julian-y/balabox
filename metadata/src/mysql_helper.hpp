@@ -1,19 +1,12 @@
 #ifndef MYSQL_HELPER_HPP
 
-/* mysql connector headers */
-#include <driver.h>
-#include <connection.h>
-#include <statement.h>
-#include <prepared_statement.h>
-#include <resultset.h>
-#include <metadata.h>
-#include <resultset_metadata.h>
-#include <exception.h>
-#include <warning.h>
-
 /* basic c++ headers */
 #include <vector>
 #include <string>
+
+/* mysql connector headers: DEFINE THESE LAST OR ELSE */
+#include <my_global.h>
+#include <mysql.h>
 
 /**
  * This class defines basic functionality to interact with the metadata
@@ -23,16 +16,26 @@ class MySQLHelper {
 public:
 
     /**
-     * Creates a connection to the local mysql database
+     * Opens a connection to the local mysql database using default parameters
+     * @return 0 on success, nonzero on failure
      */
-    bool
+    int
     connect();
 
     /**
+     * Opens a connection to a mysql database with user provided parameters
+     * @return 0 on success, nonzero on failure
+     */
+     int
+     connect(const std::string& host, unsigned int port, const std::string& db, const std::string& user, 
+        const std::string& pass);
+
+    /**
      * Closes connection to the local mysql database
+     * @return 0 on success, nonzero on failure
      * @note connect() must have been previously called
      */
-    bool 
+    int 
     close();
 
     /**
@@ -53,7 +56,7 @@ public:
      * @return 0 on success, non-zero on failure 
      * @note a user should have checked to make sure their blocks have been uploaded
      */
-    bool
+    int
     updateFileData(const std::string& userId, const std::string& filename, 
         const std::vector<std::string>& hashes); 
 
@@ -69,8 +72,7 @@ public:
         std::vector<std::string>& hashes);
 
 private:
-    sql::Driver *m_driver;
-    sql::Connection *m_conn;
+    MYSQL *m_conn;
 };
 
 #endif /* MYSQL_HELPER_HPP */
