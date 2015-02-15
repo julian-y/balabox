@@ -1,9 +1,9 @@
 # Metaserver API specification
 
-## /file_comp
-* url structure: metaserver_ip/file_comp
-* description: Compares a user's block hashes with the server's block hashes for a given file. 
-* method: GET
+## /block_query
+* url structure: metaserver_ip/block_query
+* description: Compares a user's block hashes with the server's block hashes 
+* method: POST
 * request body: JSON document with the block hashes of the file
   * block_list: list of SHA-256 hash values
 * parameters: 
