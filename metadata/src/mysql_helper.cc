@@ -1,6 +1,8 @@
 #include <string>
 #include <vector>
 #include <stdlib.h>
+#include <iostream>
+#include <sstream>
 
 /* MAKE SURE THESE ARE DEFINED LAST */
 #include <my_global.h>
@@ -66,11 +68,10 @@ MySQLHelper::getMissingBlockHashes(const std::vector<std::string>& userHashes,
     MYSQL_RES *res;
     // perform a query for each hash in user hashes, add hash to missingHashes if it wasnt in db
     for (unsigned int i = 0; i < userHashes.size(); ++i) {
-        string curHashQuery = "SELECT COUNT(*) FROM FileBlock WHERE block_hash=" + userHashes[i];
+        string curHashQuery = "SELECT COUNT(*) FROM FileBlock WHERE block_hash='" + userHashes[i] + "'";
         if (mysql_query(m_conn, curHashQuery.c_str()) != 0) {
             return mysql_errno(m_conn);
         }
-
         res = mysql_store_result(m_conn);
         if (res == NULL) {
             return mysql_errno(m_conn);
@@ -97,17 +98,20 @@ MySQLHelper::updateFileData(const string& userId, const string& filename,
         const vector<string>& hashes) 
 {
     // delete old rows for file
-    string deleteStmt = "DELETE FROM FileBlock WHERE user_id=" + userId + 
-        "AND file_name=" + filename;
+    string deleteStmt = "DELETE FROM FileBlock WHERE user_id='" + userId + 
+        "' AND file_name='" + filename + "'";
     if (mysql_query(m_conn,deleteStmt.c_str())) {
         return mysql_errno(m_conn);
     }
-
     // insert new rows for file 
     for (unsigned int i = 0; i < hashes.size(); ++i) {
-        string insertStmt = "INSERT INTO FileBlock VALUES(user_id, file_name, block_hash, block_number) VALUES('" 
+        string insertStmt = "INSERT INTO FileBlock(user_id, file_name, block_hash, block_number) VALUES('" 
             + userId + "','" + filename + "','" + hashes[i] + "',";
-        insertStmt += i;
+        string temp;
+        stringstream out;
+        out << i; // dirty trick to convert int to std::string
+        temp = out.str();
+        insertStmt += temp;
         insertStmt += ")";
         if(mysql_query(m_conn, insertStmt.c_str())) {
             return mysql_errno(m_conn);
@@ -121,9 +125,8 @@ MySQLHelper::getFileBlockList(const std::string& userId, const std::string& file
     std::vector<std::string>& hashes)
 {
     // perform a query for each hash in user hashes, add hash to missingHashes if it wasnt in db
-    string curHashQuery = "SELECT block_hash FROM FileBlock WHERE user_id=" 
-        + userId + " AND file_name=" + filename + " ORDER BY block_number ASC";
-
+    string curHashQuery = "SELECT block_hash FROM FileBlock WHERE user_id='" 
+        + userId + "' AND file_name='" + filename + "' ORDER BY block_number ASC";
     if (mysql_query(m_conn, curHashQuery.c_str()) != 0) {
         return mysql_errno(m_conn);
     }
