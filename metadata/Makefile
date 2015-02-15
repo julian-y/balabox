@@ -13,18 +13,18 @@ INCLUDE_DIR=./include
 
 COMMIT_SOURCES=$(SRC_DIR)/file_commit.cc
 QUERY_SOURCES=$(SRC_DIR)/file_query.cc
-QUERY_OBJECTS=$(OBJ_DIR)/file_query.o
-COMMIT_OBJECTS=$(OBJ_DIR)/file_commit.o
 MYSQL_HELPER_OBJECTS=$(OBJ_DIR)/mysql_helper.o
+QUERY_OBJECTS=$(OBJ_DIR)/file_query.o $(MYSQL_HELPER_OBJECTS)
+COMMIT_OBJECTS=$(OBJ_DIR)/file_commit.o $(MYSQL_HELPER_OBJECTS)
 TEST_OBJECTS= $(MYSQL_HELPER_OBJECTS) $(TEST_DIR)/mysql_helper_test.o
 INC=-I/usr/lib/x86_64-linux-gnu/ -I$(SRC_DIR) -I$(INCLUDE_DIR)/mysql
 
 all: query commit
 
-query: $(QUERY_OBJECTS) $(MYSQL_HELPER_OBJECTS)
-	$(CC) $(CPPFLAGS) $(QUERY_OBJECTS) -o $(BINARY_DIR)/file_query $(LDFLAGS)
+query: $(QUERY_OBJECTS)
+	$(CC) $(QUERY_OBJECTS) -o $(BINARY_DIR)/file_query $(LDFLAGS)
 
-commit: $(COMMIT_OBJECTS) $(MYSQL_HELPER_OBJECTS)
+commit: $(COMMIT_OBJECTS)
 	$(CC) $(COMMIT_OBJECTS) -o $(BINARY_DIR)/file_commit $(LDFLAGS)
 
 test: $(TEST_OBJECTS)
