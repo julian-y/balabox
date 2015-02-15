@@ -22,21 +22,51 @@
 class MySQLHelper {
 public:
 
-    void
+    /**
+     * Creates a connection to the local mysql database
+     */
+    bool
     connect();
 
-    void 
+    /**
+     * Closes connection to the local mysql database
+     * @note connect() must have been previously called
+     */
+    bool 
     close();
 
-    std::vector<std::vector<unsigned char>>
-    getMissingBlockHashes(const std::string& userId, const std:string& filename);
+    /**
+     * Finds supplied block hashes that are NOT in the database
+     * @param user_hashes vector of user supplied hashes  
+     * @param missing_hashes vector of user hashes that are NOT in the database
+     * @return 0 on success, non-zero on failure
+     */
+    int 
+    getMissingBlockHashes(const std::vector<std::string>& userHashes, 
+        std::vector<std::string>& missingHashes);
 
+    /**
+     * Commits an update for a file to the database
+     * @param userId user id string
+     * @param filename name of file to commit changes to
+     * @param hashes vector of block hashes for the file
+     * @return 0 on success, non-zero on failure 
+     * @note a user should have checked to make sure their blocks have been uploaded
+     */
     bool
-    updateFileData(const std::string& userId, const std:string& filename, 
-        const std::vector<std::vector<unsigned char>>& hashes); // This might not be verbose enough
+    updateFileData(const std::string& userId, const std::string& filename, 
+        const std::vector<std::string>& hashes); 
 
-    std::vector<std::vector<unsigned char>>
-    getFileBlockList(const std::string& userId, const std:string& filename);
+    /**
+     * Retrieves block hashes for a given user's file
+     * @param userId user id string
+     * @param filename file to retrieve block hashes for
+     * @param hashes reference to vector to fill with the requested file's hashes 
+     * @return 0 on success, non-zero on failure
+     */
+    int
+    getFileBlockList(const std::string& userId, const std::string& filename, 
+        std::vector<std::string>& hashes);
 
 private:
     sql::Driver *m_driver;
