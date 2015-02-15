@@ -3,7 +3,7 @@
 
 CC=g++
 CPPFLAGS=-Wall
-LDFLAGS=
+LDFLAGS=`mysql_config --cflags --libs`
 
 OBJ_DIR=./obj
 BINARY_DIR=./bin
@@ -22,13 +22,13 @@ INC=-I/usr/lib/x86_64-linux-gnu/ -I$(SRC_DIR) -I$(INCLUDE_DIR)/mysql
 all: query commit
 
 query: $(QUERY_OBJECTS) $(MYSQL_HELPER_OBJECTS)
-	$(CC) $(CPPFLAGS) $(QUERY_OBJECTS) -o $(BINARY_DIR)/file_query
+	$(CC) $(CPPFLAGS) $(QUERY_OBJECTS) -o $(BINARY_DIR)/file_query $(LDFLAGS)
 
 commit: $(COMMIT_OBJECTS) $(MYSQL_HELPER_OBJECTS)
-	$(CC) $(COMMIT_OBJECTS) -o $(BINARY_DIR)/file_commit
+	$(CC) $(COMMIT_OBJECTS) -o $(BINARY_DIR)/file_commit $(LDFLAGS)
 
 test: $(TEST_OBJECTS)
-	$(CC) $(TEST_OBJECTS) -o $(BINARY_DIR)/mysql_helper_test `mysql_config --cflags --libs`
+	$(CC) $(TEST_OBJECTS) -o $(BINARY_DIR)/mysql_helper_test $(LDFLAGS)
 
 install: 
 	cp ./bin/file_commit  ./bin/file_query -t /var/www/html/
