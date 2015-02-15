@@ -13,6 +13,7 @@
 
 /* basic c++ headers */
 #include <vector>
+#include <string>
 
 /**
  * This class defines basic functionality to interact with the metadata
@@ -28,17 +29,18 @@ public:
     close();
 
     std::vector<std::vector<unsigned char>>
-    getMissingBlocks(unsigned int userId, std:string filename);
+    getMissingBlockHashes(const std::string& userId, const std:string& filename);
 
     bool
-    updateFileData(unsigned int userId, std:string filename, const vector<>& hashes);
+    updateFileData(const std::string& userId, const std:string& filename, 
+        const std::vector<std::vector<unsigned char>>& hashes); // This might not be verbose enough
 
     std::vector<std::vector<unsigned char>>
-    getFileBlockList(unsigned int userId, std:string filename);
+    getFileBlockList(const std::string& userId, const std:string& filename);
 
 private:
-    sql::Driver *driver;
-    sql::Connection *con;
+    sql::Driver *m_driver;
+    sql::Connection *m_conn;
 };
 
 #endif /* MYSQL_HELPER_HPP */
