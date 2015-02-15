@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include <stdlib.h>
 
 /* MAKE SURE THESE ARE DEFINED LAST */
 #include <my_global.h>
@@ -62,13 +63,56 @@ int
 MySQLHelper::getMissingBlockHashes(const std::vector<std::string>& userHashes, 
     std::vector<std::string>& missingHashes)
 {
+    MYSQL_RES *res;
+    // perform a query for each hash in user hashes, add hash to missingHashes if it wasnt in db
+    for (unsigned int i = 0; i < userHashes.size(); ++i) {
+        string curHashQuery = "SELECT COUNT(*) FROM FileBlock WHERE block_hash=" + userHashes[i];
+        if (mysql_query(m_conn, curHashQuery.c_str()) != 0) {
+            return mysql_errno(m_conn);
+        }
+
+        res = mysql_store_result(m_conn);
+        if (res == NULL) {
+            return mysql_errno(m_conn);
+        }
+
+        // should only be one row containing the count(0 or 1)
+        MYSQL_ROW row = mysql_fetch_row(res);
+        // count will be in first column
+        int count = atoi(row[0]);
+        if (count == 0) {
+            missingHashes.push_back(userHashes[i]);
+        }
+    }
+
+    mysql_free_result(res);
     return 0;
 }
 
+/** 
+ * TODO: add verification of userid and filename here before deleting
+ */
 int
 MySQLHelper::updateFileData(const string& userId, const string& filename, 
         const vector<string>& hashes) 
 {
+    // delete old rows for file
+    string deleteStmt = "DELETE FROM FileBlock WHERE user_id=" + userId + 
+        "AND file_name=" + filename;
+    if (mysql_query(m_conn,deleteStmt.c_str())) {
+        return mysql_errno(m_conn);
+    }
+
+    // insert new rows for file 
+    for (unsigned int i = 0; i < hashes.size(); ++i) {
+        string insertStmt = "INSERT INTO FileBlock VALUES(user_id, file_name, block_hash, block_number) VALUES('" 
+            + userId + "','" + filename + "','" + hashes[i] + "',";
+        insertStmt += i;
+        insertStmt += ")";
+        if(mysql_query(m_conn, insertStmt.c_str())) {
+            return mysql_errno(m_conn);
+        }
+    }        
     return 0;
 }
 
@@ -76,5 +120,27 @@ int
 MySQLHelper::getFileBlockList(const std::string& userId, const std::string& filename, 
     std::vector<std::string>& hashes)
 {
+    // perform a query for each hash in user hashes, add hash to missingHashes if it wasnt in db
+    string curHashQuery = "SELECT block_hash FROM FileBlock WHERE user_id=" 
+        + userId + " AND file_name=" + filename + " ORDER BY block_number ASC";
+
+    if (mysql_query(m_conn, curHashQuery.c_str()) != 0) {
+        return mysql_errno(m_conn);
+    }
+
+    MYSQL_RES *res = mysql_store_result(m_conn);
+    if (res == NULL) {
+        return mysql_errno(m_conn);
+    }
+
+    // add all blocks to hashes vector
+    MYSQL_ROW row;
+    while ( (row = mysql_fetch_row(res)) ) {
+        // should only be one column containing the hash
+        string hash = row[0];
+        hashes.push_back(hash);
+    }
+
+    mysql_free_result(res);
     return 0;
 }
