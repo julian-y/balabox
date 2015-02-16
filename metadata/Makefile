@@ -25,13 +25,13 @@ INC=-I/usr/lib/x86_64-linux-gnu/ -I$(SRC_DIR) -I$(INCLUDE_DIR)/mysql
 all: query commit
 
 query: $(QUERY_OBJECTS)
-	$(CC) $(QUERY_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/block_query $(MYSQL_LINK)
+	$(CC) $(QUERY_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/block_query.fcgid $(MYSQL_LINK)
 
 commit: $(COMMIT_OBJECTS)
-	$(CC) $(COMMIT_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/file_commit $(MYSQL_LINK)
+	$(CC) $(COMMIT_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/file_commit.fcgid $(MYSQL_LINK)
 
 test: $(TEST_OBJECTS)
-	$(CC) $(TEST_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/mysql_helper_test $(MYSQL_LINK)
+	$(CC) $(TEST_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/mysql_helper_test.fcgid $(MYSQL_LINK)
 
 install: 
 	cp ./bin/file_commit  ./bin/block_query -t /var/www/html/

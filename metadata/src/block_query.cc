@@ -35,6 +35,8 @@ static long gstdin(FCGX_Request * request, char ** content)
         clen = strtol(clenstr, &clenstr, 10);
         if (*clenstr)
         {
+           
+            //cout << "Status: 404\r\n\r\n";
             cerr << "can't parse \"CONTENT_LENGTH="
                  << FCGX_GetParam("CONTENT_LENGTH", request->envp)
                  << "\"\n";
@@ -102,22 +104,26 @@ int main (void)
         // Although FastCGI supports writing before reading,
         // many http clients (browsers) don't support it (so
         // the connection deadlocks until a timeout expires!).
-        char * content;
+        char * content = NULL;
         unsigned long clen = gstdin(&request, &content);
+        
+        if (clen == 0) 
+        {
+            cout << "Status: 404\r\n"
+                 <<  "Content-type: text/html\r\n"
+                 <<  "\r\n"
+                 << "<html><p>404 NOT FOUND</p></html>";
+            continue;
+        }
 
-        cout << "Content-type: text/html\r\n"
-                "\r\n"
-                "<TITLE>file_comp</TITLE>\n"
-                "<H1>file_comp</H1>\n"
-                "<H4>Request Number: " << ++count << "</H4>\n";
-
-
-        cout << "<H4>Standard Input - " << clen;
+        /*cout << "<H4>Standard Input - " << clen;
         if (clen == STDIN_MAX) cout << " (STDIN_MAX)";
         cout << " bytes</H4>\n";
+        */
+
         if (clen) {
-            cout.write(content, clen);
-            cout.write("\n", 1);
+            //cout.write(content, clen);
+            //cout.write("\n", 1);
            
             Json::Value root;
             Json::Reader reader;
@@ -129,13 +135,26 @@ int main (void)
             string response_body = content;
 
             bool parsedSuccess = reader.parse(response_body, root, false);
-            if (parsedSuccess)
-               cout.write("yes\n", 4);
-            else
-               cout.write("no\n", 3);
-
             user_id = root["user_id"];
             jsonHashes = root["sha256sum"];
+            file_name = root["file_name"];
+
+            string status; 
+            // Invalid inputs
+            if (!parsedSuccess || user_id == Json::Value::null 
+                  || jsonHashes == Json::Value::null || file_name == Json::Value::null)
+            {
+                 cout << "Status: 404\r\n\r\n";
+                 continue;
+            }
+            
+            cout << "Content-type: text/html\r\n"
+                 <<  "\r\n"
+                 <<  "<TITLE>file_comp</TITLE>\n"
+                 <<  "<H1>file_comp</H1>\n"
+                 <<  "<H4>Request Number: " << ++count << "</H4>\n";
+               
+            
             vector<string> hashes;
             for (int i = 0; i < jsonHashes.size(); i++) 
             {
@@ -174,7 +193,6 @@ int main (void)
                 }
                 response["hashes"] = hashesNeeded;
             }    
-
 
             cout.write(styledWriter.write(response).c_str(), styledWriter.write(response).length());
         }
