@@ -12,7 +12,9 @@
 * returns: JSON document 
   * nb: true or false depending on if the server requires the client to upload blocks
   * needed_blocks: a list of SHA-256 block hashes that need to be uploaded to block server  
-
+* error codes:
+  * 400: invalid input
+  
 ## /file_commit
 * url structure: metaserver_ip/file_commit
 * description: Commits updated block hashes for a file.  
@@ -26,7 +28,9 @@
 * returns: JSON document containing updated fields
   * block_list: 
   * last_modified: time when the update occurred  
-
+* error codes:
+  * 400: invalid input
+  
 ## /list
 * url structure: metaserver_ip/list
 * description: Retrieves a list of a users files and the associated block hashes.   
@@ -36,3 +40,6 @@
 * returns: JSON document containing a users file block hashes 
   * files: array of files in descending modified time
     * 'file_name': array of block hashes for a given file
+* error codes:
+  * 400: invalid input
+  * 404: file doesn't exist
