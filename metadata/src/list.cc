@@ -1,5 +1,5 @@
 /**
- * Sends responses for block_query requests
+ * Sends responses for list requests
  * See metadata_api.md for more info
 */
 
@@ -36,7 +36,6 @@ static long gstdin(FCGX_Request * request, char ** content)
         if (*clenstr)
         {
            
-            //cout << "Status: 404\r\n\r\n";
             cerr << "can't parse \"CONTENT_LENGTH="
                  << FCGX_GetParam("CONTENT_LENGTH", request->envp)
                  << "\"\n";
@@ -152,7 +151,6 @@ int main (void)
             Json::Reader reader;
             Json::Value user_id;
             Json::Value file_name;
-            Json::Value jsonHashes;
             Json::StyledWriter styledWriter;
             Json::Value response; 
             string response_body = content;
@@ -160,37 +158,33 @@ int main (void)
             // Retrieving Json values 
             bool parsedSuccess = reader.parse(response_body, root, false);
             user_id = root["user_id"];
-            jsonHashes = root["block_list"];
             file_name = root["file_name"];
 
             // Invalid inputs
-            if (!parsedSuccess || user_id == Json::Value::null 
-                  || jsonHashes == Json::Value::null || file_name == Json::Value::null)
+            if (!parsedSuccess || user_id == Json::Value::null || file_name == Json::Value::null)
             {
                  outputErrorMessage();             
                  continue;
             }
             
-            outputNormalMessage(count);            
             vector<string> hashes;
-            jsonToString(jsonHashes, hashes);
+            Json::Value jsonHashes;
 
-            // Connect and query the database to see if the hash exists
-            vector<string> missingHashes;
+            // Connect and query the database
             MySQLHelper helper;
             helper.connect();
-            int blocksMissing = helper.getMissingBlockHashes(hashes, missingHashes);
-            
-            // Verify whether the database contains the hashes
-            if (missingHashes.empty()) 
-                response["nb"] = false;
+            int getBlockSuccess = helper.getFileBlockList(user_id.asString(), file_name.asString(), hashes);             
+            if (getBlockSuccess == 0)
+            {             
+                outputNormalMessage(count);            
+                stringToJson(hashes, jsonHashes);
+                response["block_list"] = jsonHashes;            
+            }
             else
             {
-                response["nb"] = true;
-                Json::Value hashesNeeded;
-                stringToJson(missingHashes, hashesNeeded);
-                response["hashes"] = hashesNeeded;
-            }    
+                outputErrorMessage();
+                continue; 
+            }
             helper.close();
             cout.write(styledWriter.write(response).c_str(), styledWriter.write(response).length());
         }

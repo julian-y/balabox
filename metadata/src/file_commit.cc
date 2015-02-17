@@ -184,8 +184,8 @@ int main (void)
             else
                 response["updatedMetadata"] = false;
 
-            cout.write(styledWriter.write(response).c_str(), styledWriter.write(response).length());
             helper.close();
+            cout.write(styledWriter.write(response).c_str(), styledWriter.write(response).length());
         }
         if (content) delete []content;
 
