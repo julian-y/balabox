@@ -68,10 +68,42 @@ static long gstdin(FCGX_Request * request, char ** content)
     return clen;
 }
 
+void outputErrorMessage() 
+{
+     cout << "Status: 404\r\n"
+          <<  "Content-type: text/html\r\n"
+          <<  "\r\n"
+          << "<html><p>404 NOT FOUND</p></html>";
+}
+
+void outputNormalMessage(int &count)
+{
+     cout << "Content-type: text/html\r\n"
+          <<  "\r\n"
+          <<  "<TITLE>file_comp</TITLE>\n"
+          <<  "<H1>file_comp</H1>\n"
+          <<  "<H4>Request Number: " << ++count << "</H4>\n";
+}
+
+void stringToJson(vector<string> &stringHashes, Json::Value &jsonHashes)
+{
+    for (int i = 0 ; i < stringHashes.size(); i++)
+    {
+        jsonHashes[i] = stringHashes[i];
+    }
+}
+
+void jsonToString(Json::Value &jsonHashes, vector<string> &stringHashes)
+{
+   for (int i = 0; i < jsonHashes.size(); i++) 
+   {
+       stringHashes.push_back(jsonHashes[i].asString());
+   }
+}
+
 int main (void)
 {
     int count = 0;
-    long pid = getpid();
 
     streambuf * cin_streambuf  = cin.rdbuf();
     streambuf * cout_streambuf = cout.rdbuf();
@@ -107,24 +139,15 @@ int main (void)
         char * content = NULL;
         unsigned long clen = gstdin(&request, &content);
         
+        // Client doesn't send in any data, ignore this request
+        // and wait for another one. 
         if (clen == 0) 
         {
-            cout << "Status: 404\r\n"
-                 <<  "Content-type: text/html\r\n"
-                 <<  "\r\n"
-                 << "<html><p>404 NOT FOUND</p></html>";
+            outputErrorMessage();
             continue;
         }
-
-        /*cout << "<H4>Standard Input - " << clen;
-        if (clen == STDIN_MAX) cout << " (STDIN_MAX)";
-        cout << " bytes</H4>\n";
-        */
-
-        if (clen) {
-            //cout.write(content, clen);
-            //cout.write("\n", 1);
-           
+        else 
+        {
             Json::Value root;
             Json::Reader reader;
             Json::Value user_id;
@@ -134,39 +157,23 @@ int main (void)
             Json::Value response; 
             string response_body = content;
 
+            // Retrieving Json values 
             bool parsedSuccess = reader.parse(response_body, root, false);
             user_id = root["user_id"];
-            jsonHashes = root["sha256sum"];
+            jsonHashes = root["block_list"];
             file_name = root["file_name"];
 
-            string status; 
             // Invalid inputs
             if (!parsedSuccess || user_id == Json::Value::null 
                   || jsonHashes == Json::Value::null || file_name == Json::Value::null)
             {
-                 cout << "Status: 404\r\n\r\n";
+                 outputErrorMessage();             
                  continue;
             }
             
-            cout << "Content-type: text/html\r\n"
-                 <<  "\r\n"
-                 <<  "<TITLE>file_comp</TITLE>\n"
-                 <<  "<H1>file_comp</H1>\n"
-                 <<  "<H4>Request Number: " << ++count << "</H4>\n";
-               
-            
+            outputNormalMessage(count);            
             vector<string> hashes;
-            for (int i = 0; i < jsonHashes.size(); i++) 
-            {
-                hashes.push_back(jsonHashes[i].asString());
-            }
-            
-            /*
-            //testing
-            for (int i = 0; i < hashes.size(); i++) 
-            {
-                cout << hashes[i] << endl;
-            }*/
+            jsonToString(jsonHashes, hashes);
 
             // Connect and query the database to see if the hash exists
             vector<string> missingHashes;
@@ -174,23 +181,14 @@ int main (void)
             helper.connect();
             int blocksMissing = helper.getMissingBlockHashes(hashes, missingHashes);
             
-            // The database contains user hashes
+            // Verify whether the database contains the hashes
             if (missingHashes.empty()) 
-            {
                 response["nb"] = false;
-            }
-            // The database does not contain all user hashes
-            // User must first upload to block servers first
             else
             {
                 response["nb"] = true;
-
-                // Turning strings into Json values 
                 Json::Value hashesNeeded;
-                for (int i = 0 ; i < missingHashes.size(); i++)
-                {
-                    hashesNeeded[i] = missingHashes[i];
-                }
+                stringToJson(missingHashes, hashesNeeded);
                 response["hashes"] = hashesNeeded;
             }    
 
