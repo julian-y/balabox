@@ -26,20 +26,20 @@
   * user_id: id of user
   * file_name: file to commit updates to 
 * returns: JSON document containing updated fields
-  * block_list: 
+  * metadata_updated: true or false depending on whether the hashes are inserted into the database
   * last_modified: time when the update occurred  
 * error codes:
   * 400: invalid input
   
 ## /list
 * url structure: metaserver_ip/list
-* description: Retrieves a list of a users files and the associated block hashes.   
+* description: Retrieves a list of a user file's associated block hashes.   
 * method: GET
 * parameters: 
   * user_id: id of user
+  * file_name : name of the file that is requested
 * returns: JSON document containing a users file block hashes 
-  * files: array of files in descending modified time
-    * 'file_name': array of block hashes for a given file
+  * block_list: array of block hashes for a given file and user
 * error codes:
   * 400: invalid input
-  * 404: file doesn't exist
+ 
