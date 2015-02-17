@@ -191,7 +191,7 @@ int main (void)
                 stringToJson(missingHashes, hashesNeeded);
                 response["hashes"] = hashesNeeded;
             }    
-
+            helper.close();
             cout.write(styledWriter.write(response).c_str(), styledWriter.write(response).length());
         }
         if (content) delete []content;
