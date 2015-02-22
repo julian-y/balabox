@@ -5,10 +5,9 @@
 * description: Compares a user's block hashes with the server's block hashes 
 * method: POST
 * request body: JSON document with the block hashes of the file
-  * block_list: list of SHA-256 hash values
-* parameters: 
   * file_name: file to compare
   * user_id: id of user 
+  * block_list: list of SHA-256 hash values
 * returns: JSON document 
   * nb: true or false depending on if the server requires the client to upload blocks
   * needed_blocks: a list of SHA-256 block hashes that need to be uploaded to block server  
@@ -21,10 +20,9 @@
   * precondition: Client should have previously issued a /file_comp request and uploaded missing blocks to block servers. 
 * method: POST
 * request body: JSON document with the block list of the file
-  * block_list: list of SHA-256 hash values
-* parameters: 
   * user_id: id of user
-  * file_name: file to commit updates to 
+  * file_name: file to commit updates to  
+  * block_list: list of SHA-256 hash values
 * returns: JSON document containing updated fields
   * metadata_updated: true or false depending on whether the hashes are inserted into the database
   * last_modified: time when the update occurred  
@@ -44,12 +42,13 @@
   * 400: invalid input
  
 ## /recent_hashes
-* url structure: metaserver_ip/
-* description: Retrieves a list of most recently used first block hashes for a user 
-* method: POST
+* url structure: metaserver_ip/recent_hashes
+* description: Retrieves a list of most recently updated first block hashes for a user's files 
+* method: GET
 * parameters: 
   * user_id: id of user
+  * max_hashes: maximum number of first block hashes to retrieve
 * returns: JSON document containing a user's file block hashes 
   * block_list: array of block hashes for a given user 
 * error codes:
-  * 400: invalid input
+  * 400: invalid input 
