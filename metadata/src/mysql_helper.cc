@@ -127,6 +127,7 @@ MySQLHelper::getFileBlockList(const std::string& userId, const std::string& file
     // perform a query for each hash in user hashes, add hash to missingHashes if it wasnt in db
     string curHashQuery = "SELECT block_hash FROM FileBlock WHERE user_id='" 
         + userId + "' AND file_name='" + filename + "' ORDER BY block_number ASC";
+    
     if (mysql_query(m_conn, curHashQuery.c_str()) != 0) {
         return mysql_errno(m_conn);
     }
@@ -147,3 +148,39 @@ MySQLHelper::getFileBlockList(const std::string& userId, const std::string& file
     mysql_free_result(res);
     return 0;
 }
+
+int
+MySQLHelper::getRecentFirstHashes(const std::string& userId, unsigned int maxHashes,
+        std::vector<std::string>& firstHashes)
+{
+    // perform a query for each hash in user hashes, add hash to missingHashes if it wasnt in db
+    string recentHashQuery = "SELECT block_hash FROM FileBlock WHERE user_id='" 
+        + userId + "' ORDER BY block_number ASC,time_last_accessed DESC LIMIT ";
+    string temp;
+    stringstream out;
+    out << maxHashes; // dirty trick to convert int to std::string
+    temp = out.str();
+    recentHashQuery += temp;
+    cout << recentHashQuery << endl;
+
+    if (mysql_query(m_conn, recentHashQuery.c_str()) != 0) {
+        return mysql_errno(m_conn);
+    }
+
+    MYSQL_RES *res = mysql_store_result(m_conn);
+    if (res == NULL) {
+        return mysql_errno(m_conn);
+    }
+
+    // add all blocks to hashes vector
+    MYSQL_ROW row;
+    while ( (row = mysql_fetch_row(res)) ) {
+        // should only be one column containing the hash
+        string hash = row[0];
+        firstHashes.push_back(hash);
+    }
+
+    mysql_free_result(res);
+    return 0;
+}
+

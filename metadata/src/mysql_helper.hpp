@@ -71,6 +71,20 @@ public:
     getFileBlockList(const std::string& userId, const std::string& filename, 
         std::vector<std::string>& hashes);
 
+    /**
+     * Retreives recent hashes for a user's files starting with the beginning blocks.
+     * Once the first block hashes for all files have been selected, the second block
+     * hashes for all will be sent, etc. until maxHashes have been found.  
+     *
+     * @param userId user to retrieve hashes for
+     * @param maxHashes maximum number of block hashes to return
+     * @param firstHashes reference to vector to fill with the hashes
+     * @return 0 on success, non-zero on failure
+     */
+    int
+    getRecentFirstHashes(const std::string& userId, unsigned int maxHashes, 
+           std::vector<std::string>& firstHashes);
+
 private:
     MYSQL *m_conn;
 };
