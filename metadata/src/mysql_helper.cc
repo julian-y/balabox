@@ -161,7 +161,7 @@ MySQLHelper::getRecentFirstHashes(const std::string& userId, unsigned int maxHas
     out << maxHashes; // dirty trick to convert int to std::string
     temp = out.str();
     recentHashQuery += temp;
-    cout << recentHashQuery << endl;
+    //cout << recentHashQuery << endl;
 
     if (mysql_query(m_conn, recentHashQuery.c_str()) != 0) {
         return mysql_errno(m_conn);

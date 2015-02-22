@@ -16,6 +16,7 @@ extern char ** environ;
 #include "fcgi_stdio.h"
 #include <jsoncpp/json/json.h>
 #include <vector> 
+#include <map>
 
 /* mysql access helpers*/
 #include "mysql_helper.hpp"
@@ -69,18 +70,19 @@ static long gstdin(FCGX_Request * request, char ** content)
 
 void outputErrorMessage() 
 {
-     cout << "Status: 404\r\n"
+     //cerr << "oops";
+     cout << "Status: 400\r\n"
           <<  "Content-type: text/html\r\n"
           <<  "\r\n"
-          << "<html><p>404 NOT FOUND</p></html>";
+          << "<html><p>400 INVALID INPUT</p></html>";
 }
 
 void outputNormalMessage(int &count)
 {
      cout << "Content-type: text/html\r\n"
           <<  "\r\n"
-          <<  "<TITLE>file_comp</TITLE>\n"
-          <<  "<H1>file_comp</H1>\n"
+          <<  "<TITLE>list</TITLE>\n"
+          <<  "<H1>list</H1>\n"
           <<  "<H4>Request Number: " << ++count << "</H4>\n";
 }
 
@@ -99,6 +101,38 @@ void jsonToString(Json::Value &jsonHashes, vector<string> &stringHashes)
        stringHashes.push_back(jsonHashes[i].asString());
    }
 }
+
+/**
+  parses the given query string
+  returns 0 upon success and nonzero otherwise
+*/
+int getParam(string param, map<string, string> &dict)
+{
+   // Verify if the parameters required are found
+   int idPos = param.find("user_id"); 
+   int filePos = param.find("file_name"); 
+
+   if (idPos == string::npos || filePos == string::npos)
+      return 1;
+  
+   int andPos = param.find("&");
+   int equPos1 = param.find("=");
+   int equPos2 = param.substr(andPos).find("=");
+   
+   // user_id is the first parameter 
+   if (idPos < filePos)
+   {
+      dict["user_id"] = param.substr(equPos1+1, (andPos-equPos1-1));
+      dict["file_name"] = param.substr(andPos).substr(equPos2+1);
+   }
+   else
+   {
+      dict["file_name"] = param.substr(equPos1+1, (andPos-equPos1-1));
+      dict["user_id"] = param.substr(andPos).substr(equPos2+1);
+   }
+   return 0;
+}
+
 
 int main (void)
 {
@@ -137,57 +171,54 @@ int main (void)
         // the connection deadlocks until a timeout expires!).
         char * content = NULL;
         unsigned long clen = gstdin(&request, &content);
+
+        Json::StyledWriter styledWriter;
+        Json::Value response; 
+        string response_body = content;
+
+        char* query_string = FCGX_GetParam("QUERY_STRING", request.envp);
+
+        // Invalid inputs
+        if (query_string == NULL)
+        {
+              outputErrorMessage();             
+              continue;
+        }
+                    
+        vector<string> hashes;
+        Json::Value jsonHashes;
+        string param = query_string;
+        map<string, string> paramMap;
+        int getParamSuccess = getParam(param, paramMap);    
         
-        // Client doesn't send in any data, ignore this request
-        // and wait for another one. 
-        if (clen == 0) 
+        if (getParamSuccess != 0)
         {
             outputErrorMessage();
             continue;
         }
-        else 
-        {
-            Json::Value root;
-            Json::Reader reader;
-            Json::Value user_id;
-            Json::Value file_name;
-            Json::StyledWriter styledWriter;
-            Json::Value response; 
-            string response_body = content;
-
-            // Retrieving Json values 
-            bool parsedSuccess = reader.parse(response_body, root, false);
-            user_id = root["user_id"];
-            file_name = root["file_name"];
-
-            // Invalid inputs
-            if (!parsedSuccess || user_id == Json::Value::null || file_name == Json::Value::null)
-            {
-                 outputErrorMessage();             
-                 continue;
-            }
-            
-            vector<string> hashes;
-            Json::Value jsonHashes;
-
-            // Connect and query the database
-            MySQLHelper helper;
-            helper.connect();
-            int getBlockSuccess = helper.getFileBlockList(user_id.asString(), file_name.asString(), hashes);             
-            if (getBlockSuccess == 0)
-            {             
-                outputNormalMessage(count);            
-                stringToJson(hashes, jsonHashes);
-                response["block_list"] = jsonHashes;            
-            }
-            else
-            {
-                outputErrorMessage();
-                continue; 
-            }
-            helper.close();
-            cout.write(styledWriter.write(response).c_str(), styledWriter.write(response).length());
+        
+        string user_id = paramMap["user_id"];
+        string file_name = paramMap["file_name"];
+        
+        // Connect and query the database
+        MySQLHelper helper;
+        helper.connect();
+        int getBlockSuccess = helper.getFileBlockList(user_id, file_name, hashes);             
+        if (getBlockSuccess == 0)
+        {             
+            outputNormalMessage(count);            
+            stringToJson(hashes, jsonHashes);
+            response["block_list"] = jsonHashes;            
         }
+        else
+        {
+            outputErrorMessage();
+            continue; 
+        }
+        helper.close();
+        cout.write(styledWriter.write(response).c_str(), styledWriter.write(response).length());
+        //string output = "user_id: " + user_id + " file_name: " + file_name;
+        //cout.write(output.c_str(), output.size()); 
         if (content) delete []content;
 
         // If the output streambufs had non-zero bufsizes and

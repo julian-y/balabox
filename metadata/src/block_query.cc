@@ -70,10 +70,10 @@ static long gstdin(FCGX_Request * request, char ** content)
 
 void outputErrorMessage() 
 {
-     cout << "Status: 404\r\n"
+     cout << "Status: 400\r\n"
           <<  "Content-type: text/html\r\n"
           <<  "\r\n"
-          << "<html><p>404 NOT FOUND</p></html>";
+          << "<html><p>400 INVALID INPUT</p></html>";
 }
 
 void outputNormalMessage(int &count)

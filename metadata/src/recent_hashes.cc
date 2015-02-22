@@ -1,5 +1,5 @@
 /**
- * Sends responses for file_commit requests
+ * Sends responses for recent hashes requests
  * See metadata_api.md for more info
 */
 
@@ -16,6 +16,8 @@ extern char ** environ;
 #include "fcgi_stdio.h"
 #include <jsoncpp/json/json.h>
 #include <vector> 
+#include <map>
+#include <sstream>
 
 /* mysql access helpers*/
 #include "mysql_helper.hpp"
@@ -36,7 +38,6 @@ static long gstdin(FCGX_Request * request, char ** content)
         if (*clenstr)
         {
            
-            //cout << "Status: 404\r\n\r\n";
             cerr << "can't parse \"CONTENT_LENGTH="
                  << FCGX_GetParam("CONTENT_LENGTH", request->envp)
                  << "\"\n";
@@ -80,8 +81,8 @@ void outputNormalMessage(int &count)
 {
      cout << "Content-type: text/html\r\n"
           <<  "\r\n"
-          <<  "<TITLE>file_comp</TITLE>\n"
-          <<  "<H1>file_comp</H1>\n"
+          <<  "<TITLE>recent hashes</TITLE>\n"
+          <<  "<H1>recent hashes</H1>\n"
           <<  "<H4>Request Number: " << ++count << "</H4>\n";
 }
 
@@ -100,6 +101,38 @@ void jsonToString(Json::Value &jsonHashes, vector<string> &stringHashes)
        stringHashes.push_back(jsonHashes[i].asString());
    }
 }
+
+/**
+  parses the given query string
+  returns 0 upon success and nonzero otherwise
+*/
+int getParam(string param, map<string, string> &dict)
+{
+   // Verify if the parameters required are found
+   int idPos = param.find("user_id"); 
+   int filePos = param.find("max_hashes"); 
+
+   if (idPos == string::npos || filePos == string::npos)
+      return 1;
+  
+   int andPos = param.find("&");
+   int equPos1 = param.find("=");
+   int equPos2 = param.substr(andPos).find("="); 
+
+   // user_id is the first parameter 
+   if (idPos < filePos)
+   {
+      dict["user_id"] = param.substr(equPos1+1, (andPos-equPos1-1));
+      dict["max_hashes"] = param.substr(andPos).substr(equPos2+1);
+   }
+   else
+   {
+      dict["max_hashes"] = param.substr(equPos1+1, (andPos-equPos1-1));
+      dict["user_id"] = param.substr(andPos).substr(equPos2+1);
+   }
+   return 0;
+}
+
 
 int main (void)
 {
@@ -138,55 +171,59 @@ int main (void)
         // the connection deadlocks until a timeout expires!).
         char * content = NULL;
         unsigned long clen = gstdin(&request, &content);
-        
-        // Client doesn't send in any data, ignore this request
-        // and wait for another one. 
-        if (clen == 0) 
+
+        Json::StyledWriter styledWriter;
+        Json::Value response; 
+        string response_body = content;
+
+        char* query_string = FCGX_GetParam("QUERY_STRING", request.envp);
+
+        // Invalid inputs
+        if (query_string == NULL)
+        {
+              outputErrorMessage();             
+              continue;
+        }
+                    
+        vector<string> hashes;
+        Json::Value jsonHashes;
+        string param = query_string;
+        map<string, string> paramMap;
+        int getParamSuccess = getParam(param, paramMap);    
+               
+        if (getParamSuccess != 0)
         {
             outputErrorMessage();
             continue;
         }
-        else 
-        {
-            Json::Value root;
-            Json::Reader reader;
-            Json::Value user_id;
-            Json::Value file_name;
-            Json::Value jsonHashes;
-            Json::StyledWriter styledWriter;
-            Json::Value response; 
-            string response_body = content;
-
-            // Retrieving Json values 
-            bool parsedSuccess = reader.parse(response_body, root, false);
-            user_id = root["user_id"];
-            jsonHashes = root["block_list"];
-            file_name = root["file_name"];
-
-            // Invalid inputs
-            if (!parsedSuccess || user_id == Json::Value::null 
-                  || jsonHashes == Json::Value::null || file_name == Json::Value::null)
-            {
-                 outputErrorMessage();             
-                 continue;
-            }
-            
+        
+        string user_id = paramMap["user_id"];
+        int max_hashes = atoi(paramMap["max_hashes"].c_str());
+        
+        // Connect and query the database
+        MySQLHelper helper;
+        helper.connect();
+        int getHashesSuccess = helper.getRecentFirstHashes(user_id, max_hashes, hashes);
+        if (getHashesSuccess == 0)
+        {             
             outputNormalMessage(count);            
-            vector<string> hashes;
-            jsonToString(jsonHashes, hashes);
-
-            // Connect and update the database
-            MySQLHelper helper;
-            helper.connect();
-            int updateFileSuccess = helper.updateFileData(user_id.asString(), file_name.asString(), hashes);             
-            if (updateFileSuccess == 0)
-                response["updatedMetadata"] = true;
-            else
-                response["updatedMetadata"] = false;
-
-            helper.close();
-            cout.write(styledWriter.write(response).c_str(), styledWriter.write(response).length());
+            stringToJson(hashes, jsonHashes);
+            response["block_list"] = jsonHashes;            
         }
+        else
+        {
+            outputErrorMessage();
+            continue; 
+        }
+        helper.close();
+       cout.write(styledWriter.write(response).c_str(), styledWriter.write(response).length());
+        
+        string temp;
+        stringstream out; 
+        out << max_hashes;
+        temp = out.str();
+        string output2 = "<p>user_id: " + paramMap["user_id"] + " max_hashes: " + temp + "</p>";
+        cout.write(output2.c_str(), output2.length()); 
         if (content) delete []content;
 
         // If the output streambufs had non-zero bufsizes and
