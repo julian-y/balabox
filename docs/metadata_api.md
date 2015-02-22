@@ -38,8 +38,18 @@
 * parameters: 
   * user_id: id of user
   * file_name : name of the file that is requested
-* returns: JSON document containing a users file block hashes 
+* returns: JSON document containing a user's file block hashes 
   * block_list: array of block hashes for a given file and user
 * error codes:
   * 400: invalid input
  
+## /recent_hashes
+* url structure: metaserver_ip/
+* description: Retrieves a list of most recently used first block hashes for a user 
+* method: POST
+* parameters: 
+  * user_id: id of user
+* returns: JSON document containing a user's file block hashes 
+  * block_list: array of block hashes for a given user 
+* error codes:
+  * 400: invalid input
