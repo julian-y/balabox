@@ -21,6 +21,7 @@ MYSQL_HELPER_OBJECTS=$(OBJ_DIR)/mysql_helper.o
 QUERY_OBJECTS=$(OBJ_DIR)/block_query.o $(MYSQL_HELPER_OBJECTS)
 COMMIT_OBJECTS=$(OBJ_DIR)/file_commit.o $(MYSQL_HELPER_OBJECTS)
 LIST_OBJECTS=$(OBJ_DIR)/list.o $(MYSQL_HELPER_OBJECTS)
+RECENT_HASHES_OBJECTS=$(OBJ_DIR)/recent_hashes.o $(MYSQL_HELPER_OBJECTS)
 TEST_OBJECTS= $(MYSQL_HELPER_OBJECTS) $(TEST_DIR)/mysql_helper_test.o
 INC=-I/usr/lib/x86_64-linux-gnu/ -I$(SRC_DIR) -I$(INCLUDE_DIR)/mysql
 
@@ -35,15 +36,18 @@ commit: $(COMMIT_OBJECTS)
 list: $(LIST_OBJECTS)
 	$(CC) $(LIST_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/list.fcgid $(MYSQL_LINK)	
 
+recent_hashes: $(RECENT_HASHES_OBJECTS)
+	$(CC) $(RECENT_HASHES_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/recent_hashes.fcgid $(MYSQL_LINK)
+
 test: $(TEST_OBJECTS)
-	$(CC) $(TEST_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/mysql_helper_test $(MYSQL_LINK)
+	$(CC) $(TEST_OBJECTS) $(LDFLAGS) -o $(TEST_DIR)/mysql_helper_test $(MYSQL_LINK)
 
 install: 
-	cp ./bin/file_commit  ./bin/block_query -t /var/www/html/
+	cp ./bin/* -t /var/www/html/
 
 clean: 
-	rm ./bin/*;
-	rm ./obj/*;
+	rm ./bin/*; \
+	rm ./obj/*; \
 	rm ./test/*.o;
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cc
