@@ -36,7 +36,7 @@ list: $(LIST_OBJECTS)
 	$(CC) $(LIST_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/list.fcgid $(MYSQL_LINK)	
 
 test: $(TEST_OBJECTS)
-	$(CC) $(TEST_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/mysql_helper_test.fcgid $(MYSQL_LINK)
+	$(CC) $(TEST_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/mysql_helper_test $(MYSQL_LINK)
 
 install: 
 	cp ./bin/file_commit  ./bin/block_query -t /var/www/html/
