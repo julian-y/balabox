@@ -68,6 +68,19 @@ int test_missing_block_hashes(MySQLHelper &h)
     return 0;
 }
 
+int test_get_recent_first_hashes(MySQLHelper &h)
+{
+    cout << "--GET RECENT FIRST HASHES TEST--" << endl;
+    vector<string> hashes;
+    if (h.getRecentFirstHashes("steven", 4, hashes) != 0) {
+        return -1;
+    }
+
+    for (int i = 0; i < hashes.size(); ++i) {
+        cout << hashes[i] << endl;
+    }
+    return 0;
+}
 int main(void)
 {
     cout << "---MYSQL HELPER TEST---"<<endl<<endl;
@@ -104,8 +117,15 @@ int main(void)
     }
     else {
         cout << "get missing block hashes test succeeded!" << endl;
-   
     }    
+
+    if (test_get_recent_first_hashes(h) != 0) {
+        cout << "get recent first hashes test failed!" << endl;
+        failed++;
+    }
+    else {
+        cout << "get recent first hashes test suceeded!" << endl;
+    }
     if(h.close() == 0) {
         printf("Successfully closed mysql connection!\n");
     }
