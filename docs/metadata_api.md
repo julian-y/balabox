@@ -25,7 +25,6 @@
   * block_list: list of SHA-256 hash values
 * returns: JSON document containing updated fields
   * metadata_updated: true or false depending on whether the hashes are inserted into the database
-  * last_modified: time when the update occurred  
 * error codes:
   * 400: invalid input
   

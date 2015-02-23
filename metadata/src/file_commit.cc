@@ -79,10 +79,10 @@ void outputErrorMessage()
 void outputNormalMessage(int &count)
 {
      cout << "Content-type: text/html\r\n"
-          <<  "\r\n"
-          <<  "<TITLE>file_comp</TITLE>\n"
-          <<  "<H1>file_comp</H1>\n"
-          <<  "<H4>Request Number: " << ++count << "</H4>\n";
+          <<  "\r\n";
+    //      <<  "<TITLE>file_comp</TITLE>\n"
+  //        <<  "<H1>file_comp</H1>\n"
+//          <<  "<H4>Request Number: " << ++count << "</H4>\n";
 }
 
 void stringToJson(vector<string> &stringHashes, Json::Value &jsonHashes)
@@ -180,9 +180,9 @@ int main (void)
             helper.connect();
             int updateFileSuccess = helper.updateFileData(user_id.asString(), file_name.asString(), hashes);             
             if (updateFileSuccess == 0)
-                response["updatedMetadata"] = true;
+                response["metadata_updated"] = true;
             else
-                response["updatedMetadata"] = false;
+                response["metadata_updated"] = false;
 
             helper.close();
             cout.write(styledWriter.write(response).c_str(), styledWriter.write(response).length());

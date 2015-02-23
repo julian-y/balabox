@@ -80,10 +80,10 @@ void outputErrorMessage()
 void outputNormalMessage(int &count)
 {
      cout << "Content-type: text/html\r\n"
-          <<  "\r\n"
-          <<  "<TITLE>list</TITLE>\n"
-          <<  "<H1>list</H1>\n"
-          <<  "<H4>Request Number: " << ++count << "</H4>\n";
+          <<  "\r\n";
+          //<<  "<TITLE>list</TITLE>\n"
+         // <<  "<H1>list</H1>\n"
+         // <<  "<H4>Request Number: " << ++count << "</H4>\n";
 }
 
 void stringToJson(vector<string> &stringHashes, Json::Value &jsonHashes)
