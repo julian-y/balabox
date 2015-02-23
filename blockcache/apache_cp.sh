@@ -10,7 +10,7 @@ fi
 name=$1
 fcgidName="${name}.fcgid"
 jsonlib="/usr/lib/x86_64-linux-gnu/libjsoncpp.so"
-compile="g++ ${name}.cpp $jsonlib -o $fcgidName -lfcgi"
+compile="g++ ${name}.cpp $jsonlib -o $fcgidName -lfcgi -l neon"
 echo -e "Compiling: $compile"
 `$compile`
 #`g++ "${name}.cpp" -o $fcgidName -lfcgi`
