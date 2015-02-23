@@ -80,10 +80,10 @@ void outputErrorMessage()
 void outputNormalMessage(int &count)
 {
      cout << "Content-type: text/html\r\n"
-          <<  "\r\n"
-          <<  "<TITLE>recent hashes</TITLE>\n"
-          <<  "<H1>recent hashes</H1>\n"
-          <<  "<H4>Request Number: " << ++count << "</H4>\n";
+          <<  "\r\n";
+//          <<  "<TITLE>recent hashes</TITLE>\n"
+//          <<  "<H1>recent hashes</H1>\n"
+//          <<  "<H4>Request Number: " << ++count << "</H4>\n";
 }
 
 void stringToJson(vector<string> &stringHashes, Json::Value &jsonHashes)
@@ -216,14 +216,16 @@ int main (void)
             continue; 
         }
         helper.close();
-       cout.write(styledWriter.write(response).c_str(), styledWriter.write(response).length());
+        cout.write(styledWriter.write(response).c_str(), styledWriter.write(response).length());
         
-        string temp;
+        //Testing
+        /*string temp;
         stringstream out; 
         out << max_hashes;
         temp = out.str();
         string output2 = "<p>user_id: " + paramMap["user_id"] + " max_hashes: " + temp + "</p>";
         cout.write(output2.c_str(), output2.length()); 
+        */
         if (content) delete []content;
 
         // If the output streambufs had non-zero bufsizes and
