@@ -23,7 +23,7 @@
   * user_id: id of user
   * file_name: file to commit updates to  
   * block_list: list of SHA-256 hash values
-  * version: the version of the file that the client would like to commit 
+  * version: the version of the file that the client would like to commit. Must be 1 greater than the version of the file on the              metaserver. 
 * returns: JSON document containing update statuses
   * metadata_updated: true or false depending on whether the hashes are inserted into the database
   * message: message indicates why an operation fails if metadata_updated is false. Not present if medata_updated is true.
