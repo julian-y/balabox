@@ -2,8 +2,7 @@
 
 ## /file_store
 * url structure: blockserver_ip/file_store
-* description: Stores the block hash and binary block pair for a given
-*              file.
+* description: Stores the block hash and binary block pair for a given file.
 * method: POST
 * request url: ?hash=\<requested_block_hash>
 * request body: binary block inside request body
