@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS FileBlock (
     file_name VARCHAR(100) NOT NULL,
     block_hash CHAR(64) NOT NULL, /* SHA-256 hex string of block hash */
     block_number INT UNSIGNED NOT NULL, /* block order is important for files, indexed from 0 */
-    time_last_accessed TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP    
-    version UNSIGNED INTEGER 
+    time_last_accessed TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,    
+    version INT UNSIGNED 
 );
 
 /* This info would be more suited to be stored in something like Redis/Memcached 

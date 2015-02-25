@@ -99,7 +99,7 @@ MySQLHelper::updateFileData(const string& userId, const string& filename,
         const vector<string>& hashes, unsigned int version) 
 {
     // verify version 
-    string versionChkStmt = "SELECT version FROM FileBlock user_id='" + userId + 
+    string versionChkStmt = "SELECT version FROM FileBlock WHERE user_id='" + userId + 
         "' AND file_name='" + filename + "'";
     if (mysql_query(m_conn, versionChkStmt.c_str())) {
       return mysql_errno(m_conn);
@@ -108,37 +108,38 @@ MySQLHelper::updateFileData(const string& userId, const string& filename,
     if(res == NULL) {
       return mysql_errno(m_conn);
     }
-    
     // if file doesn't exist at all in the table, make sure user's version is 0
     MYSQL_ROW row = mysql_fetch_row(res);
-    if (!row && version != 0) {
-        mysql_free_result(res);
-        return EVERS;
+    if (!row) {
+        if (version != 0) {
+          mysql_free_result(res);
+          return EVERS;
+        } 
     }
     // make sure user's version is greater than the current version if file is in mysql
-    else if (atoi(row[0]) >= version){
-        mysql_free_result(res);
-        return EVERS;
-    }  
-      
+    else {
+        if (atoi(row[0]) >= version) {
+          mysql_free_result(res);
+          return EVERS;
+        }
+    } 
+
     // delete file's old rows 
     string deleteStmt = "DELETE FROM FileBlock WHERE user_id='" + userId + 
           "' AND file_name='" + filename + "'";
     if (mysql_query(m_conn,deleteStmt.c_str())) {
-        return mysql_errno(m_conn);
+      cout << "delete stmt: " << deleteStmt << endl;  
+      return mysql_errno(m_conn);
     }
-
     // insert new rows for file 
     for (unsigned int i = 0; i < hashes.size(); ++i) {
         string insertStmt = "INSERT INTO FileBlock(user_id, file_name, block_hash, block_number, version) VALUES('" 
             + userId + "','" + filename + "','" + hashes[i] + "',";
         insertStmt += intToStr(i) + "," + intToStr(version) + ")";
-
         if(mysql_query(m_conn, insertStmt.c_str())) {
             return mysql_errno(m_conn);
         }
     }       
-    
     mysql_free_result(res);
     return 0;
 }

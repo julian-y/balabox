@@ -35,12 +35,12 @@ int test_file_update(MySQLHelper &h)
    hashes.push_back("aaf02993af40bf0c8ab083519af47b0d3c5af5110b72d4a3eaea2df0c765264d");
    hashes.push_back("4a8d881b5d8f7fed33b1f5a6cd0e289ed6d801bd32dbb74bc3feeef8b2eceb3e");
    if (h.updateFileData(uid,filename,hashes,0) != 0) {
-       return -1;
+     return -1;
    }
    vector<string> retrieved_hashes;
    unsigned int version;
    if (h.getFileBlockList(uid,filename,hashes,version) != 0) {
-       return -1;
+     return -1;
    }
 
    for (unsigned int i = 0; i <retrieved_hashes.size(); ++i) {
@@ -79,7 +79,7 @@ int test_get_recent_first_hashes(MySQLHelper &h)
         return -1;
     }
 
-    for (int i = 0; i < hashes.size(); ++i) {
+    for (unsigned int i = 0; i < hashes.size(); ++i) {
         cout << hashes[i] << endl;
     }
     return 0;
