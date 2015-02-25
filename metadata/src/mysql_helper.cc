@@ -15,6 +15,8 @@
 #define PASSWORD ""
 #define DATABASE "test"
 
+#define EVERS 1
+
 using namespace std;
 
 int 
@@ -80,8 +82,7 @@ MySQLHelper::getMissingBlockHashes(const std::vector<std::string>& userHashes,
         // should only be one row containing the count(0 or 1)
         MYSQL_ROW row = mysql_fetch_row(res);
         // count will be in first column
-        int count = atoi(row[0]);
-        if (count == 0) {
+        if (row && atoi(row[0]) == 0) {
             missingHashes.push_back(userHashes[i]);
         }
     }
@@ -95,37 +96,59 @@ MySQLHelper::getMissingBlockHashes(const std::vector<std::string>& userHashes,
  */
 int
 MySQLHelper::updateFileData(const string& userId, const string& filename, 
-        const vector<string>& hashes) 
+        const vector<string>& hashes, unsigned int version) 
 {
-    // delete old rows for file
-    string deleteStmt = "DELETE FROM FileBlock WHERE user_id='" + userId + 
+    // verify version 
+    string versionChkStmt = "SELECT version FROM FileBlock user_id='" + userId + 
         "' AND file_name='" + filename + "'";
+    if (mysql_query(m_conn, versionChkStmt.c_str())) {
+      return mysql_errno(m_conn);
+    }
+    MYSQL_RES *res = mysql_store_result(m_conn);
+    if(res == NULL) {
+      return mysql_errno(m_conn);
+    }
+    
+    // if file doesn't exist at all in the table, make sure user's version is 0
+    MYSQL row = mysql_fetch_row(res);
+    if (!row && version != 0) {
+        mysql_free_result(res);
+        return EVERS;
+    }
+    // make sure user's version is greater than the current version if file is in mysql
+    else if (atoi(row[0]) >= version){
+        mysql_free_result(res);
+        return EVERS;
+    }  
+      
+    // delete file's old rows 
+    string deleteStmt = "DELETE FROM FileBlock WHERE user_id='" + userId + 
+          "' AND file_name='" + filename + "'";
     if (mysql_query(m_conn,deleteStmt.c_str())) {
         return mysql_errno(m_conn);
     }
+
     // insert new rows for file 
     for (unsigned int i = 0; i < hashes.size(); ++i) {
-        string insertStmt = "INSERT INTO FileBlock(user_id, file_name, block_hash, block_number) VALUES('" 
+        string insertStmt = "INSERT INTO FileBlock(user_id, file_name, block_hash, block_number, version) VALUES('" 
             + userId + "','" + filename + "','" + hashes[i] + "',";
-        string temp;
-        stringstream out;
-        out << i; // dirty trick to convert int to std::string
-        temp = out.str();
-        insertStmt += temp;
-        insertStmt += ")";
+        insertStmt += intToStr(i) + "," + intToStr(version) + ")";
+
         if(mysql_query(m_conn, insertStmt.c_str())) {
             return mysql_errno(m_conn);
         }
-    }        
+    }       
+    
+    mysql_free_result(res);
     return 0;
 }
 
 int
 MySQLHelper::getFileBlockList(const std::string& userId, const std::string& filename, 
-    std::vector<std::string>& hashes)
+    std::vector<std::string>& hashes, unsigned int &version)
 {
     // perform a query for each hash in user hashes, add hash to missingHashes if it wasnt in db
-    string curHashQuery = "SELECT block_hash FROM FileBlock WHERE user_id='" 
+    string curHashQuery = "SELECT block_hash,version FROM FileBlock WHERE user_id='" 
         + userId + "' AND file_name='" + filename + "' ORDER BY block_number ASC";
     if (mysql_query(m_conn, curHashQuery.c_str()) != 0) {
         return mysql_errno(m_conn);
@@ -139,11 +162,50 @@ MySQLHelper::getFileBlockList(const std::string& userId, const std::string& file
     // add all blocks to hashes vector
     MYSQL_ROW row;
     while ( (row = mysql_fetch_row(res)) ) {
-        // should only be one column containing the hash
         string hash = row[0];
+        version = atoi(row[1]);
         hashes.push_back(hash);
     }
 
     mysql_free_result(res);
     return 0;
+}
+
+int
+MySQLHelper::getRecentFirstHashes(const std::string& userId, unsigned int maxHashes,
+        std::vector<std::string>& firstHashes)
+{
+    // perform a query for each hash in user hashes, add hash to missingHashes if it wasnt in db
+    string recentHashQuery = "SELECT block_hash FROM FileBlock WHERE user_id='" 
+        + userId + "' ORDER BY block_number ASC,time_last_accessed DESC LIMIT ";
+    
+    recentHashQuery += intToStr(maxHashes);
+
+    if (mysql_query(m_conn, recentHashQuery.c_str()) != 0) {
+        return mysql_errno(m_conn);
+    }
+
+    MYSQL_RES *res = mysql_store_result(m_conn);
+    if (res == NULL) {
+        return mysql_errno(m_conn);
+    }
+
+    // add all blocks to hashes vector
+    MYSQL_ROW row;
+    while ( (row = mysql_fetch_row(res)) ) {
+        // should only be one column containing the hash
+        string hash = row[0];
+        firstHashes.push_back(hash);
+    }
+
+    mysql_free_result(res);
+    return 0;
+}
+
+string MySQLHelper::intToStr(int i)
+{
+  string temp;
+  stringstream out;
+  out << maxHashes; // dirty trick to convert int to std::string
+  return out.str();
 }

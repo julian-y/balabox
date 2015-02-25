@@ -53,26 +53,30 @@ public:
      * @param userId user id string
      * @param filename name of file to commit changes to
      * @param hashes vector of block hashes for the file
+     * @param version new version of the file. must be greater than the current 
+     *                version stored in the metaserver for the update to succeed
      * @return 0 on success, non-zero on failure 
      * @note a user should have checked to make sure their blocks have been uploaded
      */
     int
     updateFileData(const std::string& userId, const std::string& filename, 
-        const std::vector<std::string>& hashes); 
+        const std::vector<std::string>& hashes, unsigned int version); 
 
     /**
      * Retrieves block hashes for a given user's file
      * @param userId user id string
      * @param filename file to retrieve block hashes for
      * @param hashes reference to vector to fill with the requested file's hashes 
+     * @param version reference to integer to fill with the requested file's version
      * @return 0 on success, non-zero on failure
      */
     int
     getFileBlockList(const std::string& userId, const std::string& filename, 
-        std::vector<std::string>& hashes);
+        std::vector<std::string>& hashes, unsigned int &version);
 
 private:
     MYSQL *m_conn;
+    std::string intToStr(int i);
 };
 
 #endif /* MYSQL_HELPER_HPP */
