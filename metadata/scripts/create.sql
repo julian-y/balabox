@@ -21,5 +21,5 @@ CREATE TABLE IF NOT EXISTS FileBlock (
  */
 CREATE TABLE IF NOT EXISTS UserCache (
     user_id VARCHAR(100) NOT NULL,
-    cache_server_ip INT UNSIGNED NOT NULL    
+    cache_server_ip VARCHAR(100) NOT NULL    
 ); 
