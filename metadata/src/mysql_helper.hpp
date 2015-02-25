@@ -73,7 +73,16 @@ public:
     int
     getFileBlockList(const std::string& userId, const std::string& filename, 
         std::vector<std::string>& hashes, unsigned int &version);
-
+    
+    /**
+     * Retrieves a list of all file names for a given user
+     * @param userId id of the user
+     * @param fileNames reference to vector that will be filled with the user's file names
+     * @return 0 on success, non-zero on failure
+     */
+    int
+    getUserFileNames(const std::string& userId, const std::vector<std::string>& fileNames);
+    
     /**
      * Retreives recent hashes for a user's files starting with the beginning blocks.
      * Once the first block hashes for all files have been selected, the second block
@@ -87,6 +96,26 @@ public:
     int
     getRecentFirstHashes(const std::string& userId, unsigned int maxHashes, 
            std::vector<std::string>& firstHashes);
+
+    /**
+     * Retreives a list of caches associated with a user
+     * @param userId id of user to retrieve caches for
+     * @param maxCahces maximum number of caches to return
+     * @param ipAddrs vector of strings 
+     * @return 0 on success, non-zero on failure
+     */
+    int
+    getCaches(const std::string& userId, unsigned int maxCaches, 
+        std::vector<std::string>& ipAddrs);
+
+    /**
+     * Removes an association between a given user and a given cache
+     * @param user to remove cache from
+     * @param ipAddr ip address string of cache to remove
+     * @return 0 on success, non-zero on error
+     */
+    int
+    removeCache(const std::string& userId, const std::string& ipAddr);
 
 private:
     MYSQL *m_conn;
