@@ -72,6 +72,7 @@
 * method: GET
 * parameters: 
   * user_id: id of user
+  * max: max number of caches to return
 * returns: JSON document containing a list of cache server ip addresses that recently served the user
   * caches: array of cache server ip addresses
 * error codes:
