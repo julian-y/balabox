@@ -38,7 +38,8 @@ int test_file_update(MySQLHelper &h)
        return -1;
    }
    vector<string> retrieved_hashes;
-   if (h.getFileBlockList(uid,filename,hashes) != 0) {
+   unsigned int version;
+   if (h.getFileBlockList(uid,filename,hashes,version) != 0) {
        return -1;
    }
 

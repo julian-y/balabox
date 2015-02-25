@@ -110,7 +110,7 @@ MySQLHelper::updateFileData(const string& userId, const string& filename,
     }
     
     // if file doesn't exist at all in the table, make sure user's version is 0
-    MYSQL row = mysql_fetch_row(res);
+    MYSQL_ROW row = mysql_fetch_row(res);
     if (!row && version != 0) {
         mysql_free_result(res);
         return EVERS;
@@ -206,6 +206,6 @@ string MySQLHelper::intToStr(int i)
 {
   string temp;
   stringstream out;
-  out << maxHashes; // dirty trick to convert int to std::string
+  out << i; // dirty trick to convert int to std::string
   return out.str();
 }
