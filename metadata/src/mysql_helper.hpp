@@ -55,7 +55,7 @@ public:
      * @param hashes vector of block hashes for the file
      * @param version new version of the file. must be greater than the current 
      *                version stored in the metaserver for the update to succeed
-     * @return 0 on success, non-zero on failure 
+     * @return 0 on success, EVERS on version mismatch, other non-zero constant for mysql failure
      * @note a user should have checked to make sure their blocks have been uploaded
      */
     int
