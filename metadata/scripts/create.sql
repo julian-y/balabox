@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS FileBlock (
 /* This info would be more suited to be stored in something like Redis/Memcached 
  * IP SHOULD be stored in network order
  */
-CREATE TABLE IF NOT EXISTS BlockCacheIP (
-    block_hash BINARY(32) NOT NULL,
+CREATE TABLE IF NOT EXISTS UserCache (
+    user_id VARCHAR(100) NOT NULL,
     cache_server_ip INT UNSIGNED NOT NULL    
 ); 
