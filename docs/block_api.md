@@ -2,10 +2,9 @@
 
 ## /file_store
 * url structure: blockserver_ip/file_store
-* description: Stores the list of block hash and binary block pairs for a given
-*              file.
+* description: Stores the block hash and binary block pair for a given file.
 * method: POST
-* request url: ?q=<requested_block_hash>
+* request url: ?hash=\<requested_block_hash>
 * request body: binary block inside request body
 * parameters: 
     * none //TODO: check that this is true
@@ -16,7 +15,7 @@
 * url structure: blockserver_ip/file_fetch
 * description: Requests the list of binary blocks based on block hash
 * method: GET
-* request url: ?q=<requested_block_hash>
+* request url: ?hash=\<requested_block_hash>
 * request body: none
 * returns: binary block inside response
 

@@ -150,6 +150,7 @@ MySQLHelper::getFileBlockList(const std::string& userId, const std::string& file
     // perform a query for each hash in user hashes, add hash to missingHashes if it wasnt in db
     string curHashQuery = "SELECT block_hash,version FROM FileBlock WHERE user_id='" 
         + userId + "' AND file_name='" + filename + "' ORDER BY block_number ASC";
+    
     if (mysql_query(m_conn, curHashQuery.c_str()) != 0) {
         return mysql_errno(m_conn);
     }
@@ -178,7 +179,6 @@ MySQLHelper::getRecentFirstHashes(const std::string& userId, unsigned int maxHas
     // perform a query for each hash in user hashes, add hash to missingHashes if it wasnt in db
     string recentHashQuery = "SELECT block_hash FROM FileBlock WHERE user_id='" 
         + userId + "' ORDER BY block_number ASC,time_last_accessed DESC LIMIT ";
-    
     recentHashQuery += intToStr(maxHashes);
 
     if (mysql_query(m_conn, recentHashQuery.c_str()) != 0) {
