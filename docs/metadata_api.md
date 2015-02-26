@@ -78,8 +78,18 @@
 * error codes:
   * 400: No entry for user 
 
-## /user_expire
-* url structure: metaserver_ip/user_expire
+## /user_cache_add
+* url structure: metaserver_ip/user_cache_add
+* description: Adds an association between a cache and a user
+* method: PUT
+* parameters: 
+  * user_id: id of user
+  * cache_ip: ip address of cache to add
+* error codes:
+  * 400: Invalid input
+
+## /user_cache_remove
+* url structure: metaserver_ip/user_cache_remove
 * description: Removes a cache from the list of caches associated with a user
 * method: DELETE
 * parameters: 
