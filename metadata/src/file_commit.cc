@@ -16,14 +16,13 @@ extern char ** environ;
 #include "fcgi_stdio.h"
 #include <jsoncpp/json/json.h>
 #include <vector> 
-
+#include <sstream> 
 /* mysql access helpers*/
 #include "mysql_helper.hpp"
 
+/* shared files helper*/
+#include "shared.hpp"
 using namespace std;
-
-// Maximum number of bytes allowed to be read from stdin
-static const unsigned long STDIN_MAX = 1000000;
 
 static long gstdin(FCGX_Request * request, char ** content)
 {
@@ -68,43 +67,8 @@ static long gstdin(FCGX_Request * request, char ** content)
     return clen;
 }
 
-void outputErrorMessage() 
-{
-     cout << "Status: 400\r\n"
-          <<  "Content-type: text/html\r\n"
-          <<  "\r\n"
-          << "<html><p>400 INVALID INPUT</p></html>";
-}
-
-void outputNormalMessage(int &count)
-{
-     cout << "Content-type: text/html\r\n"
-          <<  "\r\n";
-    //      <<  "<TITLE>file_comp</TITLE>\n"
-  //        <<  "<H1>file_comp</H1>\n"
-//          <<  "<H4>Request Number: " << ++count << "</H4>\n";
-}
-
-void stringToJson(vector<string> &stringHashes, Json::Value &jsonHashes)
-{
-    for (int i = 0 ; i < stringHashes.size(); i++)
-    {
-        jsonHashes[i] = stringHashes[i];
-    }
-}
-
-void jsonToString(Json::Value &jsonHashes, vector<string> &stringHashes)
-{
-   for (int i = 0; i < jsonHashes.size(); i++) 
-   {
-       stringHashes.push_back(jsonHashes[i].asString());
-   }
-}
-
 int main (void)
 {
-    int count = 0;
-
     streambuf * cin_streambuf  = cin.rdbuf();
     streambuf * cout_streambuf = cout.rdbuf();
     streambuf * cerr_streambuf = cerr.rdbuf();
@@ -129,7 +93,7 @@ int main (void)
         cerr = &cerr_fcgi_streambuf;
         #else
         cin.rdbuf(&cin_fcgi_streambuf);
-        cout.rdbuf(&cout_fcgi_streambuf);
+         cout.rdbuf(&cout_fcgi_streambuf);
         cerr.rdbuf(&cerr_fcgi_streambuf);
         #endif
 
@@ -153,37 +117,60 @@ int main (void)
             Json::Value user_id;
             Json::Value file_name;
             Json::Value jsonHashes;
+            Json::Value version; 
             Json::StyledWriter styledWriter;
             Json::Value response; 
             string response_body = content;
-
+           
             // Retrieving Json values 
             bool parsedSuccess = reader.parse(response_body, root, false);
             user_id = root["user_id"];
             jsonHashes = root["block_list"];
             file_name = root["file_name"];
+            version = root["version"]; 
 
             // Invalid inputs
-            if (!parsedSuccess || user_id == Json::Value::null 
+            if (!parsedSuccess || user_id == Json::Value::null || version == Json::Value::null 
                   || jsonHashes == Json::Value::null || file_name == Json::Value::null)
             {
                  outputErrorMessage();             
                  continue;
             }
             
-            outputNormalMessage(count);            
             vector<string> hashes;
             jsonToString(jsonHashes, hashes);
 
             // Connect and update the database
             MySQLHelper helper;
-            helper.connect();
-            int updateFileSuccess = helper.updateFileData(user_id.asString(), file_name.asString(), hashes);             
-            if (updateFileSuccess == 0)
+            if (helper.connect() != 0) 
+            {
+                outputErrorMessage();
+                continue;
+            }
+        
+            int vInt = atoi(version.asString().c_str());
+            int updateFileData = helper.updateFileData(user_id.asString(), file_name.asString(), hashes, vInt);
+            if (updateFileData == 0) 
+            {
+                outputNormalMessage();
                 response["metadata_updated"] = true;
-            else
+            }
+            // Failure to update the metaserver 
+            else 
+            {
+                outputErrorMessage();
                 response["metadata_updated"] = false;
-
+                if (updateFileData == EVERS)  
+                    response["message"] = "Old client version.";
+                else 
+                {
+                    string temp; 
+                    stringstream out;
+                    out << updateFileData;
+                    string msg = "Database has encountered problems while updating the files. Please try again later. error code: " + out.str();
+                    response["message"] = msg;
+                }
+            }
             helper.close();
             cout.write(styledWriter.write(response).c_str(), styledWriter.write(response).length());
         }

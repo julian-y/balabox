@@ -16,17 +16,18 @@ INCLUDE_DIR=./include
 
 COMMIT_SOURCES=$(SRC_DIR)/file_commit.cc
 QUERY_SOURCES=$(SRC_DIR)/block_query.cc
-LIST_SOURCES=$(SRC_DIR)/list.cc
+LIST_SOURCES=$(SRC_DIR)/block_list.cc
 RECENT_HASHES_SOURCES=$(SRC_DIR)/recent_hashes.cc
 MYSQL_HELPER_OBJECTS=$(OBJ_DIR)/mysql_helper.o
-QUERY_OBJECTS=$(OBJ_DIR)/block_query.o $(MYSQL_HELPER_OBJECTS)
-COMMIT_OBJECTS=$(OBJ_DIR)/file_commit.o $(MYSQL_HELPER_OBJECTS)
-LIST_OBJECTS=$(OBJ_DIR)/list.o $(MYSQL_HELPER_OBJECTS)
-RECENT_HASHES_OBJECTS=$(OBJ_DIR)/recent_hashes.o $(MYSQL_HELPER_OBJECTS)
+SHARED_OBJECTS=$(OBJ_DIR)/shared.o
+QUERY_OBJECTS=$(OBJ_DIR)/block_query.o $(MYSQL_HELPER_OBJECTS) $(SHARED_OBJECTS)
+COMMIT_OBJECTS=$(OBJ_DIR)/file_commit.o $(MYSQL_HELPER_OBJECTS) $(SHARED_OBJECTS)
+BLOCK_LIST_OBJECTS=$(OBJ_DIR)/block_list.o $(MYSQL_HELPER_OBJECTS) $(SHARED_OBJECTS)
+RECENT_HASHES_OBJECTS=$(OBJ_DIR)/recent_hashes.o $(MYSQL_HELPER_OBJECTS) $(SHARED_OBJECTS)
 TEST_OBJECTS= $(MYSQL_HELPER_OBJECTS) $(TEST_DIR)/mysql_helper_test.o
 INC=-I/usr/lib/x86_64-linux-gnu/ -I$(SRC_DIR) -I$(INCLUDE_DIR)/mysql
 
-all: query commit list recent_hashes
+all: query commit block_list recent_hashes
 
 query: $(QUERY_OBJECTS)
 	$(CC) $(QUERY_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/block_query.fcgid $(MYSQL_LINK)
@@ -34,8 +35,8 @@ query: $(QUERY_OBJECTS)
 commit: $(COMMIT_OBJECTS)
 	$(CC) $(COMMIT_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/file_commit.fcgid $(MYSQL_LINK)
 
-list: $(LIST_OBJECTS)
-	$(CC) $(LIST_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/list.fcgid $(MYSQL_LINK)	
+block_list: $(BLOCK_LIST_OBJECTS)
+	$(CC) $(BLOCK_LIST_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/block_list.fcgid $(MYSQL_LINK)	
 
 recent_hashes: $(RECENT_HASHES_OBJECTS)
 	$(CC) $(RECENT_HASHES_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/recent_hashes.fcgid $(MYSQL_LINK)
