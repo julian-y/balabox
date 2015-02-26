@@ -15,8 +15,6 @@
 #define PASSWORD ""
 #define DATABASE "test"
 
-#define EVERS 1
-
 using namespace std;
 
 int 

@@ -8,6 +8,8 @@
 #include <my_global.h>
 #include <mysql.h>
 
+#define EVERS 1
+
 /**
  * This class defines basic functionality to interact with the metadata
  * mysql database
