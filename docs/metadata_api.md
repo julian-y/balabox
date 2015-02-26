@@ -29,6 +29,19 @@
   * message: message indicates why an operation fails if metadata_updated is false. Not present if medata_updated is true.
 * error codes:
   * 400: invalid input
+ 
+## /file_delete 
+* url structure: metaserver_ip/file_delete
+* description: Removes a given user's file from the metaserver  
+* method: POST
+* parameters
+  * user_id: id of user
+  * file_name: file to delete
+* returns: JSON document containing 
+  * is_deleted: true or false depending on if the file was deleted
+  * message: message indicates why an operation fails if is_deleted is false. Not present if is_deleted is true.
+* error codes:
+  * 400: invalid input
   
 ## /block_list
 * url structure: metaserver_ip/block_list
