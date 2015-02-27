@@ -93,8 +93,8 @@
 
 ## /user_cache_add
 * url structure: metaserver_ip/user_cache_add
-* description: Adds an association between a cache and a user
-* method: PUT
+* description: Adds an association between a cache and a user. A user may be associated with multiple caches and vice versa.
+* method: POST
 * parameters: 
   * user_id: id of user
   * cache_ip: ip address of cache to add
