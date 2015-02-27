@@ -23,7 +23,7 @@ extern char ** environ;
 #include "mysql_helper.hpp"
 
 /* shared function helpers */
-#include "shared.hpp"
+#include "fcgi_util.hpp"
 using namespace std;
 
 static long gstdin(FCGX_Request * request, char ** content)
