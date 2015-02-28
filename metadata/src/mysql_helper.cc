@@ -171,6 +171,33 @@ MySQLHelper::getFileBlockList(const std::string& userId, const std::string& file
     return 0;
 }
 
+int 
+MySQLHelper::getUserFileNames(const std::string& userId, std::vector<std::string>& fileNames)
+{
+    // perform a query for each hash in user hashes, add hash to missingHashes if it wasnt in db
+    string userFilesQuery = "SELECT file_name FROM FileBlock WHERE user_id='" 
+        + userId + "'";
+    
+    if (mysql_query(m_conn, userFilesQuery.c_str()) != 0) {
+        return mysql_errno(m_conn);
+    }
+
+    MYSQL_RES *res = mysql_store_result(m_conn);
+    if (res == NULL) {
+        return mysql_errno(m_conn);
+    }
+
+    // add all file names to vector
+    MYSQL_ROW row;
+    while ( (row = mysql_fetch_row(res)) ) {
+        string file_name = row[0];
+        fileNames.push_back(file_name);
+    }
+
+    mysql_free_result(res);
+    return 0;
+}
+
 int
 MySQLHelper::getRecentFirstHashes(const std::string& userId, unsigned int maxHashes,
         std::vector<std::string>& firstHashes)
