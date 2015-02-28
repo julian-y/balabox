@@ -228,6 +228,33 @@ MySQLHelper::getRecentFirstHashes(const std::string& userId, unsigned int maxHas
     return 0;
 }
 
+int
+MySQLHelper::getCaches(const std::string& userId, unsigned int maxCaches, 
+    std::vector<std::string>& ipAddrs)
+{
+    // perform a query for each hash in user hashes, add hash to missingHashes if it wasnt in db
+    string getCachesQuery = "SELECT cache_server_ip FROM UserCache WHERE user_id='" 
+        + userId + "' LIMIT " + intToStr(maxCaches);
+
+    if (mysql_query(m_conn, getCachesQuery.c_str()) != 0) {
+        return mysql_errno(m_conn);
+    }
+
+    MYSQL_RES *res = mysql_store_result(m_conn);
+    if (res == NULL) {
+        return mysql_errno(m_conn);
+    }
+
+    MYSQL_ROW row;
+    while ( (row = mysql_fetch_row(res)) ) {
+        string ipAddrStr = row[0];
+        ipAddrs.push_back(ipAddrStr);
+    }
+
+    mysql_free_result(res);
+    return 0;
+}
+
 string MySQLHelper::intToStr(int i)
 {
   string temp;
@@ -235,3 +262,5 @@ string MySQLHelper::intToStr(int i)
   out << i; // dirty trick to convert int to std::string
   return out.str();
 }
+
+

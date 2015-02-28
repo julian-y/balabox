@@ -98,6 +98,20 @@ int test_get_user_file_names(MySQLHelper &h)
     return 0;
 }
 
+int test_get_caches(MySQLHelper &h)
+{
+    cout << endl << "--GET CACHES TEST--" << endl;
+    vector<string> caches;
+    if (h.getCaches("steven", 10, caches) != 0) {
+        return -1;
+    }
+
+    for (unsigned int i = 0; i < caches.size(); ++i) {
+        cout << caches[i] << endl;
+    }
+    return 0;
+}
+
 int main(void)
 {
     cout << "---MYSQL HELPER TEST---"<<endl<<endl;
@@ -150,7 +164,15 @@ int main(void)
     else {
         cout << "get user file names test suceeeded!" << endl;
     }
-    
+   
+    if (test_get_caches(h) != 0) {
+      failed++;
+      cout << "get caches test failed!" << endl;
+    } 
+    else {
+        cout << "get caches test suceeeded!" << endl;
+    }
+
     if(h.close() == 0) {
         cout << endl << "Successfully closed mysql connection!" << endl;
     }
