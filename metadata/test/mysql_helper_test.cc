@@ -111,6 +111,22 @@ int test_get_caches(MySQLHelper &h)
     }
     return 0;
 }
+int test_remove_cache(MySQLHelper &h)
+{
+    cout << endl << "--REMOVE CACHE TEST--" << endl;
+    vector<string> caches;
+    if (h.removeCache("steven", "10.1.1.1") != 0) {
+        return -1;
+    }
+    h.getCaches("steven",10,caches);
+    if(caches.size() != 0) {
+      cout << "Failed to remove steven -> 10.1.1.1 cache association!" << endl;
+      return -1;
+    }
+
+    return 0;
+}
+
 
 int main(void)
 {
@@ -171,6 +187,14 @@ int main(void)
     } 
     else {
         cout << "get caches test suceeeded!" << endl;
+    }
+
+    if (test_remove_cache(h) != 0) {
+      failed++;
+      cout << "remove cache test failed!" << endl;
+    } 
+    else {
+        cout << "remove cache test suceeeded!" << endl;
     }
 
     if(h.close() == 0) {

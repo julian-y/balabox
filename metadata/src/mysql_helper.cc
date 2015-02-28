@@ -255,6 +255,18 @@ MySQLHelper::getCaches(const std::string& userId, unsigned int maxCaches,
     return 0;
 }
 
+int
+MySQLHelper::removeCache(const std::string& userId, const std::string& ipAddr)
+{
+  string deleteCacheStmt = "DELETE FROM UserCache WHERE user_id='" + userId + 
+          "' AND cache_server_ip='" + ipAddr + "'";
+  if (mysql_query(m_conn, deleteCacheStmt.c_str()) != 0) {
+        return mysql_errno(m_conn);
+  }
+
+  return 0;
+}
+
 string MySQLHelper::intToStr(int i)
 {
   string temp;
