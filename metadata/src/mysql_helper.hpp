@@ -65,6 +65,15 @@ public:
         const std::vector<std::string>& hashes, unsigned int version); 
 
     /**
+     * Removes a file from the database
+     * @param userId id of user who owns the file
+     * @param filename name of file to remove
+     * @return 0 on success, non-zero for mysql failure
+     */
+    int
+    removeFile(const std::string& userId, const std::string& filename);
+
+    /**
      * Retrieves block hashes for a given user's file
      * @param userId user id string
      * @param filename file to retrieve block hashes for
@@ -102,7 +111,7 @@ public:
     /**
      * Retreives a list of caches associated with a user
      * @param userId id of user to retrieve caches for
-     * @param maxCahces maximum number of caches to return
+     * @param maxCaches maximum number of caches to return
      * @param ipAddrs vector of strings 
      * @return 0 on success, non-zero on failure
      */
@@ -110,6 +119,15 @@ public:
     getCaches(const std::string& userId, unsigned int maxCaches, 
         std::vector<std::string>& ipAddrs);
 
+    /**
+     * Adds an association between a user and a cache
+     * @param userId id of user to associate with cache
+     * @param ipAddrs ip address string of cache to associate with user
+     * @return 0 on success, non-zero on failure
+     */
+    int
+    addCache(const std::string& userId, const std::string& ipAddr);
+    
     /**
      * Removes an association between a given user and a given cache
      * @param user to remove cache from

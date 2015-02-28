@@ -126,7 +126,6 @@ MySQLHelper::updateFileData(const string& userId, const string& filename,
     string deleteStmt = "DELETE FROM FileBlock WHERE user_id='" + userId + 
           "' AND file_name='" + filename + "'";
     if (mysql_query(m_conn,deleteStmt.c_str())) {
-      cout << "delete stmt: " << deleteStmt << endl;  
       return mysql_errno(m_conn);
     }
     // insert new rows for file 
@@ -140,6 +139,18 @@ MySQLHelper::updateFileData(const string& userId, const string& filename,
     }       
     mysql_free_result(res);
     return 0;
+}
+
+int
+MySQLHelper::removeFile(const string& userId, const string& filename)
+{
+  string removeStmt = "DELETE FROM FileBlock WHERE user_id='" + userId + 
+          "' AND file_name='" + filename + "'";
+  if (mysql_query(m_conn, removeStmt.c_str())) {
+    return mysql_errno(m_conn);
+  }
+
+  return 0;
 }
 
 int

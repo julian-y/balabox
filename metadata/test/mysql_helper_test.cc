@@ -126,7 +126,26 @@ int test_remove_cache(MySQLHelper &h)
 
     return 0;
 }
+int test_remove_file(MySQLHelper &h)
+{
+    string uid = "steven";
+    string filename = "testfile";
 
+    cout << endl << "--REMOVE FILE TEST--" << endl;
+    if (h.removeFile(uid, filename) != 0) {
+        return -1;
+    }
+    vector<string> fileHashes;
+    unsigned int vers;
+    h.getFileBlockList(uid,filename,fileHashes, vers);
+    
+    if(fileHashes.size() != 0) {
+      cout << "Failed to remove " + uid + " filename: " + filename << endl;
+      return -1;
+    }
+
+    return 0;
+}
 
 int main(void)
 {
@@ -196,7 +215,13 @@ int main(void)
     else {
         cout << "remove cache test suceeeded!" << endl;
     }
-
+    if (test_remove_file(h) != 0) {
+      failed++;
+      cout << "remove file test failed!" << endl;
+    } 
+    else {
+        cout << "remove file test suceeeded!" << endl;
+    }
     if(h.close() == 0) {
         cout << endl << "Successfully closed mysql connection!" << endl;
     }
