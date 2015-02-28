@@ -146,7 +146,29 @@ int test_remove_file(MySQLHelper &h)
 
     return 0;
 }
+int test_add_cache(MySQLHelper& h)
+{
+  string uid = "testuser";
+  string ipAddr = "127.0.0.1";
 
+  cout << endl << "--ADD CACHE TEST--" << endl;
+  
+  if (h.addCache(uid, ipAddr)) {
+    return -1;
+  }
+
+  vector<string> ipAddrs;
+  h.getCaches(uid, 10, ipAddrs);
+  if (ipAddrs.size() == 0) {
+    cout << "Failed to add user-cache association!" << endl;
+    return -1;
+  }
+
+  for (int i = 0; i < ipAddrs.size(); ++i) {
+    cout << ipAddrs[i] << endl;
+  }
+  return 0;
+}
 int main(void)
 {
     cout << "---MYSQL HELPER TEST---"<<endl<<endl;
@@ -221,6 +243,13 @@ int main(void)
     } 
     else {
         cout << "remove file test suceeeded!" << endl;
+    }
+    if (test_add_cache(h) != 0) {
+      failed++;
+      cout << "add cache test failed!" << endl;
+    } 
+    else {
+        cout << "add cache test suceeeded!" << endl;
     }
     if(h.close() == 0) {
         cout << endl << "Successfully closed mysql connection!" << endl;

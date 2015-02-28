@@ -267,11 +267,24 @@ MySQLHelper::getCaches(const std::string& userId, unsigned int maxCaches,
 }
 
 int
+MySQLHelper::addCache(const string& userId, const string& ipAddr)
+{
+  string insertStmt = "INSERT INTO UserCache(user_id, cache_server_ip) VALUES('" 
+        + userId + "','" + ipAddr + "')";
+
+  if (mysql_query(m_conn, insertStmt.c_str()) != 0) {
+        return mysql_errno(m_conn);
+  }
+
+  return 0; 
+}
+
+int
 MySQLHelper::removeCache(const std::string& userId, const std::string& ipAddr)
 {
-  string deleteCacheStmt = "DELETE FROM UserCache WHERE user_id='" + userId + 
+  string removeCacheStmt = "DELETE FROM UserCache WHERE user_id='" + userId + 
           "' AND cache_server_ip='" + ipAddr + "'";
-  if (mysql_query(m_conn, deleteCacheStmt.c_str()) != 0) {
+  if (mysql_query(m_conn, removeCacheStmt.c_str()) != 0) {
         return mysql_errno(m_conn);
   }
 
@@ -285,5 +298,3 @@ string MySQLHelper::intToStr(int i)
   out << i; // dirty trick to convert int to std::string
   return out.str();
 }
-
-
