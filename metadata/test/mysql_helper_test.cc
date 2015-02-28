@@ -73,7 +73,7 @@ int test_missing_block_hashes(MySQLHelper &h)
 
 int test_get_recent_first_hashes(MySQLHelper &h)
 {
-    cout << "--GET RECENT FIRST HASHES TEST--" << endl;
+    cout << endl << "--GET RECENT FIRST HASHES TEST--" << endl;
     vector<string> hashes;
     if (h.getRecentFirstHashes("steven", 4, hashes) != 0) {
         return -1;
@@ -84,6 +84,20 @@ int test_get_recent_first_hashes(MySQLHelper &h)
     }
     return 0;
 }
+int test_get_user_file_names(MySQLHelper &h)
+{
+    cout << endl << "--GET USER FILE NAMES TEST--" << endl;
+    vector<string> fileNames;
+    if (h.getUserFileNames("steven", fileNames) != 0) {
+        return -1;
+    }
+
+    for (unsigned int i = 0; i < fileNames.size(); ++i) {
+        cout << fileNames[i] << endl;
+    }
+    return 0;
+}
+
 int main(void)
 {
     cout << "---MYSQL HELPER TEST---"<<endl<<endl;
@@ -129,8 +143,16 @@ int main(void)
     else {
         cout << "get recent first hashes test suceeded!" << endl;
     }
+    if (test_get_user_file_names(h) != 0) {
+      failed++;
+      cout << "Get User File Names Failed!" << endl;
+    } 
+    else {
+        cout << "get user file names test suceeeded!" << endl;
+    }
+    
     if(h.close() == 0) {
-        printf("Successfully closed mysql connection!\n");
+        cout << endl << "Successfully closed mysql connection!" << endl;
     }
     else {
         failed++;

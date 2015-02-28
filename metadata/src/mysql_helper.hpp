@@ -83,7 +83,7 @@ public:
      * @return 0 on success, non-zero on failure
      */
     int
-    getUserFileNames(const std::string& userId, const std::vector<std::string>& fileNames);
+    getUserFileNames(const std::string& userId, std::vector<std::string>& fileNames);
     
     /**
      * Retreives recent hashes for a user's files starting with the beginning blocks.
