@@ -1,5 +1,5 @@
 /**
- * Sends responses for file_commit requests
+ * Sends responses for file_list requests
  * See metadata_api.md for more info
 */
 
@@ -16,12 +16,14 @@ extern char ** environ;
 #include "fcgi_stdio.h"
 #include <jsoncpp/json/json.h>
 #include <vector> 
-#include <sstream> 
+#include <map>
+
 /* mysql access helpers*/
 #include "mysql_helper.hpp"
 
-/* shared files helper*/
+/* shared function helpers*/
 #include "fcgi_util.hpp"
+
 using namespace std;
 
 static long gstdin(FCGX_Request * request, char ** content)
@@ -35,7 +37,6 @@ static long gstdin(FCGX_Request * request, char ** content)
         if (*clenstr)
         {
            
-            //cout << "Status: 404\r\n\r\n";
             cerr << "can't parse \"CONTENT_LENGTH="
                  << FCGX_GetParam("CONTENT_LENGTH", request->envp)
                  << "\"\n";
@@ -67,6 +68,24 @@ static long gstdin(FCGX_Request * request, char ** content)
     return clen;
 }
 
+/**
+  parses the given query string
+  returns 0 upon success and nonzero otherwise
+*/
+int getParam(string param, map<string, string> &dict)
+{
+   // Verify if the parameters required are found
+   int idPos = param.find("user_id"); 
+
+   if (idPos == string::npos) 
+      return 1;
+  
+   int equPos1 = param.find("=");
+   dict["user_id"] = param.substr(equPos1+1);
+   return 0;
+}
+
+
 int main (void)
 {
     streambuf * cin_streambuf  = cin.rdbuf();
@@ -93,7 +112,7 @@ int main (void)
         cerr = &cerr_fcgi_streambuf;
         #else
         cin.rdbuf(&cin_fcgi_streambuf);
-         cout.rdbuf(&cout_fcgi_streambuf);
+        cout.rdbuf(&cout_fcgi_streambuf);
         cerr.rdbuf(&cerr_fcgi_streambuf);
         #endif
 
@@ -102,75 +121,52 @@ int main (void)
         // the connection deadlocks until a timeout expires!).
         char * content = NULL;
         unsigned long clen = gstdin(&request, &content);
+
+        Json::StyledWriter styledWriter;
+        Json::Value response; 
+        string response_body = content;
+
+        char* query_string = FCGX_GetParam("QUERY_STRING", request.envp);
+
+        // Invalid inputs
+        if (query_string == NULL)
+        {
+              outputErrorMessage();             
+              continue;
+        }
+                    
+        vector<string> filenames;
+        Json::Value jsonNames;
+        string param = query_string;
+        map<string, string> paramMap;
+        int getParamSuccess = getParam(param, paramMap);    
         
-        // Client doesn't send in any data, ignore this request
-        // and wait for another one. 
-        if (clen == 0) 
+        if (getParamSuccess != 0)
         {
             outputErrorMessage();
             continue;
         }
-        else 
-        {
-            Json::Value root;
-            Json::Reader reader;
-            Json::Value user_id;
-            Json::Value file_name;
-            Json::Value jsonHashes;
-            Json::Value version; 
-            Json::StyledWriter styledWriter;
-            Json::Value response; 
-            string response_body = content;
-           
-            // Retrieving Json values 
-            bool parsedSuccess = reader.parse(response_body, root, false);
-            user_id = root["user_id"];
-            jsonHashes = root["block_list"];
-            file_name = root["file_name"];
-            version = root["version"]; 
-
-            // Invalid inputs
-            if (!parsedSuccess || user_id == Json::Value::null || version == Json::Value::null 
-                  || jsonHashes == Json::Value::null || file_name == Json::Value::null)
-            {
-                 outputErrorMessage();             
-                 continue;
-            }
-            
-            vector<string> hashes;
-            jsonToString(jsonHashes, hashes);
-
-            // Connect and update the database
-            MySQLHelper helper;
-            if (helper.connect() != 0) 
-            {
-                outputErrorMessage();
-                continue;
-            }
         
-            int vInt = atoi(version.asString().c_str());
-            int updateFileData = helper.updateFileData(user_id.asString(), file_name.asString(), hashes, vInt);
-            if (updateFileData == 0) 
-            {
-                outputNormalMessage();
-                response["metadata_updated"] = true;
-            }
-            // Failure to update the metaserver 
-            else 
-            {
-                outputErrorMessage();
-                response["metadata_updated"] = false;
-                if (updateFileData == EVERS)  
-                    response["message"] = "Old client version.";
-                else 
-                {
-                    string msg = "Database has encountered problems while updating the files. Please try again later. error code: " + intToStr(updateFileData);
-                    response["message"] = msg;
-                }
-            }
-            helper.close();
-            cout.write(styledWriter.write(response).c_str(), styledWriter.write(response).length());
+        string user_id = paramMap["user_id"];
+        
+        // Connect and query the database
+        MySQLHelper helper;
+        helper.connect();
+        int getFileSuccess = helper.getUserFileNames(user_id, filenames);             
+        if (getFileSuccess == 0)
+        {             
+            outputNormalMessage();            
+            stringToJson(filenames, jsonNames);
+            response["files"] = jsonNames;   
         }
+        else
+        {
+            outputErrorMessage();
+            continue; 
+        }
+        helper.close();
+        cout.write(styledWriter.write(response).c_str(), styledWriter.write(response).length());
+        
         if (content) delete []content;
 
         // If the output streambufs had non-zero bufsizes and

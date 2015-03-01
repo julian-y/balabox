@@ -6,6 +6,7 @@
 #include <jsoncpp/json/json.h>
 #include <vector>
 #include <string>
+#include <sstream>
 #include "fcgi_util.hpp"
 using namespace std;
 
@@ -17,6 +18,17 @@ void outputErrorMessage()
           << "<html><p>400 INVALID INPUT</p></html>"
           << "\r\n";
 }
+
+
+void outputNoEntryMessage()
+{
+          cout << "Status: 400\r\n"
+               << "Content-type: text/html\r\n"
+               << "\r\n"
+               << "<html><p>400 NO ENTRY FOR USER</p></html>"
+               << "\r\n";
+}
+
 
 void outputNormalMessage()
 {
@@ -40,3 +52,10 @@ void jsonToString(Json::Value &jsonVals, vector<string> &stringVals)
    }
 }
 
+string intToStr(int i)
+{
+   string temp;
+   stringstream out;
+   out << i;
+   return out.str();
+}

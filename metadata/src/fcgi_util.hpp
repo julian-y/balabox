@@ -18,6 +18,11 @@ const unsigned long STDIN_MAX = 1000000;
 void outputErrorMessage();
 
 /**
+  error code 400 in the HTTP header and output no entry for user
+*/
+void outputNoEntryMessage();
+
+/**
   HTTP status 200 when no error is encountered
 */
 void outputNormalMessage();
@@ -31,5 +36,10 @@ void stringToJson(vector<string> &stringVals, Json::Value &jsonVals);
   converts a list of Json values into a vector of strings 
 */
 void jsonToString(Json::Value &jsonVals, vector<string> &stringVals);
+
+/**
+  converts an integer to a string
+*/
+string intToStr(int i);
 
 #endif /* SHARED_FUNCTIONS */
