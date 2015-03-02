@@ -31,7 +31,7 @@ int httpResponseReader(void *data, const char *buf, size_t len)
 int storeToBlockServer(string hash, string block) {
     //make request here.
     string host = "127.0.0.1";
-    string query = "/file_store.fcgid?hash=" + hash;
+    string query = "/file_fetch.fcgid?hash=" + hash;
     ne_session *sess;
     ne_request *req;
     string response;
@@ -75,7 +75,7 @@ int main(void)
         
         string hash(getenv("QUERY_STRING"));
         hash = hash.substr(5);
-        printf("hash: %s\n", hash.c_str());
+        //printf("hash: %s\n", hash.c_str());
         storeToBlockServer(hash, response_body);
         
     }
