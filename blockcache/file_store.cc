@@ -87,7 +87,45 @@ void outputSuccessMessage(const unordered_map<string, string>& info) {
 		 << "<html><p> 200 OK </p>\n"
          << "<p> Hash: " << info.find("hash")->second << "</p>\n"
          << "<p> Data: " << info.find("data")->second << "</p>\n"
+         << "<p> IP: " << info.find("ip")->second << "</p>\n"
          << "</html>\n";
+}
+
+/** 
+*   Returns ifconfig's eth0 information.
+*/
+string getEth0Info() {
+    FILE *fp;
+    char ipBuffer[64];
+    string eth0;
+
+    fp = popen("/sbin/ifconfig eth0", "r");
+
+    while (fgets(ipBuffer, 64, fp) != NULL) {
+        eth0 += ipBuffer;
+    }
+
+    pclose(fp);
+    return eth0;
+}
+
+/**
+*   Parses eth0 information for IP address.
+*   @param ip: string containing IP address
+*   Returns 0 upon success and nonzero otherwise.
+*/
+int getIPAddress(string& ip) {
+    string eth0 = getEth0Info();
+    string begin = "inet addr";
+
+    // Verify that the inet addr exists
+    int beginPos = eth0.find(begin);
+    if (beginPos == string::npos) {
+        return 1;
+    }
+
+    ip = eth0.substr(beginPos + begin.length() + 1, 13);
+    return 0;
 }
 
 /*
@@ -200,8 +238,16 @@ int main(void) {
     		continue;
     	}
 
+        string ip;
+        int getIPSuccess = getIPAddress(ip);
+        if (getIPSuccess != 0) {
+            outputErrorMessage("Unable to retrieve IP address");
+            continue;
+        }
+
         successInfo["hash"] = blockPair.first;
         successInfo["data"] = blockPair.second;
+        successInfo["ip"] = ip;
 
     	outputSuccessMessage(successInfo);
 
