@@ -22,10 +22,9 @@ extern char ** environ;
 /* mysql access helpers*/
 #include "mysql_helper.hpp"
 
+/* shared function helpers */
+#include "fcgi_util.hpp"
 using namespace std;
-
-// Maximum number of bytes allowed to be read from stdin
-static const unsigned long STDIN_MAX = 1000000;
 
 static long gstdin(FCGX_Request * request, char ** content)
 {
@@ -69,39 +68,6 @@ static long gstdin(FCGX_Request * request, char ** content)
     return clen;
 }
 
-void outputErrorMessage() 
-{
-     cout << "Status: 400\r\n"
-          <<  "Content-type: text/html\r\n"
-          <<  "\r\n"
-          << "<html><p>400 INVALID INPUT</p></html>";
-}
-
-void outputNormalMessage(int &count)
-{
-     cout << "Content-type: text/html\r\n"
-          <<  "\r\n"
-          <<  "<TITLE>recent hashes</TITLE>\n"
-          <<  "<H1>recent hashes</H1>\n"
-          <<  "<H4>Request Number: " << ++count << "</H4>\n";
-}
-
-void stringToJson(vector<string> &stringHashes, Json::Value &jsonHashes)
-{
-    for (int i = 0 ; i < stringHashes.size(); i++)
-    {
-        jsonHashes[i] = stringHashes[i];
-    }
-}
-
-void jsonToString(Json::Value &jsonHashes, vector<string> &stringHashes)
-{
-   for (int i = 0; i < jsonHashes.size(); i++) 
-   {
-       stringHashes.push_back(jsonHashes[i].asString());
-   }
-}
-
 /**
   parses the given query string
   returns 0 upon success and nonzero otherwise
@@ -136,8 +102,6 @@ int getParam(string param, map<string, string> &dict)
 
 int main (void)
 {
-    int count = 0;
-
     streambuf * cin_streambuf  = cin.rdbuf();
     streambuf * cout_streambuf = cout.rdbuf();
     streambuf * cerr_streambuf = cerr.rdbuf();
@@ -206,7 +170,7 @@ int main (void)
         int getHashesSuccess = helper.getRecentFirstHashes(user_id, max_hashes, hashes);
         if (getHashesSuccess == 0)
         {             
-            outputNormalMessage(count);            
+            outputNormalMessage();            
             stringToJson(hashes, jsonHashes);
             response["block_list"] = jsonHashes;            
         }
@@ -216,14 +180,16 @@ int main (void)
             continue; 
         }
         helper.close();
-       cout.write(styledWriter.write(response).c_str(), styledWriter.write(response).length());
+        cout.write(styledWriter.write(response).c_str(), styledWriter.write(response).length());
         
-        string temp;
+        //Testing
+        /*string temp;
         stringstream out; 
         out << max_hashes;
         temp = out.str();
         string output2 = "<p>user_id: " + paramMap["user_id"] + " max_hashes: " + temp + "</p>";
         cout.write(output2.c_str(), output2.length()); 
+        */
         if (content) delete []content;
 
         // If the output streambufs had non-zero bufsizes and

@@ -8,6 +8,8 @@
 #include <my_global.h>
 #include <mysql.h>
 
+#define EVERS 1
+
 /**
  * This class defines basic functionality to interact with the metadata
  * mysql database
@@ -53,24 +55,45 @@ public:
      * @param userId user id string
      * @param filename name of file to commit changes to
      * @param hashes vector of block hashes for the file
-     * @return 0 on success, non-zero on failure 
+     * @param version new version of the file. must be greater than the current 
+     *                version stored in the metaserver for the update to succeed
+     * @return 0 on success, EVERS on version mismatch, other non-zero constant for mysql failure
      * @note a user should have checked to make sure their blocks have been uploaded
      */
     int
     updateFileData(const std::string& userId, const std::string& filename, 
-        const std::vector<std::string>& hashes); 
+        const std::vector<std::string>& hashes, unsigned int version); 
+
+    /**
+     * Removes a file from the database
+     * @param userId id of user who owns the file
+     * @param filename name of file to remove
+     * @return 0 on success, non-zero for mysql failure
+     */
+    int
+    removeFile(const std::string& userId, const std::string& filename);
 
     /**
      * Retrieves block hashes for a given user's file
      * @param userId user id string
      * @param filename file to retrieve block hashes for
      * @param hashes reference to vector to fill with the requested file's hashes 
+     * @param version reference to integer to fill with the requested file's version
      * @return 0 on success, non-zero on failure
      */
     int
     getFileBlockList(const std::string& userId, const std::string& filename, 
-        std::vector<std::string>& hashes);
-
+        std::vector<std::string>& hashes, unsigned int &version);
+    
+    /**
+     * Retrieves a list of all file names for a given user
+     * @param userId id of the user
+     * @param fileNames reference to vector that will be filled with the user's file names
+     * @return 0 on success, non-zero on failure
+     */
+    int
+    getUserFileNames(const std::string& userId, std::vector<std::string>& fileNames);
+    
     /**
      * Retreives recent hashes for a user's files starting with the beginning blocks.
      * Once the first block hashes for all files have been selected, the second block
@@ -85,8 +108,38 @@ public:
     getRecentFirstHashes(const std::string& userId, unsigned int maxHashes, 
            std::vector<std::string>& firstHashes);
 
+    /**
+     * Retreives a list of caches associated with a user
+     * @param userId id of user to retrieve caches for
+     * @param maxCaches maximum number of caches to return
+     * @param ipAddrs vector of strings 
+     * @return 0 on success, non-zero on failure
+     */
+    int
+    getCaches(const std::string& userId, unsigned int maxCaches, 
+        std::vector<std::string>& ipAddrs);
+
+    /**
+     * Adds an association between a user and a cache
+     * @param userId id of user to associate with cache
+     * @param ipAddrs ip address string of cache to associate with user
+     * @return 0 on success, non-zero on failure
+     */
+    int
+    addCache(const std::string& userId, const std::string& ipAddr);
+    
+    /**
+     * Removes an association between a given user and a given cache
+     * @param user to remove cache from
+     * @param ipAddr ip address string of cache to remove
+     * @return 0 on success, non-zero on error
+     */
+    int
+    removeCache(const std::string& userId, const std::string& ipAddr);
+
 private:
     MYSQL *m_conn;
+    std::string intToStr(int i);
 };
 
 #endif /* MYSQL_HELPER_HPP */

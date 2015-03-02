@@ -1,8 +1,3 @@
-/**
- * Sends responses for block_query requests
- * See metadata_api.md for more info
-*/
-
 /* c++ headers */
 #include <stdlib.h>
 #ifdef _WIN32
@@ -12,17 +7,15 @@
 extern char ** environ;
 #endif
 #include "fcgio.h"
-#include "fcgi_config.h"  // HAVE_IOSTREAM_WITHASSIGN_STREAMBUF
+#include "fcgi_config.h" // HAVE_IOSTREAM_WITHASSIGN_STREAMBUF
 #include "fcgi_stdio.h"
-#include <jsoncpp/json/json.h>
-#include <vector> 
+#include "leveldb/db.h"
+#include <string>
 
-/* mysql access helpers*/
-#include "mysql_helper.hpp"
-
-/* shared function helpers*/
-#include "fcgi_util.hpp"
 using namespace std;
+
+// Maximum number of bytes allowed to be read from stdin
+static const unsigned long STDIN_MAX = 1000000;
 
 static long gstdin(FCGX_Request * request, char ** content)
 {
@@ -67,8 +60,44 @@ static long gstdin(FCGX_Request * request, char ** content)
     return clen;
 }
 
-int main (void)
+void outputErrorMessage(const string& error) 
 {
+     cout << "Status: 400\r\n"
+          <<  "Content-type: text/html\r\n"
+          <<  "\r\n"
+          << "<html><p>400 " << error << "</p></html>";
+}
+
+void outputNormalMessage(int &count)
+{
+     cout << "Content-type: text/html\r\n"
+          <<  "\r\n"
+          <<  "<TITLE>file_comp</TITLE>\n"
+          <<  "<H1>file_comp</H1>\n"
+          <<  "<H4>Request Number: " << ++count << "</H4>\n";
+}
+
+/*
+  Parses given query string for block hash.
+  Returns 0 upon success and nonzero otherwise.
+*/
+int getBlockHash(const string& param, string& blockHash) {
+	// Verify that the parameter required is found
+	int hashPos = param.find("hash");
+
+	if (hashPos == string::npos) {
+		return 1;
+	}
+
+	int equPos = param.find("=");
+	blockHash = param.substr(equPos+1);
+	
+	return 0;
+}
+
+int main(void) {
+	int count = 0;
+
     streambuf * cin_streambuf  = cin.rdbuf();
     streambuf * cout_streambuf = cout.rdbuf();
     streambuf * cerr_streambuf = cerr.rdbuf();
@@ -80,7 +109,7 @@ int main (void)
 
     while (FCGX_Accept_r(&request) == 0)
     {
-        // Note that the default bufsize (0) will cause the use of iostream
+    	// Note that the default bufsize (0) will cause the use of iostream
         // methods that require positioning (such as peek(), seek(),
         // unget() and putback()) to fail (in favour of more efficient IO).
         fcgi_streambuf cin_fcgi_streambuf(request.in);
@@ -100,70 +129,56 @@ int main (void)
         // Although FastCGI supports writing before reading,
         // many http clients (browsers) don't support it (so
         // the connection deadlocks until a timeout expires!).
-        char * content = NULL;
+        char * content = nullptr;
         unsigned long clen = gstdin(&request, &content);
-        
-        // Client doesn't send in any data, ignore this request
-        // and wait for another one. 
-        if (clen == 0) 
-        {
-            outputErrorMessage();
+        string response_body = content;
+
+        char* query_string = FCGX_GetParam("QUERY_STRING", request.envp);
+        string errorMsg = "Invalid Input";
+
+        // Invalid inputs
+        if (query_string == nullptr) {
+        	outputErrorMessage("No parameters");
+        	continue;
+        } 
+
+        string param = query_string;
+        string blockHash;
+        int getBlockHashSuccess = getBlockHash(param, blockHash);
+
+        if (getBlockHashSuccess != 0) {
+        	outputErrorMessage(errorMsg);
             continue;
         }
-        else 
-        {
-            Json::Value root;
-            Json::Reader reader;
-            Json::Value user_id;
-            Json::Value file_name;
-            Json::Value jsonHashes;
-            Json::StyledWriter styledWriter;
-            Json::Value response; 
-            string response_body = content;
 
-            // Retrieving Json values 
-            bool parsedSuccess = reader.parse(response_body, root, false);
-            user_id = root["user_id"];
-            jsonHashes = root["block_list"];
-            file_name = root["file_name"];
+        string dbName = "mydb";
+        leveldb::DB *db;
+    	leveldb::Options options;
+    	leveldb::Status status = leveldb::DB::Open(options, "mydb", &db);
+    	if (!status.ok()) {
+        	outputErrorMessage(status.ToString());
+        	continue;
+    	}
+    	
+    	leveldb::ReadOptions roptions;
+    	string binaryData;
+    	status = db->Get(roptions, blockHash, &binaryData);
 
-            // Invalid inputs
-            if (!parsedSuccess || user_id == Json::Value::null 
-                  || jsonHashes == Json::Value::null || file_name == Json::Value::null)
-            {
-                 outputErrorMessage();             
-                 continue;
-            }
-            
-            outputNormalMessage();            
-            vector<string> hashes;
-            jsonToString(jsonHashes, hashes);
+    	// Key not found
+    	if (!status.ok()) {
+    		outputErrorMessage("Key does not exist");
+    		continue;
+    	}
 
-            // Connect and query the database to see if the hash exists
-            vector<string> missingHashes;
-            MySQLHelper helper;
-            helper.connect();
-            int blocksMissing = helper.getMissingBlockHashes(hashes, missingHashes);
-            
-            // Verify whether the database contains the hashes
-            if (missingHashes.empty()) 
-                response["nb"] = false;
-            else
-            {
-                response["nb"] = true;
-                Json::Value hashesNeeded;
-                stringToJson(missingHashes, hashesNeeded);
-                response["needed_blocks"] = hashesNeeded;
-            }    
-            helper.close();
-            cout.write(styledWriter.write(response).c_str(), styledWriter.write(response).length());
-        }
-        if (content) delete []content;
+    	cout << "Content-type: application/binary\r\n"
+    		 << "Content-Length: " << binaryData.size() << "\r\n"
+    		 << "\r\n";
 
-        // If the output streambufs had non-zero bufsizes and
-        // were constructed outside of the accept loop (i.e.
-        // their destructor won't be called here), they would
-        // have to be flushed here.
+    	cout.write(binaryData.data(), binaryData.size());
+
+    	if (content) delete[] content;
+
+    	delete db;
     }
 
 #if HAVE_IOSTREAM_WITHASSIGN_STREAMBUF
@@ -178,3 +193,4 @@ int main (void)
 
     return 0;
 }
+

@@ -80,8 +80,7 @@ MySQLHelper::getMissingBlockHashes(const std::vector<std::string>& userHashes,
         // should only be one row containing the count(0 or 1)
         MYSQL_ROW row = mysql_fetch_row(res);
         // count will be in first column
-        int count = atoi(row[0]);
-        if (count == 0) {
+        if (row && atoi(row[0]) == 0) {
             missingHashes.push_back(userHashes[i]);
         }
     }
@@ -95,37 +94,71 @@ MySQLHelper::getMissingBlockHashes(const std::vector<std::string>& userHashes,
  */
 int
 MySQLHelper::updateFileData(const string& userId, const string& filename, 
-        const vector<string>& hashes) 
+        const vector<string>& hashes, unsigned int version) 
 {
-    // delete old rows for file
-    string deleteStmt = "DELETE FROM FileBlock WHERE user_id='" + userId + 
+    // verify version 
+    string versionChkStmt = "SELECT version FROM FileBlock WHERE user_id='" + userId + 
         "' AND file_name='" + filename + "'";
+    if (mysql_query(m_conn, versionChkStmt.c_str())) {
+      return mysql_errno(m_conn);
+    }
+    MYSQL_RES *res = mysql_store_result(m_conn);
+    if(res == NULL) {
+      return mysql_errno(m_conn);
+    }
+    // if file doesn't exist at all in the table, make sure user's version is 0
+    MYSQL_ROW row = mysql_fetch_row(res);
+    if (!row) {
+        if (version != 0) {
+          mysql_free_result(res);
+          return EVERS;
+        } 
+    }
+    // make sure user's version is greater than the current version if file is in mysql
+    else {
+        if (atoi(row[0]) >= version) {
+          mysql_free_result(res);
+          return EVERS;
+        }
+    } 
+
+    // delete file's old rows 
+    string deleteStmt = "DELETE FROM FileBlock WHERE user_id='" + userId + 
+          "' AND file_name='" + filename + "'";
     if (mysql_query(m_conn,deleteStmt.c_str())) {
-        return mysql_errno(m_conn);
+      return mysql_errno(m_conn);
     }
     // insert new rows for file 
     for (unsigned int i = 0; i < hashes.size(); ++i) {
-        string insertStmt = "INSERT INTO FileBlock(user_id, file_name, block_hash, block_number) VALUES('" 
+        string insertStmt = "INSERT INTO FileBlock(user_id, file_name, block_hash, block_number, version) VALUES('" 
             + userId + "','" + filename + "','" + hashes[i] + "',";
-        string temp;
-        stringstream out;
-        out << i; // dirty trick to convert int to std::string
-        temp = out.str();
-        insertStmt += temp;
-        insertStmt += ")";
+        insertStmt += intToStr(i) + "," + intToStr(version) + ")";
         if(mysql_query(m_conn, insertStmt.c_str())) {
             return mysql_errno(m_conn);
         }
-    }        
+    }       
+    mysql_free_result(res);
     return 0;
 }
 
 int
+MySQLHelper::removeFile(const string& userId, const string& filename)
+{
+  string removeStmt = "DELETE FROM FileBlock WHERE user_id='" + userId + 
+          "' AND file_name='" + filename + "'";
+  if (mysql_query(m_conn, removeStmt.c_str())) {
+    return mysql_errno(m_conn);
+  }
+
+  return 0;
+}
+
+int
 MySQLHelper::getFileBlockList(const std::string& userId, const std::string& filename, 
-    std::vector<std::string>& hashes)
+    std::vector<std::string>& hashes, unsigned int &version)
 {
     // perform a query for each hash in user hashes, add hash to missingHashes if it wasnt in db
-    string curHashQuery = "SELECT block_hash FROM FileBlock WHERE user_id='" 
+    string curHashQuery = "SELECT block_hash,version FROM FileBlock WHERE user_id='" 
         + userId + "' AND file_name='" + filename + "' ORDER BY block_number ASC";
     
     if (mysql_query(m_conn, curHashQuery.c_str()) != 0) {
@@ -140,9 +173,36 @@ MySQLHelper::getFileBlockList(const std::string& userId, const std::string& file
     // add all blocks to hashes vector
     MYSQL_ROW row;
     while ( (row = mysql_fetch_row(res)) ) {
-        // should only be one column containing the hash
         string hash = row[0];
+        version = atoi(row[1]);
         hashes.push_back(hash);
+    }
+
+    mysql_free_result(res);
+    return 0;
+}
+
+int 
+MySQLHelper::getUserFileNames(const std::string& userId, std::vector<std::string>& fileNames)
+{
+    // perform a query for each hash in user hashes, add hash to missingHashes if it wasnt in db
+    string userFilesQuery = "SELECT DISTINCT file_name FROM FileBlock WHERE user_id='" 
+        + userId + "'";
+    
+    if (mysql_query(m_conn, userFilesQuery.c_str()) != 0) {
+        return mysql_errno(m_conn);
+    }
+
+    MYSQL_RES *res = mysql_store_result(m_conn);
+    if (res == NULL) {
+        return mysql_errno(m_conn);
+    }
+
+    // add all file names to vector
+    MYSQL_ROW row;
+    while ( (row = mysql_fetch_row(res)) ) {
+        string file_name = row[0];
+        fileNames.push_back(file_name);
     }
 
     mysql_free_result(res);
@@ -156,11 +216,7 @@ MySQLHelper::getRecentFirstHashes(const std::string& userId, unsigned int maxHas
     // perform a query for each hash in user hashes, add hash to missingHashes if it wasnt in db
     string recentHashQuery = "SELECT block_hash FROM FileBlock WHERE user_id='" 
         + userId + "' ORDER BY block_number ASC,time_last_accessed DESC LIMIT ";
-    string temp;
-    stringstream out;
-    out << maxHashes; // dirty trick to convert int to std::string
-    temp = out.str();
-    recentHashQuery += temp;
+    recentHashQuery += intToStr(maxHashes);
 
     if (mysql_query(m_conn, recentHashQuery.c_str()) != 0) {
         return mysql_errno(m_conn);
@@ -183,3 +239,62 @@ MySQLHelper::getRecentFirstHashes(const std::string& userId, unsigned int maxHas
     return 0;
 }
 
+int
+MySQLHelper::getCaches(const std::string& userId, unsigned int maxCaches, 
+    std::vector<std::string>& ipAddrs)
+{
+    // perform a query for each hash in user hashes, add hash to missingHashes if it wasnt in db
+    string getCachesQuery = "SELECT cache_server_ip FROM UserCache WHERE user_id='" 
+        + userId + "' LIMIT " + intToStr(maxCaches);
+
+    if (mysql_query(m_conn, getCachesQuery.c_str()) != 0) {
+        return mysql_errno(m_conn);
+    }
+
+    MYSQL_RES *res = mysql_store_result(m_conn);
+    if (res == NULL) {
+        return mysql_errno(m_conn);
+    }
+
+    MYSQL_ROW row;
+    while ( (row = mysql_fetch_row(res)) ) {
+        string ipAddrStr = row[0];
+        ipAddrs.push_back(ipAddrStr);
+    }
+
+    mysql_free_result(res);
+    return 0;
+}
+
+int
+MySQLHelper::addCache(const string& userId, const string& ipAddr)
+{
+  string insertStmt = "INSERT INTO UserCache(user_id, cache_server_ip) VALUES('" 
+        + userId + "','" + ipAddr + "')";
+
+  if (mysql_query(m_conn, insertStmt.c_str()) != 0) {
+        return mysql_errno(m_conn);
+  }
+
+  return 0; 
+}
+
+int
+MySQLHelper::removeCache(const std::string& userId, const std::string& ipAddr)
+{
+  string removeCacheStmt = "DELETE FROM UserCache WHERE user_id='" + userId + 
+          "' AND cache_server_ip='" + ipAddr + "'";
+  if (mysql_query(m_conn, removeCacheStmt.c_str()) != 0) {
+        return mysql_errno(m_conn);
+  }
+
+  return 0;
+}
+
+string MySQLHelper::intToStr(int i)
+{
+  string temp;
+  stringstream out;
+  out << i; // dirty trick to convert int to std::string
+  return out.str();
+}
