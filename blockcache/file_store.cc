@@ -12,6 +12,7 @@ extern char ** environ;
 #include "leveldb/db.h"
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 using namespace std;
 
@@ -79,11 +80,14 @@ void outputErrorMessage(const string& error)
           << "<html><p>400 " << error << "</p></html>";
 }
 
-void outputSuccessMessage() {
+void outputSuccessMessage(const unordered_map<string, string>& info) {
 	cout << "Status: 200\r\n"
 		 << "Content-type: text/html\r\n"
 		 << "\r\n"
-		 << "<html><p> 200 OK </p></html>";
+		 << "<html><p> 200 OK </p>\n"
+         << "<p> Hash: " << info.find("hash")->second << "</p>\n"
+         << "<p> Data: " << info.find("data")->second << "</p>\n"
+         << "</html>\n";
 }
 
 /*
@@ -154,6 +158,7 @@ int main(void) {
 
         // Get data from POST request
         vector<unsigned char> content = getRequestBody(request);
+        unordered_map<string, string> successInfo;
 
         char* query_string = FCGX_GetParam("QUERY_STRING", request.envp);
         string errorMsg = "Invalid Input";
@@ -195,7 +200,10 @@ int main(void) {
     		continue;
     	}
 
-    	outputSuccessMessage();
+        successInfo["hash"] = blockPair.first;
+        successInfo["data"] = blockPair.second;
+
+    	outputSuccessMessage(successInfo);
 
     	delete db;
     }
