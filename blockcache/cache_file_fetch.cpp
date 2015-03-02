@@ -57,6 +57,28 @@ int requestFromBlockServer(string hash, string block) {
 }
 
 //TODO: refactor Roger's file_fetch hashBlock #'s so that this code uses it too
+int getQueryParam(const string& query_string, const string& param, string& value) {
+	// Verify that the parameter required is found
+	int paramPos = query_string.find(param);
+    
+	if (paramPos == string::npos) {
+		return 1;
+	}
+
+	int valuePos = query_string.find("=") + 1;
+    int nextParam = query_string.find("&", valuePos);
+    
+    //if there is another parameter after the one we're searching for
+    if (nextParam == string::npos) {
+	    value = query_string.substr(valuePos);    
+    } else {
+        value = query_string.substr(valuePos, nextParam - valuePos);
+
+    }
+
+	return 0;
+}
+
 
 int main(void)
 {
@@ -73,8 +95,14 @@ int main(void)
             //fwrite(buffer, bytes, sizeof(char), stdout);
         }
         
-        string hash(getenv("QUERY_STRING"));
-        hash = hash.substr(5);
+        string query_string(getenv("QUERY_STRING"));
+        //hash = hash.substr(5);
+        string hash;
+        string userId;
+        getQueryParam(query_string, "hash", hash);
+        getQueryParam(query_string, "user", userId);
+        
+
         //printf("hash: %s\n", hash.c_str());
         //
         //TODO@Roger: add check to leveldb to see if we already have the
