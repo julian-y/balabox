@@ -38,7 +38,7 @@ USER_CACHES_OBJECTS=$(OBJ_DIR)/user_caches.o $(MYSQL_HELPER_OBJECTS) $(FCGI_UTIL
 TEST_OBJECTS= $(MYSQL_HELPER_OBJECTS) $(TEST_DIR)/mysql_helper_test.o
 INC=-I/usr/lib/x86_64-linux-gnu/ -I$(SRC_DIR) -I$(INCLUDE_DIR)/mysql
 
-all: query commit delete block_list recent_hashes file_list user_cache_add user_cache_remove
+all: query commit delete block_list recent_hashes file_list user_cache_add user_cache_remove user_caches
 
 query: $(QUERY_OBJECTS)
 	$(CC) $(QUERY_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/block_query.fcgid $(MYSQL_LINK)
