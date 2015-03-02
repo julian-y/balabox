@@ -14,10 +14,24 @@
 #include "fcgi_stdio.h"
 #include <jsoncpp/json/json.h>
 
+//socket sending stuff:
+#include <strings.h>
+#include <stdio.h>
+// definitions of a number of data types used in socket.h and netinet/in.h
+#include <sys/types.h>   
+#include <sys/socket.h>  
+// definitions of structures needed for sockets, e.g. sockaddr
+#include <netinet/in.h>
+#include <netdb.h>
+// constants and structures needed for 
+// internet domain addresses, e.g. sockaddr_in
+
 
 //using namespace cgicc;
 using namespace std;
 #define BLOCK_SIZE 512
+
+int const MSG_SIZE = 1000;
 
 int httpResponseReader(void *data, const char *buf, size_t len)
 {
@@ -65,7 +79,7 @@ int getQueryParam(const string& query_string, const string& param, string& value
 		return 1;
 	}
 
-	int valuePos = query_string.find("=") + 1;
+	int valuePos = query_string.find("=", paramPos) + 1;
     int nextParam = query_string.find("&", valuePos);
     
     //if there is another parameter after the one we're searching for
@@ -79,6 +93,54 @@ int getQueryParam(const string& query_string, const string& param, string& value
 	return 0;
 }
 
+void error(const char *msg)
+{
+    perror(msg);
+    exit(1);
+}
+
+int sendMsg(string msg) {
+    
+    //Code taken from CS118 project
+    int sockfd, newsockfd, portno;
+    struct sockaddr_in serv_addr;
+    socklen_t addrlen = sizeof(serv_addr);
+    //contains tons of information, including the server's IP address
+    struct hostent *server;
+
+    portno = 8080;
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0); //create a new socket
+    if (sockfd < 0) {
+        error("ERROR opening socket");
+    }
+
+    server = gethostbyname("127.0.0.1"); 
+        if (server == NULL) {
+        fprintf(stderr,"ERROR, no such host\n");
+        exit(1);
+    }
+
+    bzero((char *) &serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET; //initialize server's address
+    bcopy((char *)server->h_addr, 
+            (char *)&serv_addr.sin_addr.s_addr, 
+            server->h_length);
+    serv_addr.sin_port = htons(portno);
+
+    char buffer[MSG_SIZE];
+    bzero(buffer, MSG_SIZE);
+
+    msg.copy(buffer, msg.length());
+
+    if(sendto(sockfd, buffer, MSG_SIZE, 0, 
+                    (struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0 ) {
+            //perror("sendto failed");
+            printf("sendto failed");
+            return 1;
+    }
+
+    return 0;
+}
 
 int main(void)
 {
@@ -117,6 +179,10 @@ int main(void)
         //}
         
         //send message to another process running on cache server to prefetch
+        string msg = "{\"user\": \"" + userId + "\", \"block\": \"" + hash + "\" }"; 
+
+        
+        sendMsg(msg);
     }
 
 	return 0;
