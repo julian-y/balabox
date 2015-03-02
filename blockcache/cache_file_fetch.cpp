@@ -28,7 +28,7 @@ int httpResponseReader(void *data, const char *buf, size_t len)
 
 //forwards the HTTP request to the actual Block Server
 //TODO: change host & query to the correct values when finalized
-int storeToBlockServer(string hash, string block) {
+int requestFromBlockServer(string hash, string block) {
     //make request here.
     string host = "127.0.0.1";
     string query = "/file_fetch.fcgid?hash=" + hash;
@@ -76,8 +76,19 @@ int main(void)
         string hash(getenv("QUERY_STRING"));
         hash = hash.substr(5);
         //printf("hash: %s\n", hash.c_str());
-        storeToBlockServer(hash, response_body);
+        //
+        //TODO@Roger: add check to leveldb to see if we already have the
+        //requested hash locally.
         
+        //if(have block already) {
+        //  create resposne and insert block data into response body
+        //  return;
+        //}
+        //else {
+        requestFromBlockServer(hash, response_body);
+        //}
+        
+        //send message to another process running on cache server to prefetch
     }
 
 	return 0;
