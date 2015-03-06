@@ -5,7 +5,7 @@
 
 hostname="http://104.236.169.138" 
 port="" #Format ":<port number>"
-blache_hostname="http://192.168.1.130" #SET THIS block/cache to VM IP
+blache_hostname="http://131.179.51.143" #SET THIS block/cache to VM IP
 blache_port=""
 
 function fileExists {
@@ -127,9 +127,7 @@ echo "Need to send blocks for these hashes:"
 #sudo apt-get install jq if you don't have it yet installed
 needed_blocks="$(cat ./responses/${filename}_md_response | jq '.needed_blocks[]')"
 
-needed_blocks_no_quotes="$(echo $needed_blocks | sed "s/\"//g")"
-
-
+block_list=`cat ./responses/${filename}_md_response | jq '.needed_blocks[]'| sed 's/\"//g'`
 
 #TO-D0: Optimize
 #Might change so filename is hash and content is file block name
@@ -139,9 +137,9 @@ do
 	do
 		#remove block file name and append only hash
 		ha="$(echo "$in" | awk '{print $1}')"
+
 		if [[ "$line" =  "$ha" ]]
 		then
-
 			file="$(echo "$in" | awk '{print $2}')"
 			
     		fileExists "$file"
@@ -156,24 +154,22 @@ do
 		fi
 
 	done < "./hashes/${filename}_hash"
-done <<< "$needed_blocks_no_quotes"
+done <<< "$block_list"
 
 if echo $needed_blocks | sed -e 's/[[:space:]]/, /g'; then 
-	echo "IN IF"
 	hash_send="[ $(echo $needed_blocks | sed -e 's/[[:space:]]/, /g') ]"
 else
-	echo "SINGLE LINE NEED BLOCKS"
 	hash_send="[ $needed_blocks ]"	
 fi
 
 echo -e "\nSending HTTP POST to metadata to commit blocks..." 
-echo $hash_send
+#echo $hash_send
 
 	if [ ! -f  "versions/${filename}_version" ]; then
     	echo "First version of file. Version 0"
     	version="0"
     else
-    	oldversion=$(head -n 1 filename)
+    	oldversion=$(head -n 1 versions/${filename}_version)
     	version=$((oldversion+1))
 	fi 
 response_fc=`curl --header "Content-Type: application/json" --header "Accept: application/json" --data '{ "user_id":"'"$user"'", "file_name":"'"$filename"'", "block_list":'"$hash_send"', "version":"'"$version"'" }' "${hostname}${port}/file_commit.fcgid"`
