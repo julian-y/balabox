@@ -32,7 +32,7 @@ void outputNoEntryMessage()
 
 void outputNormalMessage()
 {
-     cout << "Content-type: text/html\r\n"
+     cout << "Content-type: application/json\r\n"
           <<  "\r\n";
 }
 
