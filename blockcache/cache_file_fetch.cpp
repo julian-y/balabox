@@ -164,9 +164,14 @@ int main(void)
         getQueryParam(query_string, "hash", hash);
         getQueryParam(query_string, "user", userId);
         
+        //we want to send the prefetch message before requesting the original
+        //block so the prefetcher can get a "head start"; espcially since the 
+        //request to block-server is blocking.
 
-        //printf("hash: %s\n", hash.c_str());
-        //
+        //send message to another process running on cache server to prefetch
+        string msg = "{\"user\": \"" + userId + "\", \"hash\": \"" + hash + "\" }"; 
+        sendMsg(msg);
+
         //TODO@Roger: add check to leveldb to see if we already have the
         //requested hash locally.
         
@@ -178,11 +183,7 @@ int main(void)
         requestFromBlockServer(hash, response_body);
         //}
         
-        //send message to another process running on cache server to prefetch
-        string msg = "{\"user\": \"" + userId + "\", \"block\": \"" + hash + "\" }"; 
-
         
-        sendMsg(msg);
     }
 
 	return 0;
