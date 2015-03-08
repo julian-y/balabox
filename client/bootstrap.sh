@@ -5,4 +5,4 @@
 `brew install jq`
 
 #for Steven's chromebook 
-sudo apt-get install jq
+`sudo apt-get install jq`
