@@ -48,8 +48,6 @@ string lookUpRecentHashes(string userID) {
     ne_request *req;
     string response;
     
-    //block = block + "test123";
-    
     sess = ne_session_create("http", metadata_ip.c_str(), 80);
 
     req = ne_request_create(sess, "GET", query.c_str());
@@ -73,34 +71,6 @@ string lookUpRecentHashes(string userID) {
     //printf("Content-Type:  %s\r\n\r\n", responseHeader.c_str());
     cout << response << endl;
     return response;
-}
-
-int requestFromBlockServer(string hash, string block) {
-    //make request here.
-    string host = "127.0.0.1";
-    string query = "/file_fetch.fcgid?hash=" + hash;
-    ne_session *sess;
-    ne_request *req;
-    string response;
-    
-    //block = block + "test123";
-
-    sess = ne_session_create("http", metadata_ip.c_str(), 80);
-
-    req = ne_request_create(sess, "GET", query.c_str());
-    ne_set_request_body_buffer(req, block.c_str(), block.length());
-
-    ne_add_response_body_reader(req, ne_accept_always, httpResponseReader, &response);
-    int result = ne_request_dispatch(req);
-    int status = ne_get_status(req)->code;
-    string responseHeader(ne_get_response_header(req, "Content-Type"));
-
-    ne_request_destroy(req);
-        
-    printf("Content-Type:  %s\r\n\r\n", responseHeader.c_str());
-    printf("%s", response.c_str());
-
-    return 0;
 }
 
 void errorParsing(string json) {
@@ -166,6 +136,7 @@ int main(int argc, char *argv[]) {
         if(block_list.empty()) {
             cout << "block_list is empty, don't need to fetch stuff" << endl;
         } else {
+            //TODO:
             //parse array 
             //add logic to choose which hashes to pick
             //make requests to block server
