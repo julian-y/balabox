@@ -6,6 +6,8 @@
 
 using namespace std;
 
+const string  HttpHelper::metadata_ip = "104.236.169.138";
+
 int HttpHelper::getQueryParam(const std::string& query_string, 
         const std::string& param, std::string& value) {
 
@@ -52,12 +54,16 @@ int HttpHelper::sendHttpRequest(string host_ip, string path, string reqType,
 
     ne_add_response_body_reader(req, ne_accept_always, HttpHelper::httpResponseReader, &response);
     int result = ne_request_dispatch(req);
+    if(result) {
+        printf("Request failed: %s\n", ne_get_error(sess));
+        return -1;
+    }
     int status = ne_get_status(req)->code;
     
     responseHeader = ne_get_response_header(req, "Content-Type");
 
     ne_request_destroy(req);
-
+    ne_session_destroy(sess);
     return 0;
 }
 

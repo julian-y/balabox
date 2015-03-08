@@ -12,6 +12,7 @@ public:
             std::string reqType, std::string reqBody, std::string &responseHeader, 
             std::string &response);
 
+    const static std::string metadata_ip; 
 private:
     static int httpResponseReader(void *data, const char *buf, size_t len);
 };
