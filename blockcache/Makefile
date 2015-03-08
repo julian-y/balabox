@@ -31,7 +31,7 @@ leveldb_helper_test: leveldb_helper_test.cc
 
 #http helper
 http_helper: http_helper.cpp
-	$(CC) -c http_helper.cpp
+	$(CC) -c http_helper.cpp $(CACHE_OPTS)
 
 #cache_file_fetch
 cache_file_fetch: cache_file_fetch.cpp
