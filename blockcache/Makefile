@@ -7,7 +7,12 @@ CC = g++
 CXXFLAGS=-std=c++11
 OPTS = -lfcgi++ -lfcgi -L/usr/lib/x86_64-linux-gnu $(LEVELDB_DIR)/libleveldb.a -lpthread -I $(LEVELDB_DIR)/include 
 
-all: file_fetch file_store leveldb_helper_test
+JSON_LIB = /usr/lib/x86_64-linux-gnu/libjsoncpp.so
+CACHE_OPTS = -lfcgi -l neon
+
+all: file_fetch file_store leveldb_helper_test 
+
+cache: http_helper cache_file_fetch prefetch
 	
 read: read.cc
 	$(CC) -o read read.cc $(OPTS)
@@ -24,9 +29,21 @@ file_store: file_store.cc
 leveldb_helper_test: leveldb_helper_test.cc	
 	$(CC) $(CXXFLAGS) leveldb_helper_test.cc leveldb_helper.cc -o leveldb_helper_test $(OPTS)
 
+#http helper
+http_helper: http_helper.cpp
+	$(CC) -c http_helper.cpp
+
+#cache_file_fetch
+cache_file_fetch: cache_file_fetch.cpp
+	$(CC) $(CXXFLAGS) http_helper.o cache_file_fetch.cpp $(JSON_LIB) -o fcgid/cache_file_fetch.fcgid $(CACHE_OPTS)
+
+prefetch: prefetch.cpp
+	$(CC) $(CXXFLAGS) http_helper.o prefetch.cpp $(JSON_LIB) -o prefetch $(CACHE_OPTS)
+
 install: 
-	sudo rm /var/www/html/file_fetch.fcgid
-	sudo rm /var/www/html/file_store.fcgid
+#	sudo rm /var/www/html/file_fetch.fcgid
+#	sudo rm /var/www/html/file_store.fcgid
+	sudo rm /var/www/html/*.fcgid
 	sudo cp fcgid/*.fcgid -t /var/www/html
 	sudo chmod 777 /var/www/html/*
 

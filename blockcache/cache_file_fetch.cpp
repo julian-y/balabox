@@ -25,7 +25,7 @@
 #include <netdb.h>
 // constants and structures needed for 
 // internet domain addresses, e.g. sockaddr_in
-
+#include "http_helper.h"
 
 //using namespace cgicc;
 using namespace std;
@@ -71,27 +71,27 @@ int requestFromBlockServer(string hash, string block) {
 }
 
 //TODO: refactor Roger's file_fetch hashBlock #'s so that this code uses it too
-int getQueryParam(const string& query_string, const string& param, string& value) {
-	// Verify that the parameter required is found
-	int paramPos = query_string.find(param);
-    
-	if (paramPos == string::npos) {
-		return 1;
-	}
-
-	int valuePos = query_string.find("=", paramPos) + 1;
-    int nextParam = query_string.find("&", valuePos);
-    
-    //if there is another parameter after the one we're searching for
-    if (nextParam == string::npos) {
-	    value = query_string.substr(valuePos);    
-    } else {
-        value = query_string.substr(valuePos, nextParam - valuePos);
-
-    }
-
-	return 0;
-}
+//int getQueryParam(const string& query_string, const string& param, string& value) {
+//	// Verify that the parameter required is found
+//	int paramPos = query_string.find(param);
+//    
+//	if (paramPos == string::npos) {
+//		return 1;
+//	}
+//
+//	int valuePos = query_string.find("=", paramPos) + 1;
+//    int nextParam = query_string.find("&", valuePos);
+//    
+//    //if there is another parameter after the one we're searching for
+//    if (nextParam == string::npos) {
+//	    value = query_string.substr(valuePos);    
+//    } else {
+//        value = query_string.substr(valuePos, nextParam - valuePos);
+//
+//    }
+//
+//	return 0;
+//}
 
 void error(const char *msg)
 {
@@ -159,8 +159,8 @@ int main(void)
         string query_string(getenv("QUERY_STRING"));
         string hash;
         string userId;
-        getQueryParam(query_string, "hash", hash);
-        getQueryParam(query_string, "user", userId);
+        HttpHelper::getQueryParam(query_string, "hash", hash);
+        HttpHelper::getQueryParam(query_string, "user", userId);
         
         //we want to send the prefetch message before requesting the original
         //block so the prefetcher can get a "head start"; espcially since the 

@@ -165,6 +165,11 @@ int main(int argc, char *argv[]) {
         cout << "block_list: " << block_list << endl;
         if(block_list.empty()) {
             cout << "block_list is empty, don't need to fetch stuff" << endl;
+        } else {
+            //parse array 
+            //add logic to choose which hashes to pick
+            //make requests to block server
+            //save blocks
         }
     }
 }
