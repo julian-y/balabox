@@ -32,6 +32,7 @@ using namespace std;
 #define BLOCK_SIZE 512
 
 int const MSG_SIZE = 1000;
+string const cache_ip = "1.2.3.4";
 
 //forwards the HTTP request to the actual Block Server
 //TODO: change host & query to the correct values when finalized
@@ -48,6 +49,18 @@ int requestFromBlockServer(string hash, string block) {
     printf("Content-Type:  %s\r\n\r\n", responseHeader.c_str());
     printf("%s", response.c_str());
     
+    return 0;
+}
+
+//TODO: test this
+int addUserCache(string user_id) {
+    string path = "/user_cache_add?user_id=" + user_id;
+    path += "&cache_ip=" + cache_ip;
+    
+    string responseHeader;
+    string response;
+    HttpHelper::sendHttpRequest(HttpHelper::metadata_ip, path, "POST", 
+            "", responseHeader, response);
     return 0;
 }
 
@@ -127,6 +140,9 @@ int main(void)
         //send message to another process running on cache server to prefetch
         string msg = "{\"userID\": \"" + userId + "\", \"hash\": \"" + hash + "\" }"; 
         sendMsg(msg);
+        
+        //add (to metadata) the association of this cache to the user we're serving 
+
 
         //TODO@Roger: add check to leveldb to see if we already have the
         //requested hash locally.
