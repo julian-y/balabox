@@ -11,7 +11,15 @@
 
 #include <string>
 #include <iostream>
+
+#include <jsoncpp/json/json.h>
+#include <neon/ne_request.h>
+#include <neon/ne_session.h>
+
 using namespace std;
+
+const string metadata_ip = "104.236.169.138";
+const string maxHashes = "10";
 
 int sockfd, newsockfd, portno, pid;
 socklen_t clilen;
@@ -22,6 +30,83 @@ void error(const char* msg)
 {
     perror(msg);
     exit(0);
+}
+
+int httpResponseReader(void *data, const char *buf, size_t len)
+{
+    string *str = (string *)data;
+    str->append(buf, len);
+    return 0;
+}
+
+string lookUpRecentHashes(string userID) {
+    //make request here.
+    string query = "/recent_hashes.fcgid?user_id=" + userID;
+    query += "&max_hashes=" + maxHashes;
+
+    ne_session *sess;
+    ne_request *req;
+    string response;
+    
+    //block = block + "test123";
+    
+    sess = ne_session_create("http", metadata_ip.c_str(), 80);
+
+    req = ne_request_create(sess, "GET", query.c_str());
+    //ne_set_request_body_buffer(req, block.c_str(), block.length());
+
+    ne_add_response_body_reader(req, ne_accept_always, httpResponseReader, &response);
+    int result = ne_request_dispatch(req);
+    cout << "result: " << result << endl;
+    if(result) {
+        printf("Request failed: %s\n", ne_get_error(sess));
+        error("Error making request during lookUpRecentHashes()!");
+    }
+    
+    int status = ne_get_status(req)->code;
+
+    //string responseHeader(ne_get_response_header(req, "Content-Type"));
+
+    ne_request_destroy(req);
+    
+    cout << "Requesting recent hashes from metadata server @ " << metadata_ip << ": " << endl;
+    //printf("Content-Type:  %s\r\n\r\n", responseHeader.c_str());
+    cout << response << endl;
+    return response;
+}
+
+int requestFromBlockServer(string hash, string block) {
+    //make request here.
+    string host = "127.0.0.1";
+    string query = "/file_fetch.fcgid?hash=" + hash;
+    ne_session *sess;
+    ne_request *req;
+    string response;
+    
+    //block = block + "test123";
+
+    sess = ne_session_create("http", metadata_ip.c_str(), 80);
+
+    req = ne_request_create(sess, "GET", query.c_str());
+    ne_set_request_body_buffer(req, block.c_str(), block.length());
+
+    ne_add_response_body_reader(req, ne_accept_always, httpResponseReader, &response);
+    int result = ne_request_dispatch(req);
+    int status = ne_get_status(req)->code;
+    string responseHeader(ne_get_response_header(req, "Content-Type"));
+
+    ne_request_destroy(req);
+        
+    printf("Content-Type:  %s\r\n\r\n", responseHeader.c_str());
+    printf("%s", response.c_str());
+
+    return 0;
+}
+
+void errorParsing(string json) {
+    string errorMsg = "Could not parse json!\n";
+    errorMsg += json;
+    error("Could not parse received message!"); 
 }
 
 int main(int argc, char *argv[]) {
@@ -45,6 +130,41 @@ int main(int argc, char *argv[]) {
     while (1) {
         int recvlen = recvfrom(sockfd, buffer, MSG_SIZE, 0, 
                     (struct sockaddr *) &cli_addr, &clilen);
-        cout << "received a message: " << buffer << endl;
+        //cout << "received a message: " << buffer << endl;
+        
+        string msg(buffer);
+        //parse json
+        Json::Value msg_root;
+        Json::Reader msg_reader;
+        bool parsedSuccess = msg_reader.parse(msg, msg_root, false);
+        if(!parsedSuccess) {
+            errorParsing(msg);    
+        }
+        
+        string userID = msg_root.get("userID", "-1").asString();
+        string hash = msg_root.get("hash", "-1").asString();
+        cout << "------Incoming Request------" << endl;
+        cout << "userID: " << userID << endl;
+        cout << "hash: " << hash << endl;
+        //cout << "msg: " << msg << endl;
+        
+        cout << "call lookUpRecentHashes() here" << endl;
+        // make request to metadata server
+        string recent_hashes_json = lookUpRecentHashes(userID);
+        
+        //parse json
+        Json::Value recent_hashes_root;
+        Json::Reader recent_hashes_reader;
+        parsedSuccess = recent_hashes_reader.parse(recent_hashes_json, recent_hashes_root, false);
+        if(!parsedSuccess) {
+            errorParsing(recent_hashes_json);
+        }
+
+        string block_list = recent_hashes_root.get("block_list", "").asString();
+        cout << "------Recent Hashes------" << endl;
+        cout << "block_list: " << block_list << endl;
+        if(block_list.empty()) {
+            cout << "block_list is empty, don't need to fetch stuff" << endl;
+        }
     }
 }

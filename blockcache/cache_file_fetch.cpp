@@ -63,10 +63,10 @@ int requestFromBlockServer(string hash, string block) {
     string responseHeader(ne_get_response_header(req, "Content-Type"));
 
     ne_request_destroy(req);
-        
+    
     printf("Content-Type:  %s\r\n\r\n", responseHeader.c_str());
     printf("%s", response.c_str());
-
+    
     return 0;
 }
 
@@ -154,11 +154,9 @@ int main(void)
         while(!feof(stdin)) {
             size_t bytes = fread(buffer, sizeof(char), BLOCK_SIZE, stdin);
             response_body += buffer;
-            //fwrite(buffer, bytes, sizeof(char), stdout);
         }
         
         string query_string(getenv("QUERY_STRING"));
-        //hash = hash.substr(5);
         string hash;
         string userId;
         getQueryParam(query_string, "hash", hash);
@@ -169,7 +167,7 @@ int main(void)
         //request to block-server is blocking.
 
         //send message to another process running on cache server to prefetch
-        string msg = "{\"user\": \"" + userId + "\", \"hash\": \"" + hash + "\" }"; 
+        string msg = "{\"userID\": \"" + userId + "\", \"hash\": \"" + hash + "\" }"; 
         sendMsg(msg);
 
         //TODO@Roger: add check to leveldb to see if we already have the
