@@ -1,50 +1,15 @@
 #!/bin/bash
 
+dir="$(dirname "$0")"
+source $dir/defFunctions.sh #include functions
+
 #uncomment line below for debugging
 #set -vx
 
 hostname="http://104.236.169.138" 
 port="" #Format ":<port number>"
-blache_hostname="http://131.179.51.143" #SET THIS block/cache to VM IP
+blache_hostname="http://192.168.1.130" #SET THIS block/cache to VM IP
 blache_port=""
-
-function fileExists {
-
-	if [ ! -f $1 ]; then
-    	echo "File $1 not found!"
-    	exit 1
-	fi
-}
-
-function exitUpload {
-	if [ ! -d  ./responses ]; then
-    		`sudo rm -r "./responses"`
-			echo -e "Deleted responses directory\n"
-	fi
-	exit 1
-}
-
-function checkStatus { 
-
-	if echo "$1" | grep "<html>"; then 
-		status_code=$(echo "$1" | grep -o -w -E '[[:digit:]]{3}')
-
-		#echo -e "HTTP status: $status_code"
-		if [[ "$status_code" = "400" ]]
-		then
-			echo "HTTP Status Code: 400. Check Input."
-			exit 1
-		elif [[ "$status_code" = "404" ]]
-		then
-			echo "HTTP Status Code: 404. Not Found."
-			exit 1
-		elif [[ "$status_code" = "500" ]]
-		then
-			echo "HTTP Status Code: 500. Internal Server Error."
-			exit 1
-		fi
-	fi
-}
 
 function getJsonResp {
 
@@ -112,7 +77,7 @@ nb=`parseJson "./responses/${filename}_md_response" "nb"`
 #Check if client needs to send blocks
 if [[ "$nb" = False ]]
 then
-	echo "File is synced. No blocks need to be sent."
+	echo "File $filename is synced. No blocks need to be sent."
 	exitUpload
 elif [[ "$nb" != True ]]
 then
@@ -146,6 +111,7 @@ do
 
 			echo -e "\nSending HTTP POST to cache server with binary data for $file..."
 
+			echo "curl below needs to be changed. Not actaully sending data at file. Just sending the filename.."
 			response_cache=`curl --data-binary '"@$file"' "$blache_hostname$blache_port/file_store.fcgid?hash=$ha"`
 			
 			echo -e "$response_cache\n"
