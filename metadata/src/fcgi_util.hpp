@@ -10,7 +10,7 @@
 using namespace std;
 
 //Maximum number of bytes allowed to be read from stdin 
-const unsigned long STDIN_MAX = 1000000;
+const unsigned long STDIN_MAX = 10000000;
 
 /**
   error code 400 in the HTTP header when an error is encountered
