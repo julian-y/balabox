@@ -9,31 +9,30 @@ function fileExists {
 }
 
 function exitUpload {
-	if [ ! -d  ./responses ]; then
-    		`sudo rm -r "./responses"`
-			echo -e "Deleted responses directory\n"
-	fi
+	#if [ ! -d  ./responses ]; then
+    #		`sudo rm -r "./responses"`
+	#		echo -e "Deleted responses directory\n"
+	#fi
 	exit 1
 }
 
 function checkStatus { 
-
-	if echo "$1" | grep "<html>"; then 
-		status_code=$(echo "$1" | grep -o -w -E '[[:digit:]]{3}')
-
-		#echo -e "HTTP status: $status_code"
-		if [[ "$status_code" = "400" ]]
+	echo "HTTP Status Code: $1"
+	if [[ "$1" = "200" ]]
+	then
+		echo -e "OK\n"
+	else
+		if [[ "$1" = "400" ]]
 		then
-			echo "HTTP Status Code: 400. Check Input."
-			exit 1
-		elif [[ "$status_code" = "404" ]]
+			echo "Check Input."	
+		elif [[ "$1" = "404" ]]
 		then
-			echo "HTTP Status Code: 404. Not Found."
-			exit 1
-		elif [[ "$status_code" = "500" ]]
+			echo "Not Found."
+	
+		elif [[ "$1" = "500" ]]
 		then
-			echo "HTTP Status Code: 500. Internal Server Error."
-			exit 1
+			echo "Internal Server Error."
 		fi
+		exit 1
 	fi
 }
