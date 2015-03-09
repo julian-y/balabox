@@ -17,6 +17,7 @@
 #include <neon/ne_session.h>
 
 #include "http_helper.h"
+#include "leveldb_helper.hpp"
 #include <vector>
 
 using namespace std;
@@ -85,8 +86,8 @@ vector<string> pickHashes(Json::Value recent_hashes) {
     for(int i = 0; i < recent_hashes.size(); i++) {
         string curHash = recent_hashes[i].asString();
         
-        //TODO: check if curHash already exists in leveldb; if so, skip it
-        //if(!curHash already exists)
+        // if curHash already exists in leveldb, skip it
+        if(!db.alreadyExists(curHash))
             hashes.push_back(curHash);
     }
     return hashes;
@@ -108,6 +109,9 @@ int main(int argc, char *argv[]) {
     if (bind(sockfd, (struct sockaddr *) &serv_addr,
               sizeof(serv_addr)) < 0) 
               error("ERROR on binding");
+
+    // Open the database
+    LevelDBHelper db("cachedb");
 
     printf("listening on port 8080\n");
     while (1) {
@@ -155,7 +159,7 @@ int main(int argc, char *argv[]) {
                 string responseContentType;
                 string block;
                 HttpHelper::requestFromBlockServer(curHash, responseContentType, block);
-                //TODO: Save block here
+                db.put(curHash, block);
             }
             
         }
