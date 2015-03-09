@@ -41,7 +41,7 @@ int httpResponseReader(void *data, const char *buf, size_t len)
 
 string lookUpRecentHashes(string userID) {
     //make request here.
-    string query = "/recent_hashes.fcgid?user_id=" + userID;
+    string query = "/recent_hashes?user_id=" + userID;
     query += "&max_hashes=" + maxHashes;
 
     ne_session *sess;
