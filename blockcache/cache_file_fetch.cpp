@@ -100,15 +100,6 @@ int main(void)
 {
     int count = 0;
     while(FCGI_Accept() >= 0) {
-        // NOTE: The actual request body is piped into stdin:
-        
-        //code from http://stackoverflow.com/questions/10129085/read-from-stdin-write-to-stdout-in-c
-        //string response_body;
-        //char buffer[BLOCK_SIZE];
-        //while(!feof(stdin)) {
-        //    size_t bytes = fread(buffer, sizeof(char), BLOCK_SIZE, stdin);
-        //    response_body += buffer;
-        //}
         
         string query_string(getenv("QUERY_STRING"));
         string hash;
