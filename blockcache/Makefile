@@ -44,10 +44,9 @@ install:
 #	sudo rm /var/www/html/file_fetch.fcgid
 #	sudo rm /var/www/html/file_store.fcgid
 #	sudo rm /var/www/html/*.fcgid
-	mkdir fcgid
 	sudo cp fcgid/* -t /var/www/html
 	sudo chmod 777 /var/www/html/*
-	sudo rm -r fcgid
+
 clean:
 	sudo rm -rf read write file_fetch file_store leveldb_helper_test *.fcgid temp /var/www/html/mydb
 
