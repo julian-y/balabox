@@ -153,20 +153,3 @@ Testing file_commit.fcgid
 		Content-Type: text/html
 
 		<html><p>400 INVALID INPUT</p></html>
-
-
-
-sudo curl --data-binary "foo.txt" --header "Host: www.balabox.com" http://192.168.1.130/file_store.fcgid?hash=123
-
-sudo curl --data-binary "@filename" --header "Host: www.balabox.com" http://<insert IP> /file_store.fcgid?hash=<hash>
-
-sudo curl --data-binary "abc" http://192.168.1.130/file_store.fcgid?hash=123
-
-
-sudo curl --data-binary "abc" http://localhost/file_store.fcgid?hash=123
-
-
-curl  -X GET "http://192.168.1.130/recent_hashes.fcgid?user_id=steven&max_hashes=2" --header 'Content-Type: application/json' --header 'Accept: application/json'
-
-
-curl -i  --data '{"user_id":"123444", "file_name":"rawr" , "block_list":["c7c084318b6f1bece6f74ffce1ea53596070345272dee8040037497c7d4cbffe", "c7c084318b6f1bece6f74ffce1ea53596070345272dee8040037497c7d4cbfff"]}' http://192.168.1.130/block_query.fcgid --header 'Content-Type: application/json' --header 'Accept: application/json'
