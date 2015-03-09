@@ -12,7 +12,7 @@ CACHE_OPTS = -lfcgi -l neon
 
 all: file_fetch file_store leveldb_helper_test 
 
-cache: http_helper cache_file_fetch prefetch
+cache: http_helper cache_file_fetch cache_file_store prefetch
 	
 read: read.cc
 	$(CC) -o read read.cc $(OPTS)
