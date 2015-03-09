@@ -72,8 +72,9 @@ int main(void)
             //fwrite(buffer, bytes, sizeof(char), stdout);
         }
         
-        string hash(getenv("QUERY_STRING"));
-        hash = hash.substr(5);
+        string query_string = (getenv("QUERY_STRING"));
+        string hash;
+        HttpHelper::getQueryParam(query_string, "hash", hash);
         printf("hash: %s\n", hash.c_str());
         storeToBlockServer(hash, response_body);
         
