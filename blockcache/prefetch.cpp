@@ -128,7 +128,7 @@ int main(int argc, char *argv[]) {
         string hash = msg_root.get("hash", "-1").asString();
         cout << "------Incoming Request------" << endl;
         cout << "userID: " << userID << endl;
-        cout << "hash: " << hash << endl;
+        cout << "requested hash: " << hash << endl;
         //cout << "msg: " << msg << endl;
         
         // make request to metadata server
