@@ -39,7 +39,7 @@ int storeToBlockServer(string hash, string block) {
     
     sess = ne_session_create("http", HttpHelper::block_ip.c_str(), 80);
 
-    req = ne_request_create(sess, "GET", query.c_str());
+    req = ne_request_create(sess, "POST", query.c_str());
     ne_set_request_body_buffer(req, block.c_str(), block.length());
 
     ne_add_response_body_reader(req, ne_accept_always, httpResponseReader, &response);
