@@ -13,13 +13,14 @@ extern char ** environ;
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <unistd.h>
 
 using namespace std;
 
 // To check binary file: sudo curl --data-binary "@filename" --header "Host: www.balabox.com"
 
 // Maximum number of bytes allowed to be read from stdin
-static const unsigned long STDIN_MAX = 1000000;
+static const unsigned long STDIN_MAX = 100000000;
 
 /* 
 	Parses request body into a vector<unsigned char>.
@@ -28,12 +29,13 @@ vector<unsigned char> getRequestBody(const FCGX_Request &request)
 {
 	FCGX_Stream *in; 
     char * clenstr = FCGX_GetParam("CONTENT_LENGTH", request.envp);
-    unsigned long clen = STDIN_MAX;
+    unsigned long int clen = STDIN_MAX;
+
     vector<unsigned char> content;
 
     if (clenstr)
     {
-        clen = strtol(clenstr, &clenstr, 10);
+        clen = strtoul(clenstr, &clenstr, 10);
         if (*clenstr)
         {
            
@@ -168,11 +170,12 @@ int main(void) {
 
     FCGX_Request request;
 
-    FCGX_Init();
-    FCGX_InitRequest(&request, 0, 0);
+    int status = FCGX_Init();
+    status = FCGX_InitRequest(&request, 0, 0);
 
     while (FCGX_Accept_r(&request) == 0)
     {
+
     	// Note that the default bufsize (0) will cause the use of iostream
         // methods that require positioning (such as peek(), seek(),
         // unget() and putback()) to fail (in favour of more efficient IO).
@@ -222,19 +225,23 @@ int main(void) {
         leveldb::DB *db;
     	leveldb::Options options;
     	options.create_if_missing = true;
-    	leveldb::Status status = leveldb::DB::Open(options, "/var/www/html/mydb", &db);
-    	if (!status.ok()) {
-        	outputErrorMessage(status.ToString());
-        	continue;
-    	}
+        leveldb::Status status;
+        do {
+            status = leveldb::DB::Open(options, "/var/www/html/mydb", &db);
+            sleep(2);
+        } while (!status.ok());
     	
     	leveldb::WriteOptions woptions;
 
     	// Insert into DB
     	pair<string, string> blockPair = constructKV(blockHash, content);
-    	status = db->Put(woptions, blockPair.first, blockPair.second);
+        do {
+            status = db->Put(woptions, blockPair.first, blockPair.second);
+            sleep(1);
+        } while (!status.ok());
     	if (!status.ok()) {
     		outputErrorMessage(status.ToString());
+            delete db;
     		continue;
     	}
 
@@ -242,6 +249,7 @@ int main(void) {
         int getIPSuccess = getIPAddress(ip);
         if (getIPSuccess != 0) {
             outputErrorMessage("Unable to retrieve IP address");
+            delete db;
             continue;
         }
 
@@ -249,9 +257,10 @@ int main(void) {
         successInfo["data"] = blockPair.second;
         successInfo["ip"] = ip;
 
+        delete db;
+
     	outputSuccessMessage(successInfo);
 
-    	delete db;
     }
 
 #if HAVE_IOSTREAM_WITHASSIGN_STREAMBUF
