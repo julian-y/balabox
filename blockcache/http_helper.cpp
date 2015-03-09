@@ -34,18 +34,13 @@ int HttpHelper::getQueryParam(const std::string& query_string,
 }
 
 //forwards the HTTP request to the actual Block Server
-int HttpHelper::requestFromBlockServer(string hash, string block) {
+int HttpHelper::requestFromBlockServer(string hash, string &responseContentType, string &response) {
     //make request here.
     string path = "/file_fetch?hash=" + hash;
-    string response;
-    string responseHeader;
 
-    HttpHelper::sendHttpRequest(HttpHelper::block_ip, path, "GET", block, responseHeader, 
+    HttpHelper::sendHttpRequest(HttpHelper::block_ip, path, "GET", "", responseContentType, 
             response);
 
-    printf("Content-Type:  %s\r\n\r\n", responseHeader.c_str());
-    printf("%s", response.c_str());
-    
     return 0;
 }
 
@@ -58,7 +53,7 @@ int HttpHelper::httpResponseReader(void *data, const char *buf, size_t len)
 }
 
 int HttpHelper::sendHttpRequest(string host_ip, string path, string reqType, 
-        string reqBody, string &responseHeader, string &response) {
+        string reqBody, string &responseContentType, string &response) {
 
     ne_session *sess;
     ne_request *req;
@@ -78,7 +73,7 @@ int HttpHelper::sendHttpRequest(string host_ip, string path, string reqType,
     }
     int status = ne_get_status(req)->code;
     
-    responseHeader = ne_get_response_header(req, "Content-Type");
+    responseContentType = ne_get_response_header(req, "Content-Type");
 
     ne_request_destroy(req);
     ne_session_destroy(sess);
