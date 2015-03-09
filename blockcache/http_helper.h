@@ -13,6 +13,7 @@ public:
             std::string &response);
 
     const static std::string metadata_ip; 
+    const static std::string block_ip;
 private:
     static int httpResponseReader(void *data, const char *buf, size_t len);
 };

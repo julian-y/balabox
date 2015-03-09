@@ -16,9 +16,9 @@
 #include <neon/ne_request.h>
 #include <neon/ne_session.h>
 
+#include "http_helper.h"
 using namespace std;
 
-const string metadata_ip = "104.236.169.138";
 const string maxHashes = "10";
 
 int sockfd, newsockfd, portno, pid;
@@ -48,7 +48,7 @@ string lookUpRecentHashes(string userID) {
     ne_request *req;
     string response;
     
-    sess = ne_session_create("http", metadata_ip.c_str(), 80);
+    sess = ne_session_create("http", HttpHelper::metadata_ip.c_str(), 80);
 
     req = ne_request_create(sess, "GET", query.c_str());
     //ne_set_request_body_buffer(req, block.c_str(), block.length());
@@ -67,7 +67,7 @@ string lookUpRecentHashes(string userID) {
 
     ne_request_destroy(req);
     
-    cout << "Requesting recent hashes from metadata server @ " << metadata_ip << ": " << endl;
+    cout << "Requesting recent hashes from metadata server @ " << HttpHelper::metadata_ip << ": " << endl;
     //printf("Content-Type:  %s\r\n\r\n", responseHeader.c_str());
     cout << response << endl;
     return response;

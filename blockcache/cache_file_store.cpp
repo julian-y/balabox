@@ -14,6 +14,7 @@
 #include "fcgi_stdio.h"
 #include <jsoncpp/json/json.h>
 
+#include "http_helper.h"
 
 //using namespace cgicc;
 using namespace std;
@@ -30,15 +31,13 @@ int httpResponseReader(void *data, const char *buf, size_t len)
 //TODO: change host & query to the correct values when finalized
 int storeToBlockServer(string hash, string block) {
     //make request here.
-    string host = "127.0.0.1";
+    //string host = "127.0.0.1";
     string query = "/file_store.fcgid?hash=" + hash;
     ne_session *sess;
     ne_request *req;
     string response;
     
-    //block = block + "test123";
-
-    sess = ne_session_create("http", host.c_str(), 80);
+    sess = ne_session_create("http", HttpHelper::block_ip.c_str(), 80);
 
     req = ne_request_create(sess, "GET", query.c_str());
     ne_set_request_body_buffer(req, block.c_str(), block.length());

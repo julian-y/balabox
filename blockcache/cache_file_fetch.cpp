@@ -38,12 +38,11 @@ string const cache_ip = "1.2.3.4";
 //TODO: change host & query to the correct values when finalized
 int requestFromBlockServer(string hash, string block) {
     //make request here.
-    string host = "127.0.0.1";
-    string path = "/file_fetch.fcgid?hash=" + hash;
+    string path = "/file_fetch?hash=" + hash;
     string response;
     string responseHeader;
 
-    HttpHelper::sendHttpRequest(host, path, "GET", block, responseHeader, 
+    HttpHelper::sendHttpRequest(HttpHelper::block_ip, path, "GET", block, responseHeader, 
             response);
 
     printf("Content-Type:  %s\r\n\r\n", responseHeader.c_str());
