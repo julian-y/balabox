@@ -32,7 +32,7 @@ int httpResponseReader(void *data, const char *buf, size_t len)
 int storeToBlockServer(string hash, string block) {
     //make request here.
     //string host = "127.0.0.1";
-    string query = "/file_store.fcgid?hash=" + hash;
+    string query = "/file_store?hash=" + hash;
     ne_session *sess;
     ne_request *req;
     string response;
