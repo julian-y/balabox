@@ -47,6 +47,11 @@ install:
 #	sudo rm /var/www/html/file_fetch.fcgid
 #	sudo rm /var/www/html/file_store.fcgid
 #	sudo rm /var/www/html/*.fcgid
+	sudo rm /var/www/html/file_fetch
+	sudo rm /var/www/html/file_store
+	sudo rm /var/www/html/cache_file_fetch
+	sudo rm /var/www/html/cache_file_store
+
 	sudo cp fcgid/* -t /var/www/html
 	sudo chmod 777 /var/www/html/*
 
