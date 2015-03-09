@@ -32,24 +32,26 @@ int httpResponseReader(void *data, const char *buf, size_t len)
 int storeToBlockServer(string hash, string block) {
     //make request here.
     //string host = "127.0.0.1";
-    string query = "/file_store?hash=" + hash;
-    ne_session *sess;
-    ne_request *req;
+    string path = "/file_store?hash=" + hash;
+    //ne_session *sess;
+    //ne_request *req;
+    string responseContentType;
     string response;
     
-    sess = ne_session_create("http", HttpHelper::block_ip.c_str(), 80);
+    HttpHelper::sendHttpRequest(HttpHelper::block_ip, path, "POST", block, responseContentType, response);
+    //sess = ne_session_create("http", HttpHelper::block_ip.c_str(), 80);
 
-    req = ne_request_create(sess, "POST", query.c_str());
-    ne_set_request_body_buffer(req, block.c_str(), block.length());
+    //req = ne_request_create(sess, "POST", query.c_str());
+    //ne_set_request_body_buffer(req, block.c_str(), block.length());
 
-    ne_add_response_body_reader(req, ne_accept_always, httpResponseReader, &response);
-    int result = ne_request_dispatch(req);
-    int status = ne_get_status(req)->code;
-    string responseHeader(ne_get_response_header(req, "Content-Type"));
+    //ne_add_response_body_reader(req, ne_accept_always, httpResponseReader, &response);
+    //int result = ne_request_dispatch(req);
+    //int status = ne_get_status(req)->code;
+    //string responseHeader(ne_get_response_header(req, "Content-Type"));
 
-    ne_request_destroy(req);
+    //ne_request_destroy(req);
         
-    printf("Content-Type:  %s\r\n\r\n", responseHeader.c_str());
+    printf("Content-Type:  %s\r\n\r\n", responseContentType.c_str());
     printf("%s", response.c_str());
 
     return 0;
