@@ -41,31 +41,31 @@ INC=-I/usr/lib/x86_64-linux-gnu/ -I$(SRC_DIR) -I$(INCLUDE_DIR)/mysql
 all: query commit delete block_list recent_hashes file_list user_cache_add user_cache_remove user_caches
 
 query: $(QUERY_OBJECTS)
-	$(CC) $(QUERY_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/block_query.fcgid $(MYSQL_LINK)
+	$(CC) $(QUERY_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/block_query $(MYSQL_LINK)
 
 commit: $(COMMIT_OBJECTS)
-	$(CC) $(COMMIT_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/file_commit.fcgid $(MYSQL_LINK)
+	$(CC) $(COMMIT_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/file_commit $(MYSQL_LINK)
 
 delete: $(DELETE_OBJECTS)
-	$(CC) $(DELETE_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/file_delete.fcgid $(MYSQL_LINK)
+	$(CC) $(DELETE_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/file_delete $(MYSQL_LINK)
 
 block_list: $(BLOCK_LIST_OBJECTS)
-	$(CC) $(BLOCK_LIST_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/block_list.fcgid $(MYSQL_LINK)	
+	$(CC) $(BLOCK_LIST_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/block_list $(MYSQL_LINK)	
 
 file_list: $(FILE_LIST_OBJECTS)
-	$(CC) $(FILE_LIST_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/file_list.fcgid $(MYSQL_LINK)	
+	$(CC) $(FILE_LIST_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/file_list $(MYSQL_LINK)	
 
 recent_hashes: $(RECENT_HASHES_OBJECTS)
-	$(CC) $(RECENT_HASHES_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/recent_hashes.fcgid $(MYSQL_LINK)
+	$(CC) $(RECENT_HASHES_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/recent_hashes $(MYSQL_LINK)
 
 user_cache_add: $(USER_CACHE_ADD_OBJECTS)
-	$(CC) $(USER_CACHE_ADD_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/user_cache_add.fcgid $(MYSQL_LINK)
+	$(CC) $(USER_CACHE_ADD_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/user_cache_add $(MYSQL_LINK)
 
 user_cache_remove: $(USER_CACHE_REMOVE_OBJECTS)
-	$(CC) $(USER_CACHE_REMOVE_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/user_cache_remove.fcgid $(MYSQL_LINK)
+	$(CC) $(USER_CACHE_REMOVE_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/user_cache_remove $(MYSQL_LINK)
 
 user_caches: $(USER_CACHES_OBJECTS)
-	$(CC) $(USER_CACHES_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/user_caches.fcgid $(MYSQL_LINK)
+	$(CC) $(USER_CACHES_OBJECTS) $(LDFLAGS) -o $(BINARY_DIR)/user_caches $(MYSQL_LINK)
 
 test: $(TEST_OBJECTS)
 	$(CC) $(TEST_OBJECTS) $(LDFLAGS) -o $(TEST_DIR)/mysql_helper_test $(MYSQL_LINK)
