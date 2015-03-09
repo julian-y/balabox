@@ -37,6 +37,9 @@ http_helper: http_helper.cpp
 cache_file_fetch: cache_file_fetch.cpp
 	$(CC) $(CXXFLAGS) http_helper.o cache_file_fetch.cpp $(JSON_LIB) -o fcgid/cache_file_fetch $(CACHE_OPTS)
 
+cache_file_store: cache_file_store.cpp
+	$(CC) $(CXXFLAGS) http_helper.o cache_file_store.cpp $(JSON_LIB) -o fcgid/cache_file_store $(CACHE_OPTS)
+
 prefetch: prefetch.cpp
 	$(CC) $(CXXFLAGS) http_helper.o prefetch.cpp $(JSON_LIB) -o prefetch $(CACHE_OPTS)
 
