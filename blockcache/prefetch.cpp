@@ -83,7 +83,7 @@ void errorParsing(string json) {
 vector<string> pickHashes(Json::Value recent_hashes) {
     vector<string> hashes;
     for(int i = 0; i < recent_hashes.size(); i++) {
-        string curHash = recent_hashes[i].toString();
+        string curHash = recent_hashes[i].asString();
         
         //TODO: check if curHash already exists in leveldb; if so, skip it
         //if(!curHash already exists)
