@@ -20,13 +20,6 @@
 using namespace std;
 #define BLOCK_SIZE 512
 
-int httpResponseReader(void *data, const char *buf, size_t len)
-{
-    string *str = (string *)data;
-    str->append(buf, len);
-    return 0;
-}
-
 //forwards the HTTP request to the actual Block Server
 //TODO: change host & query to the correct values when finalized
 int storeToBlockServer(string hash, string block) {
