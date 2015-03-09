@@ -42,4 +42,10 @@ void jsonToString(Json::Value &jsonVals, vector<string> &stringVals);
 */
 string intToStr(int i);
 
+/**
+  parses query string
+*/
+int getQueryParam(const std::string& query_string, const std::string& param, std::string& value);
+
+
 #endif /* SHARED_FUNCTIONS */

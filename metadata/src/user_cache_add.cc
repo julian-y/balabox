@@ -68,37 +68,6 @@ static long gstdin(FCGX_Request * request, char ** content)
     return clen;
 }
 
-/**
-  parses the given query string
-  returns 0 upon success and nonzero otherwise
-*/
-int getParam(string param, map<string, string> &dict)
-{
-   // Verify if the parameters required are found
-   int idPos = param.find("user_id"); 
-   int filePos = param.find("cache_ip"); 
-
-   if (idPos == string::npos || filePos == string::npos)
-      return 1;
-  
-   int andPos = param.find("&");
-   int equPos1 = param.find("=");
-   int equPos2 = param.substr(andPos).find("="); 
-
-   // user_id is the first parameter 
-   if (idPos < filePos)
-   {
-      dict["user_id"] = param.substr(equPos1+1, (andPos-equPos1-1));
-      dict["cache_ip"] = param.substr(andPos).substr(equPos2+1);
-   }
-   else
-   {
-      dict["cache_ip"] = param.substr(equPos1+1, (andPos-equPos1-1));
-      dict["user_id"] = param.substr(andPos).substr(equPos2+1);
-   }
-   return 0;
-}
-
 int main (void)
 {
     streambuf * cin_streambuf  = cin.rdbuf();
@@ -149,17 +118,16 @@ int main (void)
         }
                     
         string param = query_string;
-        map<string, string> paramMap;
-        int getParamSuccess = getParam(param, paramMap);    
-               
-        if (getParamSuccess != 0)
+        string user_id, cache_ip;
+        int getParamSuccess1 = getQueryParam(param, "user_id", user_id);    
+        int getParamSuccess2 = getQueryParam(param, "cache_ip", cache_ip);    
+       
+        if (getParamSuccess1 != 0 || getParamSuccess2 !=0)
         {
             outputErrorMessage();
             continue;
         }
         
-        string user_id = paramMap["user_id"];
-        string cache_ip = paramMap["cache_ip"];
         
         // Connect and query the database
         MySQLHelper helper;
