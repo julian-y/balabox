@@ -59,3 +59,27 @@ string intToStr(int i)
    out << i;
    return out.str();
 }
+
+int getQueryParam(const std::string& query_string, 
+         const std::string& param, std::string& value) {
+
+      // Verify that the parameter required is found
+      int paramPos = query_string.find(param + "=");
+
+      if (paramPos == string::npos) {
+           return 1;
+      }   
+
+      int valuePos = query_string.find("=", paramPos) + 1;
+      int nextParam = query_string.find("&", valuePos);
+                
+      //if there is another parameter after the one
+      //we're searching for
+      if (nextParam == string::npos) {
+          value = query_string.substr(valuePos);    
+      } else {
+          value = query_string.substr(valuePos, nextParam - valuePos);
+      }   
+
+      return 0;
+}
