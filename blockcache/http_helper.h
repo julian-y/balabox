@@ -12,6 +12,8 @@ public:
             std::string reqType, std::string reqBody, std::string &responseHeader, 
             std::string &response);
 
+    static int requestFromBlockServer(std::string hash, std::string block);
+
     const static std::string metadata_ip; 
     const static std::string block_ip;
 private:

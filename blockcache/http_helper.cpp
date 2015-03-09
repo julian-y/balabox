@@ -33,6 +33,23 @@ int HttpHelper::getQueryParam(const std::string& query_string,
 	return 0;
 }
 
+//forwards the HTTP request to the actual Block Server
+int HttpHelper::requestFromBlockServer(string hash, string block) {
+    //make request here.
+    string path = "/file_fetch?hash=" + hash;
+    string response;
+    string responseHeader;
+
+    HttpHelper::sendHttpRequest(HttpHelper::block_ip, path, "GET", block, responseHeader, 
+            response);
+
+    printf("Content-Type:  %s\r\n\r\n", responseHeader.c_str());
+    printf("%s", response.c_str());
+    
+    return 0;
+}
+
+
 int HttpHelper::httpResponseReader(void *data, const char *buf, size_t len)
 {
     string *str = (string *)data;

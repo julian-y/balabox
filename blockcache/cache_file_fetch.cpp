@@ -34,22 +34,7 @@ using namespace std;
 int const MSG_SIZE = 1000;
 string const cache_ip = "1.2.3.4";
 
-//forwards the HTTP request to the actual Block Server
-//TODO: change host & query to the correct values when finalized
-int requestFromBlockServer(string hash, string block) {
-    //make request here.
-    string path = "/file_fetch?hash=" + hash;
-    string response;
-    string responseHeader;
 
-    HttpHelper::sendHttpRequest(HttpHelper::block_ip, path, "GET", block, responseHeader, 
-            response);
-
-    printf("Content-Type:  %s\r\n\r\n", responseHeader.c_str());
-    printf("%s", response.c_str());
-    
-    return 0;
-}
 
 //TODO: test this
 int addUserCache(string user_id) {
@@ -151,7 +136,7 @@ int main(void)
         //  return;
         //}
         //else {
-        requestFromBlockServer(hash, response_body);
+        HttpHelper::requestFromBlockServer(hash, response_body);
         //}
         
         
