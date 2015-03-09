@@ -63,7 +63,6 @@ int sendMsg(string msg) {
     //contains tons of information, including the server's IP address
     struct hostent *server;
 
-    portno = 8080;
     sockfd = socket(AF_INET, SOCK_DGRAM, 0); //create a new socket
     if (sockfd < 0) {
         error("ERROR opening socket");
@@ -80,7 +79,7 @@ int sendMsg(string msg) {
     bcopy((char *)server->h_addr, 
             (char *)&serv_addr.sin_addr.s_addr, 
             server->h_length);
-    serv_addr.sin_port = htons(portno);
+    serv_addr.sin_port = htons(HttpHelper::prefetch_portno);
 
     char buffer[MSG_SIZE];
     bzero(buffer, MSG_SIZE);
@@ -101,15 +100,6 @@ int main(void)
 {
     int count = 0;
     while(FCGI_Accept() >= 0) {
-        // NOTE: The actual request body is piped into stdin:
-        
-        //code from http://stackoverflow.com/questions/10129085/read-from-stdin-write-to-stdout-in-c
-        //string response_body;
-        //char buffer[BLOCK_SIZE];
-        //while(!feof(stdin)) {
-        //    size_t bytes = fread(buffer, sizeof(char), BLOCK_SIZE, stdin);
-        //    response_body += buffer;
-        //}
         
         string query_string(getenv("QUERY_STRING"));
         string hash;
