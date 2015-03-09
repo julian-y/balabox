@@ -63,7 +63,6 @@ int sendMsg(string msg) {
     //contains tons of information, including the server's IP address
     struct hostent *server;
 
-    portno = 8080;
     sockfd = socket(AF_INET, SOCK_DGRAM, 0); //create a new socket
     if (sockfd < 0) {
         error("ERROR opening socket");
@@ -80,7 +79,7 @@ int sendMsg(string msg) {
     bcopy((char *)server->h_addr, 
             (char *)&serv_addr.sin_addr.s_addr, 
             server->h_length);
-    serv_addr.sin_port = htons(portno);
+    serv_addr.sin_port = htons(HttpHelper::prefetch_portno);
 
     char buffer[MSG_SIZE];
     bzero(buffer, MSG_SIZE);

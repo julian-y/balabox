@@ -17,10 +17,11 @@
 #include <neon/ne_session.h>
 
 #include "http_helper.h"
+#include <vector>
+
 using namespace std;
 
 const string maxHashes = "10";
-
 int sockfd, newsockfd, portno, pid;
 socklen_t clilen;
 struct sockaddr_in serv_addr, cli_addr;
@@ -55,7 +56,6 @@ string lookUpRecentHashes(string userID) {
 
     ne_add_response_body_reader(req, ne_accept_always, httpResponseReader, &response);
     int result = ne_request_dispatch(req);
-    cout << "result: " << result << endl;
     if(result) {
         printf("Request failed: %s\n", ne_get_error(sess));
         error("Error making request during lookUpRecentHashes()!");
@@ -69,7 +69,7 @@ string lookUpRecentHashes(string userID) {
     
     cout << "Requesting recent hashes from metadata server @ " << HttpHelper::metadata_ip << ": " << endl;
     //printf("Content-Type:  %s\r\n\r\n", responseHeader.c_str());
-    cout << response << endl;
+    //cout << response << endl;
     return response;
 }
 
@@ -77,6 +77,19 @@ void errorParsing(string json) {
     string errorMsg = "Could not parse json!\n";
     errorMsg += json;
     error("Could not parse received message!"); 
+}
+
+//simple pickHashes function (just 
+vector<string> pickHashes(Json::Value recent_hashes) {
+    vector<string> hashes;
+    for(int i = 0; i < recent_hashes.size(); i++) {
+        string curHash = recent_hashes[i].toString();
+        
+        //TODO: check if curHash already exists in leveldb; if so, skip it
+        //if(!curHash already exists)
+            hashes.push_back(curHash);
+    }
+    return hashes;
 }
 
 int main(int argc, char *argv[]) {
@@ -90,7 +103,7 @@ int main(int argc, char *argv[]) {
     portno = 8080;//atoi(argv[1]);
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons(portno);
+    serv_addr.sin_port = htons(HttpHelper::prefetch_portno);
     
     if (bind(sockfd, (struct sockaddr *) &serv_addr,
               sizeof(serv_addr)) < 0) 
@@ -118,7 +131,6 @@ int main(int argc, char *argv[]) {
         cout << "hash: " << hash << endl;
         //cout << "msg: " << msg << endl;
         
-        cout << "call lookUpRecentHashes() here" << endl;
         // make request to metadata server
         string recent_hashes_json = lookUpRecentHashes(userID);
         
@@ -131,16 +143,21 @@ int main(int argc, char *argv[]) {
         }
 
         Json::Value block_list = recent_hashes_root.get("block_list", "");//.asString();
-        cout << "------Recent Hashes------" << endl;
+        cout << ">>>Recent Hashes" << endl;
         cout << "block_list: " << block_list << endl;
         if(block_list.isNull()) {
             cout << "block_list is empty, don't need to fetch stuff" << endl;
         } else {
-            //TODO:
-            //parse array 
-            //add logic to choose which hashes to pick
-            //make requests to block server
-            //save blocks
+
+            vector<string> hashesToRetrieve = pickHashes(block_list);
+            for(int i = 0; i < hashesToRetrieve.size(); i++) {
+                string curHash = hashesToRetrieve[i];
+                string responseContentType;
+                string block;
+                HttpHelper::requestFromBlockServer(curHash, responseContentType, block);
+                //TODO: Save block here
+            }
+            
         }
     }
 }
