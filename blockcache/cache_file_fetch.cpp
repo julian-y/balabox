@@ -134,7 +134,12 @@ int main(void)
             HttpHelper::requestFromBlockServer(hash, responseContentType, response);
             printf("Content-Type:  %s\r\n\r\n", responseContentType.c_str());
             //printf("%s", response.c_str());
-            fwrite(response.c_str(), sizeof(char), response.length(), stdin);
+            
+            
+            char* response_c_str = (char*) malloc(response.length());
+            memcpy(response_c_str, response.c_str(), response.length());
+            fwrite(response_c_str, sizeof(char), response.length(), stdin);
+            free(response_c_str);
         }
         
     }
