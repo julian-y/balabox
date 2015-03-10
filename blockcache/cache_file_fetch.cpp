@@ -107,8 +107,13 @@ int main(void)
     streambuf * cin_streambuf  = cin.rdbuf();
     streambuf * cout_streambuf = cout.rdbuf();
     streambuf * cerr_streambuf = cerr.rdbuf();
+
+    FCGX_Request request;
+
+    FCGX_Init();
+    FCGX_InitRequest(&request, 0, 0);
     
-    while(FCGI_Accept() >= 0) {
+    while (FCGX_Accept_r(&request) == 0) {
 
         // Note that the default bufsize (0) will cause the use of iostream
         // methods that require positioning (such as peek(), seek(),
@@ -166,6 +171,16 @@ int main(void)
         //}
         
     }
+
+#if HAVE_IOSTREAM_WITHASSIGN_STREAMBUF
+    cin  = cin_streambuf;
+    cout = cout_streambuf;
+    cerr = cerr_streambuf;
+#else
+    cin.rdbuf(cin_streambuf);
+    cout.rdbuf(cout_streambuf);
+    cerr.rdbuf(cerr_streambuf);
+#endif
 
 	return 0;
 }
