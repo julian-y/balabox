@@ -125,7 +125,7 @@ int main(void)
             string data;
             db.get(hash, data);
             printf("Content-Type: application/binary\r\n\r\n");
-            printf("%s", data);
+            printf("%s", data.c_str());
             return 0;  
         }  
         else {
@@ -133,7 +133,8 @@ int main(void)
             string responseContentType;
             HttpHelper::requestFromBlockServer(hash, responseContentType, response);
             printf("Content-Type:  %s\r\n\r\n", responseContentType.c_str());
-            printf("%s", response.c_str());
+            //printf("%s", response.c_str());
+            fwrite(response.c_str(), sizeof(char), response.length(), stdin);
         }
         
     }
