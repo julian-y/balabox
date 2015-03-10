@@ -45,10 +45,6 @@ HTTPRESP=responses/${filename}_responses
 `sudo split -b 4m $filename $FILEBLOCKS/${filename}_`
 echo -e "Split $filename into 4MB files in $FILEBLOCKS ...\n"
 
-s
-if [ -f "./hashes/${filename}_hash" ]; then
-    `sudo rm ./hashes/${filename}_hash`
-fi
 
 #Creates one file with all its blocks' hashe
 for file in "$FILEBLOCKS/*"
@@ -99,7 +95,7 @@ fi
 #parse hashes string then send corresponding blocks to cache server
 echo "Need to send blocks for these hashes:"
 
-#sudo apt-get install jq if you don't have it yet installed
+#run bootstrap to isntall jq
 needed_blocks="$(cat $RESPONSE | jq '.needed_blocks[]')"
 
 block_list=`cat $RESPONSE | jq '.needed_blocks[]'| sed 's/\"//g'`
@@ -125,14 +121,13 @@ do
 
 			echo -e "\nSending HTTP POST to cache server with binary data for $block_name..."
 
-			echo "*******curl below will send error 500 for larger blocks (4 MB blocks not working)*******"
 
 			RESPONSE=${HTTPRESP}/file_store_response
 			status=`curl -s -w %{http_code} --data-binary "@$block_name" "$blache_hostname$blache_port/file_store?hash=$file_hash" -o $RESPONSE`
 			
 			checkStatus "$status"
 			echo "file_store for block $block_name Response:"
-			#cat $RESPONSE
+			cat $RESPONSE
 						
 		fi
 
@@ -148,7 +143,6 @@ else
 fi
 
 echo -e "\nSending HTTP POST to metadata to commit blocks..." 
-#echo $hash_send
 
 if [ ! -f  "versions/${filename}_version" ]; then
     echo "First version of file. Version 0"
@@ -163,7 +157,7 @@ RESPONSE=${HTTPRESP}/file_commit_response
 status=`curl -s -w %{http_code} --header "Content-Type: application/json" --header "Accept: application/json" --data '{ "user_id":"'"$user"'", "file_name":"'"$filename"'", "block_list":'"$hash_send"', "version":"'"$version"'" }' "${hostname}${port}/file_commit" -o $RESPONSE`
 
 checkStatus "$status"
-echo "file_store for block $file Response:"
+echo "file_commit_response for file $filename:"
 cat $RESPONSE
 
 metadata_updated=`parseJson $RESPONSE "metadata_updated"`

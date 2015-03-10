@@ -6,21 +6,6 @@ source $dir/defFunctions.sh
 #uncomment line below for debugging
 #set -vx
 
-#SET THESE
-hostname="http://104.236.169.138"
-port=""
-blache_hostname="http://192.168.1.130"
-blache_port=""
-
-function fetchBlock {
-
-	echo -e "\nSending HTTP request to get block..."
-	response_cache=`curl --data-binary '"@${file}"' "${blache_hostname}${blache_port}/file_fetch.fcgid?hash=$1" `
-	echo -e "${response_cache}\n"
-
-	checkStatus "${response_cache}"
-
-}
 
 if [ "$#" -ne 2 ]; then
     echo "Please enter 2 parameters: filename (foo.txt) to download and user_id"
@@ -29,86 +14,175 @@ fi
 
 filename=$1
 user=$2
+fileChanged=False
+
+#SET THESE
+hostname="http://104.236.169.138"
+port=""
+blache_hostname="http://104.236.169.138"
+blache_port=""
+
+FILEBLOCKS=blocks/${filename}_blocks
+HTTPRESP=responses/${filename}_responses
+`sudo mkdir -p $FILEBLOCKS`
+`sudo mkdir -p $HTTPRESP`
+`sudo chmod 777 $FILEBLOCKS`
+`sudo chmod 777 $HTTPRESP`
 
 
-#Send GET to metaserver to get hashes
+function fetchBlock { #2 parameters: hash and file block
 
-echo -e "\nSending HTTP post to metadata..." 
+	echo -e "\nSending HTTP request to get block for hash $1 and saving to $2..."
+	RESPONSE="${HTTPRESP}/file_fetch_response"
+	status=`curl -s -w %{http_code} "${blache_hostname}${blache_port}/cache_file_fetch?hash=$1&user=$user" -o $RESPONSE`
 
-response=`curl "${hostname}${port}/block_list.fcgid?user_id=${user}&file_name=${filename}" --header "Content-Type: application/json" --header "Accept: application/json" `
+	checkStatus "$status"
+	cat $RESPONSE
+	resp=$(cat $RESPONSE)
+	checkResponse "$resp"
+	echo "file_fetch Response:"
+	cat $RESPONSE >> $2
+}
 
-checkStatus "$response"
-
-echo "$response" | sudo python -mjson.tool &>./responses/${filename}_dl_response
-
-
-block_list="$(cat ./responses/${filename}_dl_response | jq '.block_list[]' | sed "s/\"//g")"
-
-echo -e "Hashes need to request from cache:\n${block_list}"
-
-
-#Create new file name
-#if filename already exists will create filename-1, filename-2, etc. until it creates a file that does not already exit
-n=
-set -C
-until
-  	newfile=$filename${n:+-$n}
-  	{ command exec 3> "$newfile"; } 2> /dev/null
-do
-  	((n++))
-  	echo "hi"
-done
-
-touch "$newfile"
-
-while read -r line
-do
-	while read in
-	do
-		#remove block file name and get only hash
-		ha="$(echo "$in" | awk '{print $1}')"
-
-		#if the hash is in the file, that means the local file should exist
-		if [[ "$line" =  "$ha" ]] #
-		then
-			#check if file still exists
-			file="$(echo "$in" | awk '{print $2}')"
-			if [ ! -f $file ]; then
-
-				#Block matched for this hash does not exist in file sysetm anymore.
-    			echo "File ${file} not found!" 
-    			fetchBlock "${ha}"
-
-    			#No error, block successfully retrieved
-
-    			#Put new block in filename that did not exist
-    			echo "$block" >> "$file"	
-			fi
-			cat "$file" >> "$newfile"
-		else
-			fetchBlock "${ha}"
-
-			#No error, block successfully retrieved
-    		echo "$block" >> "$newfile"
+function blockDNE {
+			echo "enter blockDNE"
+			#block does not exist in client's filesystem. Write to a new file for this block
 
 			#Creates filename for block
 			n=
 			set -C
 			until
-  				file="${filename}_aa${n:+-$n}" #TO-DO: fix new block naming system
-  				{ command exec 3> "$file"; } 2> /dev/null
+  				new_block_name=$FILEBLOCKS/${filename}_a${n:+-$n} #TO-DO: fix new block naming system
+  				{ command exec 3> "$new_block_name"; } 2> /dev/null
 			do
   				((n++))
 			done
-			
-			#Adds new block's hash to locally saved hashes for this file
-			echo "${ha}  ${file}" >> "./hashes/${filename}_hash"
 
-			cat "$file" >> "$newfile"
+			fetchBlock "$1" "$new_block_name"
+
+			#Adds new block's hash to locally saved hashes for this file
+			echo "$1  $new_block_name" >> "./hashes/${filename}_hash"
+
+			cat "$new_block_name" >> "$2"
+}
+
+function compHashes {
+	echo "enter compHashes\n 1: $1 \n 2: $2"
+	while read in
+	do
+		echo "in while"
+		#remove block file name and get only hash
+		file_hash="$(echo "$in" | awk '{print $1}')"
+		echo "file_hash: $file_hash"
+		#if the hash is in the file, that means the local file should exist
+		if [[ "$1" =  "$file_hash" ]] #if hash does equals current line
+		then
+			#check if file for block still exists
+			block_name="$(echo "$in" | awk '{print $2}')"
+			if [ ! -f "$block_name" ]; then
+
+				#Block matched for this hash does not exist in file system anymore.
+    			echo "File $block_name not found in local file system. Must fetch file from cache" 
+    			fetchBlock "$file_hash" "$block_name"	
+
+    			#No error, block successfully retrieved
+    		fi
+    			#Put new block in filename that did not exist
+    			echo "Adding $block_name to file"
+				cat "$block_name" >> "$2"	
+		else
+				echo "Called blockDNE from while loop"
+				echo "1: $1"
+				blockDNE "$1" "$2"
+			
 		fi
 
 	done < "./hashes/${filename}_hash"
-done <<< "$block_list"
+}
+
+
+
+#Send GET to metaserver to get hashes
+echo -e "\nSending HTTP post to metadata..." 
+
+RESPONSE="${HTTPRESP}/block_list_response"
+status=`curl -s -w %{http_code} "${hostname}${port}/block_list?user_id=${user}&file_name=${filename}" --header "Content-Type: application/json" --header "Accept: application/json" -o $RESPONSE`
+
+checkStatus "$status"
+echo "block_query Response:"
+cat $RESPONSE
+
+#echo "$response" | sudo python -mjson.tool &>./responses/${filename}_dl_response
+
+
+block_list="$(cat $RESPONSE| jq '.block_list[]' | sed "s/\"//g")"
+
+echo -e "Hashes for this file:\n${block_list}"
+
+
+#Create new file name
+n=
+set -C
+until
+  	NEWFILE=${filename}_new${n:+-$n}
+  	{ command exec 3> "$NEWFILE"; } 2> /dev/null
+do
+  	((n++))
+done
+touch "$NEWFILE"
+
+if [ ! -f ./hashes/${filename}_hash ]; then
+	echo "No hashes for this file"
+    while read -r block_list_hash
+	do
+		echo "calling blockDNE"
+		blockDNE "$block_list_hash" "$NEWFILE" 
+	done <<< "$block_list"   	
+else 
+	while read -r block_list_hash
+	do
+	addedBlock=False
+	while read line
+	do
+		echo "in while"
+		#remove block file name and get only hash
+		file_hash="$(echo "$line" | awk '{print $1}')"
+		echo "file_hash: $file_hash"
+		#if the hash is in the file, that means the local file should exist
+		if [[ "$block_list_hash" =  "$file_hash" ]] #if hash equals current line
+		then
+			#check if file for block name associated with hash still exists
+			block_name="$(echo "$line" | awk '{print $2}')"
+			if [ ! -f "$block_name" ]; then
+
+				#Block matched for this hash does not exist in file system anymore.
+    			echo "File $block_name not found in local file system. Must fetch file from cache" 
+    			fetchBlock "$file_hash" "$block_name"	
+
+    			#No error, block successfully retrieved
+    		fi
+    			
+    		#Put new block in filename that did not exist
+    		echo "Adding $block_name to file"
+			cat "$block_name" >> "$NEWFILE" 	
+			addedBlock=True			
+		fi
+	done < "./hashes/${filename}_hash"
+		if [[ "$addedBlock" = False ]]; then
+			echo "Called blockDNE from while loop"
+			blockDNE "$block_list_hash" "$NEWFILE" 
+		fi
+	done <<< "$block_list" 
+    
+fi
+
+#echo "Updated file $filename content:"
+#cat $NEWFILE
+
+
+#replace original file with new one
+#`sudo mv "$NEWFILE" "$filename`
+
 
 
 
