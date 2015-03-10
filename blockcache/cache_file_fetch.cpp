@@ -104,11 +104,18 @@ int main(void)
     int count = 0;
     // Open the database
     LevelDBHelper db("cachedb");
-
+    streambuf * cin_streambuf  = cin.rdbuf();
+    streambuf * cout_streambuf = cout.rdbuf();
+    streambuf * cerr_streambuf = cerr.rdbuf();
+    
     while(FCGI_Accept() >= 0) {
-        streambuf * cin_streambuf  = cin.rdbuf();
-        streambuf * cout_streambuf = cout.rdbuf();
-        streambuf * cerr_streambuf = cerr.rdbuf();
+
+        // Note that the default bufsize (0) will cause the use of iostream
+        // methods that require positioning (such as peek(), seek(),
+        // unget() and putback()) to fail (in favour of more efficient IO).
+        fcgi_streambuf cin_fcgi_streambuf(request.in);
+        fcgi_streambuf cout_fcgi_streambuf(request.out);
+        fcgi_streambuf cerr_fcgi_streambuf(request.err);
         
         #if HAVE_IOSTREAM_WITHASSIGN_STREAMBUF
         cin  = &cin_fcgi_streambuf;
