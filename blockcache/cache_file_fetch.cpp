@@ -26,6 +26,7 @@
 // constants and structures needed for 
 // internet domain addresses, e.g. sockaddr_in
 #include "http_helper.h"
+#include "leveldb_helper.hpp"
 
 //using namespace cgicc;
 using namespace std;
@@ -99,16 +100,10 @@ int sendMsg(string msg) {
 int main(void)
 {
     int count = 0;
+    // Open the database
+    LevelDBHelper db("cachedb");
+
     while(FCGI_Accept() >= 0) {
-        // NOTE: The actual request body is piped into stdin:
-        
-        //code from http://stackoverflow.com/questions/10129085/read-from-stdin-write-to-stdout-in-c
-        //string response_body;
-        //char buffer[BLOCK_SIZE];
-        //while(!feof(stdin)) {
-        //    size_t bytes = fread(buffer, sizeof(char), BLOCK_SIZE, stdin);
-        //    response_body += buffer;
-        //}
         
         string query_string(getenv("QUERY_STRING"));
         string hash;
@@ -126,23 +121,20 @@ int main(void)
         
         //add (to metadata) the association of this cache to the user we're serving 
 
-
-        //TODO@Roger: add check to leveldb to see if we already have the
-        //requested hash locally.
-        
-        //if(have block already) {
-        //  create response and insert block data into response body
-        //  return;
-        //}
-        //else {
-        
-        string response;
-        string responseContentType;
-        HttpHelper::requestFromBlockServer(hash, responseContentType, response);
-        printf("Content-Type:  %s\r\n\r\n", responseContentType.c_str());
-        printf("%s", response.c_str());
-        //}
-        
+        if (db.alreadyExists(hash)) {
+            string data;
+            db.get(hash, data);
+            printf("Content-Type: application/binary\r\n\r\n");
+            printf("%s", data);
+            return 0;  
+        }  
+        else {
+            string response;
+            string responseContentType;
+            HttpHelper::requestFromBlockServer(hash, responseContentType, response);
+            printf("Content-Type:  %s\r\n\r\n", responseContentType.c_str());
+            printf("%s", response.c_str());
+        }
         
     }
 

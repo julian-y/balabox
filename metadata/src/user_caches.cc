@@ -68,37 +68,6 @@ static long gstdin(FCGX_Request * request, char ** content)
     return clen;
 }
 
-/**
-  parses the given query string
-  returns 0 upon success and nonzero otherwise
-*/
-int getParam(string param, map<string, string> &dict)
-{
-   // Verify if the parameters required are found
-   int idPos = param.find("user_id"); 
-   int filePos = param.find("max"); 
-
-   if (idPos == string::npos || filePos == string::npos)
-      return 1;
-  
-   int andPos = param.find("&");
-   int equPos1 = param.find("=");
-   int equPos2 = param.substr(andPos).find("="); 
-
-   // user_id is the first parameter 
-   if (idPos < filePos)
-   {
-      dict["user_id"] = param.substr(equPos1+1, (andPos-equPos1-1));
-      dict["max"] = param.substr(andPos).substr(equPos2+1);
-   }
-   else
-   {
-      dict["max"] = param.substr(equPos1+1, (andPos-equPos1-1));
-      dict["user_id"] = param.substr(andPos).substr(equPos2+1);
-   }
-   return 0;
-}
-
 int main (void)
 {
     streambuf * cin_streambuf  = cin.rdbuf();
@@ -151,17 +120,17 @@ int main (void)
         vector<string> ipAddrs;
         Json::Value jsonVals;
         string param = query_string;
-        map<string, string> paramMap;
-        int getParamSuccess = getParam(param, paramMap);    
-               
-        if (getParamSuccess != 0)
+        string user_id, maxStr;
+        int getParamSuccess1 = getQueryParam(param, "user_id", user_id);    
+        int getParamSuccess2 = getQueryParam(param, "max", maxStr);
+
+        if (getParamSuccess1 != 0 && getParamSuccess2 != 0)
         {
             outputErrorMessage();
             continue;
         }
         
-        string user_id = paramMap["user_id"];
-        int max = atoi(paramMap["max"].c_str());
+        int max = atoi(maxStr.c_str());
         
         // Connect and query the database
         MySQLHelper helper;

@@ -19,7 +19,7 @@ LevelDBHelper::~LevelDBHelper() {
 	m_db = nullptr;
 }
 
-int LevelDBHelper::getData(const string& block_hash, string& data) {
+int LevelDBHelper::get(const string& block_hash, string& data) {
 	string value;
 	leveldb::Status status = m_db->Get(readoptions, block_hash, &value);
 	if (status.IsNotFound()) {
@@ -29,7 +29,7 @@ int LevelDBHelper::getData(const string& block_hash, string& data) {
 	return 0;
 }
 
-int LevelDBHelper::putKV(const string& block_hash, const string& data) {
+int LevelDBHelper::put(const string& block_hash, const string& data) {
 	leveldb::Status status = m_db->Put(writeoptions, block_hash, data);
 	if (!status.ok()) {
 		cerr << status.ToString() << endl;

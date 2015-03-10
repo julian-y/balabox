@@ -68,23 +68,6 @@ static long gstdin(FCGX_Request * request, char ** content)
     return clen;
 }
 
-/**
-  parses the given query string
-  returns 0 upon success and nonzero otherwise
-*/
-int getParam(string param, map<string, string> &dict)
-{
-   // Verify if the parameters required are found
-   int idPos = param.find("user_id"); 
-
-   if (idPos == string::npos) 
-      return 1;
-  
-   int equPos1 = param.find("=");
-   dict["user_id"] = param.substr(equPos1+1);
-   return 0;
-}
-
 
 int main (void)
 {
@@ -138,16 +121,14 @@ int main (void)
         vector<string> filenames;
         Json::Value jsonNames;
         string param = query_string;
-        map<string, string> paramMap;
-        int getParamSuccess = getParam(param, paramMap);    
+        string user_id;
+        int getParamSuccess = getQueryParam(param, "user_id", user_id);    
         
         if (getParamSuccess != 0)
         {
             outputErrorMessage();
             continue;
         }
-        
-        string user_id = paramMap["user_id"];
         
         // Connect and query the database
         MySQLHelper helper;

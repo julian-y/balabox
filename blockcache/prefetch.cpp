@@ -17,6 +17,7 @@
 #include <neon/ne_session.h>
 
 #include "http_helper.h"
+#include "leveldb_helper.hpp"
 #include <vector>
 
 using namespace std;
@@ -83,10 +84,10 @@ void errorParsing(string json) {
 vector<string> pickHashes(Json::Value recent_hashes) {
     vector<string> hashes;
     for(int i = 0; i < recent_hashes.size(); i++) {
-        string curHash = recent_hashes[i].toString();
+        string curHash = recent_hashes[i].asString();
         
-        //TODO: check if curHash already exists in leveldb; if so, skip it
-        //if(!curHash already exists)
+        // if curHash already exists in leveldb, skip it
+        if(!db.alreadyExists(curHash))
             hashes.push_back(curHash);
     }
     return hashes;
@@ -109,6 +110,9 @@ int main(int argc, char *argv[]) {
               sizeof(serv_addr)) < 0) 
               error("ERROR on binding");
 
+    // Open the database
+    LevelDBHelper db("cachedb");
+
     printf("listening on port 8080\n");
     while (1) {
         int recvlen = recvfrom(sockfd, buffer, MSG_SIZE, 0, 
@@ -128,7 +132,7 @@ int main(int argc, char *argv[]) {
         string hash = msg_root.get("hash", "-1").asString();
         cout << "------Incoming Request------" << endl;
         cout << "userID: " << userID << endl;
-        cout << "hash: " << hash << endl;
+        cout << "requested hash: " << hash << endl;
         //cout << "msg: " << msg << endl;
         
         // make request to metadata server
@@ -155,7 +159,7 @@ int main(int argc, char *argv[]) {
                 string responseContentType;
                 string block;
                 HttpHelper::requestFromBlockServer(curHash, responseContentType, block);
-                //TODO: Save block here
+                db.put(curHash, block);
             }
             
         }
