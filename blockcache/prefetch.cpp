@@ -81,7 +81,7 @@ void errorParsing(string json) {
 }
 
 //simple pickHashes function (just 
-vector<string> pickHashes(Json::Value recent_hashes) {
+vector<string> pickHashes(Json::Value recent_hashes, LevelDBHelper db) {
     vector<string> hashes;
     for(int i = 0; i < recent_hashes.size(); i++) {
         string curHash = recent_hashes[i].asString();
@@ -153,7 +153,7 @@ int main(int argc, char *argv[]) {
             cout << "block_list is empty, don't need to fetch stuff" << endl;
         } else {
 
-            vector<string> hashesToRetrieve = pickHashes(block_list);
+            vector<string> hashesToRetrieve = pickHashes(block_list, db);
             for(int i = 0; i < hashesToRetrieve.size(); i++) {
                 string curHash = hashesToRetrieve[i];
                 string responseContentType;

@@ -41,7 +41,7 @@ int LevelDBHelper::put(const string& block_hash, const string& data) {
 
 bool LevelDBHelper::alreadyExists(const string& block_hash) {
 	string dummy;
-	return (getData(block_hash, dummy) == 0) ? true : false;
+	return (get(block_hash, dummy) == 0) ? true : false;
 }
 
 
