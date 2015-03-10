@@ -132,7 +132,16 @@ int main(void)
         cerr.rdbuf(&cerr_fcgi_streambuf);
         #endif
        
- //       string query_string(getenv("QUERY_STRING"));
+        char* query_string = FCGX_GetParam("QUERY_STRING", request.envp);
+        string errorMsg = "Invalid Input";
+
+        // Invalid inputs
+        if (query_string == nullptr) {
+        	outputErrorMessage("No parameters");
+        	continue;
+        } 
+
+        string param = query_string;
  //       string hash;
  //       string userId;
  //       HttpHelper::getQueryParam(query_string, "hash", hash);
