@@ -8,7 +8,7 @@ CXXFLAGS=-std=c++11
 OPTS = -lfcgi++ -lfcgi -L/usr/lib/x86_64-linux-gnu $(LEVELDB_DIR)/libleveldb.a -lpthread -I $(LEVELDB_DIR)/include 
 
 JSON_LIB = /usr/lib/x86_64-linux-gnu/libjsoncpp.so
-CACHE_OPTS = -lfcgi -l neon
+CACHE_OPTS = -l neon $(OPTS)
 
 all: file_fetch file_store leveldb_helper_test 
 
