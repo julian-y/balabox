@@ -121,26 +121,26 @@ int main(void)
         
         //add (to metadata) the association of this cache to the user we're serving 
 
-        if (db.alreadyExists(hash)) {
-            string data;
-            db.get(hash, data);
-            printf("Content-Type: application/binary\r\n\r\n");
-            printf("%s", data.c_str());
-            return 0;  
-        }  
-        else {
+        //if (db.alreadyExists(hash)) {
+        //    string data;
+        //    db.get(hash, data);
+        //    printf("Content-Type: application/binary\r\n\r\n");
+        //    printf("%s", data.c_str());
+        //    return 0;  
+        //}  
+        //else {
             string response;
             string responseContentType;
             HttpHelper::requestFromBlockServer(hash, responseContentType, response);
             printf("Content-Type:  %s\r\n\r\n", responseContentType.c_str());
-            //printf("%s", response.c_str());
+            printf("%s", response.c_str());
             
             
             char* response_c_str = (char*) malloc(response.length());
             memcpy(response_c_str, response.c_str(), response.length());
-            fwrite(response_c_str, sizeof(char), response.length(), stdin);
+//            fwrite(response_c_str, sizeof(char), response.length(), stdin);
             free(response_c_str);
-        }
+        //}
         
     }
 
