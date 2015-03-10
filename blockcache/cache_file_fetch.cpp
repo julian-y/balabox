@@ -11,6 +11,7 @@
 #include <neon/ne_request.h>
 #include <neon/ne_session.h>
 
+#include "fcgi_config.h"
 #include "fcgi_stdio.h"
 #include <jsoncpp/json/json.h>
 
