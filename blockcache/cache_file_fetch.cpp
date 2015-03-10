@@ -99,6 +99,14 @@ int sendMsg(string msg) {
     return 0;
 }
 
+void outputErrorMessage(const string& error) 
+{
+     cout << "Status: 400\r\n"
+          <<  "Content-type: text/html\r\n"
+          <<  "\r\n"
+          << "<html><p>400 " << error << "</p></html>\n";
+}
+
 int main(void)
 {
     int count = 0;
@@ -142,20 +150,20 @@ int main(void)
         } 
 
         string param = query_string;
- //       string hash;
- //       string userId;
- //       HttpHelper::getQueryParam(query_string, "hash", hash);
- //       HttpHelper::getQueryParam(query_string, "user", userId);
- //       
- //       //we want to send the prefetch message before requesting the original
- //       //block so the prefetcher can get a "head start"; espcially since the 
- //       //request to block-server is blocking.
+        string hash;
+        string userId;
+        HttpHelper::getQueryParam(query_string, "hash", hash);
+        HttpHelper::getQueryParam(query_string, "user", userId);
+        
+        //we want to send the prefetch message before requesting the original
+        //block so the prefetcher can get a "head start"; espcially since the 
+        //request to block-server is blocking.
 
- //       //send message to another process running on cache server to prefetch
- //       string msg = "{\"userID\": \"" + userId + "\", \"hash\": \"" + hash + "\" }"; 
- //       sendMsg(msg);
- //       
- //       //add (to metadata) the association of this cache to the user we're serving 
+        //send message to another process running on cache server to prefetch
+        string msg = "{\"userID\": \"" + userId + "\", \"hash\": \"" + hash + "\" }"; 
+        sendMsg(msg);
+        
+        //add (to metadata) the association of this cache to the user we're serving 
 
  //       //if (db.alreadyExists(hash)) {
  //       //    string data;
