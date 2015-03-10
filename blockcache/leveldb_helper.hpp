@@ -15,7 +15,7 @@ public:
 	* @param data: string representing data associated with block hash
 	* @return 0 on success, non-zero on failure
 	*/
-	int getData(const std::string& block_hash, std::string& data);
+	int get(const std::string& block_hash, std::string& data);
 
 	/**
 	* Puts a (blockhash, data) pair into the database.
@@ -23,7 +23,7 @@ public:
 	* @param data: string representing data associated with block hash
 	* @return 0 on success, non-zero on failure
 	*/
-	int putKV(const std::string& block_hash, const std::string& data);
+	int put(const std::string& block_hash, const std::string& data);
 
  	/**
 	* Finds if a block hash already exists in the database.
