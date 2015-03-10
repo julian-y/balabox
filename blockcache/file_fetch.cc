@@ -199,7 +199,7 @@ int main(void) {
     		continue;
     	}
 
-    	cout << "Content-type: application/binary\r\n"
+    	cout << "Content-Type: application/binary\r\n"
     		 << "Content-Length: " << binaryData.size() << "\r\n"
     		 << "\r\n";
 

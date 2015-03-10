@@ -113,7 +113,7 @@ int main(void)
     FCGX_Init();
     FCGX_InitRequest(&request, 0, 0);
     
-    while (FCGX_Accept_r(&request) == 0) {
+    while (FCGI_Accept() >=  0) {
 
         // Note that the default bufsize (0) will cause the use of iostream
         // methods that require positioning (such as peek(), seek(),
@@ -160,8 +160,8 @@ int main(void)
             string responseContentType;
             HttpHelper::requestFromBlockServer(hash, responseContentType, response);
             printf("Content-Type:  %s\r\n\r\n", responseContentType.c_str());
-            //printf("%s", response.c_str());
-            cout.write(response.c_str(), response.length());
+//            printf("%s", response.c_str());
+//            cout.write(response.c_str(), response.length());
             
             //char* response_c_str = (char*) malloc(response.length());
             //memcpy(response_c_str, response.c_str(), response.length());
