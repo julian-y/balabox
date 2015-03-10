@@ -103,7 +103,7 @@ int main(void)
 {
     int count = 0;
     // Open the database
-    LevelDBHelper db("cachedb");
+//    LevelDBHelper db("cachedb");
     streambuf * cin_streambuf  = cin.rdbuf();
     streambuf * cout_streambuf = cout.rdbuf();
     streambuf * cerr_streambuf = cerr.rdbuf();
@@ -113,7 +113,7 @@ int main(void)
     FCGX_Init();
     FCGX_InitRequest(&request, 0, 0);
     
-    while (FCGI_Accept() >=  0) {
+    while (FCGX_Accept_r(&request) == 0) {
 
         // Note that the default bufsize (0) will cause the use of iostream
         // methods that require positioning (such as peek(), seek(),
@@ -132,47 +132,52 @@ int main(void)
         cerr.rdbuf(&cerr_fcgi_streambuf);
         #endif
        
-        string query_string(getenv("QUERY_STRING"));
-        string hash;
-        string userId;
-        HttpHelper::getQueryParam(query_string, "hash", hash);
-        HttpHelper::getQueryParam(query_string, "user", userId);
-        
-        //we want to send the prefetch message before requesting the original
-        //block so the prefetcher can get a "head start"; espcially since the 
-        //request to block-server is blocking.
+ //       string query_string(getenv("QUERY_STRING"));
+ //       string hash;
+ //       string userId;
+ //       HttpHelper::getQueryParam(query_string, "hash", hash);
+ //       HttpHelper::getQueryParam(query_string, "user", userId);
+ //       
+ //       //we want to send the prefetch message before requesting the original
+ //       //block so the prefetcher can get a "head start"; espcially since the 
+ //       //request to block-server is blocking.
 
-        //send message to another process running on cache server to prefetch
-        string msg = "{\"userID\": \"" + userId + "\", \"hash\": \"" + hash + "\" }"; 
-        sendMsg(msg);
-        
-        //add (to metadata) the association of this cache to the user we're serving 
+ //       //send message to another process running on cache server to prefetch
+ //       string msg = "{\"userID\": \"" + userId + "\", \"hash\": \"" + hash + "\" }"; 
+ //       sendMsg(msg);
+ //       
+ //       //add (to metadata) the association of this cache to the user we're serving 
 
-        //if (db.alreadyExists(hash)) {
-        //    string data;
-        //    db.get(hash, data);
-        //    printf("Content-Type: application/binary\r\n\r\n");
-        //    printf("%s", data.c_str());
-        //    return 0;  
-        //}  
-        //else {
-            string response;
-            string responseContentType;
-            HttpHelper::requestFromBlockServer(hash, responseContentType, response);
-            printf("Content-Type:  %s\r\n\r\n", responseContentType.c_str());
-//            printf("%s", response.c_str());
-//            cout.write(response.c_str(), response.length());
-            for(int i = 0; i < response.length(); i++) {
-                printf("%c", response.c_str()[i]);
-            }
-            //char* response_c_str = (char*) malloc(response.length());
-            //memcpy(response_c_str, response.c_str(), response.length());
-            ////fwrite(response_c_str, sizeof(char), response.length(), stdin);
-            //free(response_c_str);
+ //       //if (db.alreadyExists(hash)) {
+ //       //    string data;
+ //       //    db.get(hash, data);
+ //       //    printf("Content-Type: application/binary\r\n\r\n");
+ //       //    printf("%s", data.c_str());
+ //       //    return 0;  
+ //       //}  
+ //       //else {
+ //           string response;
+ //           string responseContentType;
+ //           HttpHelper::requestFromBlockServer(hash, responseContentType, response);
+////		cout << "Content-Type: " << responseContentType << "\r\n\r\n";
+////            printf("Content-Type:  %s\r\n\r\n", responseContentType.c_str());
+////            printf("%s", response.data());
+////            cout.write(response.data(), response.size());
+ //           for(int i = 0; i < response.length(); i++) {
+ //               if(response.data()[i] == '\0')
+ //       		printf("\0");
+ //       	else 
+ //       		printf("%c", response.data()[i]);
+ //           }
+ //           //char* response_c_str = (char*) malloc(response.length());
+ //           //memcpy(response_c_str, response.c_str(), response.length());
+ //           ////fwrite(response_c_str, sizeof(char), response.length(), stdin);
+ //           //free(response_c_str);
 
-        //}
-        
-    }
+ //       //}
+cout << "Content-Type: application/binary\r\n" 
+	<< "Content-Length: 0\r\n\r\n";    
+}
 
 #if HAVE_IOSTREAM_WITHASSIGN_STREAMBUF
     cin  = cin_streambuf;
