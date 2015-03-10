@@ -104,7 +104,20 @@ int main(void)
     LevelDBHelper db("cachedb");
 
     while(FCGI_Accept() >= 0) {
+        streambuf * cin_streambuf  = cin.rdbuf();
+        streambuf * cout_streambuf = cout.rdbuf();
+        streambuf * cerr_streambuf = cerr.rdbuf();
         
+        #if HAVE_IOSTREAM_WITHASSIGN_STREAMBUF
+        cin  = &cin_fcgi_streambuf;
+        cout = &cout_fcgi_streambuf;
+        cerr = &cerr_fcgi_streambuf;
+        #else
+        cin.rdbuf(&cin_fcgi_streambuf);
+        cout.rdbuf(&cout_fcgi_streambuf);
+        cerr.rdbuf(&cerr_fcgi_streambuf);
+        #endif
+       
         string query_string(getenv("QUERY_STRING"));
         string hash;
         string userId;
@@ -121,26 +134,26 @@ int main(void)
         
         //add (to metadata) the association of this cache to the user we're serving 
 
-        if (db.alreadyExists(hash)) {
-            string data;
-            db.get(hash, data);
-            printf("Content-Type: application/binary\r\n\r\n");
-            printf("%s", data.c_str());
-            return 0;  
-        }  
-        else {
+        //if (db.alreadyExists(hash)) {
+        //    string data;
+        //    db.get(hash, data);
+        //    printf("Content-Type: application/binary\r\n\r\n");
+        //    printf("%s", data.c_str());
+        //    return 0;  
+        //}  
+        //else {
             string response;
             string responseContentType;
             HttpHelper::requestFromBlockServer(hash, responseContentType, response);
             printf("Content-Type:  %s\r\n\r\n", responseContentType.c_str());
             //printf("%s", response.c_str());
+            cout.write(response.c_str(), response.length());
             
-            
-            char* response_c_str = (char*) malloc(response.length());
-            memcpy(response_c_str, response.c_str(), response.length());
-            fwrite(response_c_str, sizeof(char), response.length(), stdin);
-            free(response_c_str);
-        }
+            //char* response_c_str = (char*) malloc(response.length());
+            //memcpy(response_c_str, response.c_str(), response.length());
+            ////fwrite(response_c_str, sizeof(char), response.length(), stdin);
+            //free(response_c_str);
+        //}
         
     }
 
