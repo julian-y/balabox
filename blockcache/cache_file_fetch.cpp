@@ -162,7 +162,9 @@ int main(void)
             printf("Content-Type:  %s\r\n\r\n", responseContentType.c_str());
 //            printf("%s", response.c_str());
 //            cout.write(response.c_str(), response.length());
-            
+            for(int i = 0; i < response.length(); i++) {
+                printf("%c", response.c_str()[i]);
+            }
             //char* response_c_str = (char*) malloc(response.length());
             //memcpy(response_c_str, response.c_str(), response.length());
             ////fwrite(response_c_str, sizeof(char), response.length(), stdin);
