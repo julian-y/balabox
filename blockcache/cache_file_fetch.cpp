@@ -170,7 +170,7 @@ int main(void)
             string data;
             db.get(hash, data);
             cout << "Status: 200\r\n";
-            cout << "Source: Cache Server\r\n";
+            cout << "Server: Cache Server\r\n";
             cout << "Content-Type: application/binary\r\n\r\n";
             cout.write(data.data(), data.size());
             return 0;  
@@ -181,7 +181,7 @@ int main(void)
             string responseCode;
             HttpHelper::requestFromBlockServer(hash, responseContentType, response, responseCode);
             cout << "Status: " << responseCode << "\r\n";
-            cout << "Source: Block Server\r\n";
+            cout << "Server: Block Server\r\n";
             cout << "Content-Type: " << responseContentType << "\r\n\r\n";
             cout.write(response.data(), response.size());
         }
