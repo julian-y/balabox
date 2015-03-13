@@ -46,8 +46,9 @@ int addUserCache(string user_id) {
     
     string responseHeader;
     string response;
+    string responseCode;
     HttpHelper::sendHttpRequest(HttpHelper::metadata_ip, path, "POST", 
-            "", responseHeader, response);
+            "", responseHeader, response, responseCode);
     return 0;
 }
 
@@ -110,7 +111,7 @@ void outputErrorMessage(const string& error)
 int main(void)
 {
     int count = 0;
-    // Open the database
+    //Open the database
 //    LevelDBHelper db("cachedb");
     streambuf * cin_streambuf  = cin.rdbuf();
     streambuf * cout_streambuf = cout.rdbuf();
@@ -175,7 +176,9 @@ int main(void)
        //else {
         string response;
         string responseContentType;
-        HttpHelper::requestFromBlockServer(hash, responseContentType, response);
+        string responseCode;
+        HttpHelper::requestFromBlockServer(hash, responseContentType, response, responseCode);
+        cout << "Status: " << responseCode << "\r\n";
         cout << "Content-Type: " << responseContentType << "\r\n\r\n";
         cout.write(response.data(), response.size());
 

@@ -28,9 +28,10 @@ int storeToBlockServer(string hash, string block) {
     string path = "/file_store?hash=" + hash;
     string responseContentType;
     string response;
+    string responseCode;
     
-    HttpHelper::sendHttpRequest(HttpHelper::block_ip, path, "POST", block, responseContentType, response);
-            
+    HttpHelper::sendHttpRequest(HttpHelper::block_ip, path, "POST", block, responseContentType, response, responseCode);
+    printf("Status: %s\r\n", responseCode.c_str());
     printf("Content-Type:  %s\r\n\r\n", responseContentType.c_str());
     printf("%s", response.c_str());
 
