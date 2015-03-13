@@ -81,15 +81,16 @@ void errorParsing(string json) {
 }
 
 //simple pickHashes function (just 
-vector<string> pickHashes(Json::Value recent_hashes, LevelDBHelper db) {
+vector<string> pickHashes(Json::Value recent_hashes, LevelDBHelper* db) {
     vector<string> hashes;
     for(int i = 0; i < recent_hashes.size(); i++) {
         string curHash = recent_hashes[i].asString();
         
         // if curHash already exists in leveldb, skip it
-        if(!db.alreadyExists(curHash))
+        if(!db->alreadyExists(curHash))
             hashes.push_back(curHash);
     }
+   
     return hashes;
 }
 
@@ -111,7 +112,7 @@ int main(int argc, char *argv[]) {
               error("ERROR on binding");
 
     // Open the database
-    LevelDBHelper db("cacheDB");
+    LevelDBHelper* db = new LevelDBHelper("cacheDB");
 
     printf("listening on port 8080\n");
     while (1) {
@@ -154,7 +155,8 @@ int main(int argc, char *argv[]) {
         } else {
 
             vector<string> hashesToRetrieve = pickHashes(block_list, db);
-            for(int i = 0; i < hashesToRetrieve.size(); i++) {
+    
+	  for(int i = 0; i < hashesToRetrieve.size(); i++) {
                 string curHash = hashesToRetrieve[i];
                 string responseContentType;
                 string block;
@@ -163,11 +165,15 @@ int main(int argc, char *argv[]) {
                 if(atoi(responseCode.c_str()) == 200) {
                     cout << "fetched hash " << curHash << endl;
                     cout << "block: " << endl << block << endl << "---" << endl;
-                    db.put(curHash, block);
+		    int status = db->put(curHash, block);
+		    if (status != 0) {
+		    	cout << "Error inserting into database" << endl;
+	 	    }
                     cout << "stored hash " << curHash << " into cacheDB" << endl;
                 }
             }
             
         }
     }
+    delete db;
 }

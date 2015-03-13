@@ -1,11 +1,14 @@
 #include "leveldb_helper.hpp"
 #include "leveldb/db.h"
+#include "leveldb/write_batch.h"
+#include <string>
 #include <iostream>
 
 using namespace std;
 
 LevelDBHelper::LevelDBHelper(const string& db_name) {
 	options.create_if_missing = true;
+	writeoptions.sync = true;
 	leveldb::Status status = leveldb::DB::Open(options, db_name, &m_db);
 	if (!status.ok()) {
 		cerr << status.ToString() << endl;
@@ -35,13 +38,16 @@ int LevelDBHelper::put(const string& block_hash, const string& data) {
         return 1;
     } else {
         cout << "m_db was NOT NULL!" << endl;
-    }
+	}
+
 	leveldb::Status status = m_db->Put(writeoptions, block_hash, data);
+//	leveldb::Status status = m_db->Write(writeoptions, &batch);
+
 	if (!status.ok()) {
-		cerr << status.ToString() << endl;
+		cout << status.ToString() << endl;
 		return 1;
 	} 
-	cerr << "(" << block_hash << "," << data << ") succesfully inserted!" << endl;
+	cout << "(" << block_hash << "," << data << ") succesfully inserted!" << endl;
 	return 0;
 }
 
