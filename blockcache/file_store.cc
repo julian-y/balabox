@@ -12,13 +12,15 @@ extern char ** environ;
 #include "leveldb/db.h"
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include <unistd.h>
 
 using namespace std;
 
 // To check binary file: sudo curl --data-binary "@filename" --header "Host: www.balabox.com"
 
 // Maximum number of bytes allowed to be read from stdin
-static const unsigned long STDIN_MAX = 1000000;
+static const unsigned long STDIN_MAX = 100000000;
 
 /* 
 	Parses request body into a vector<unsigned char>.
@@ -27,12 +29,13 @@ vector<unsigned char> getRequestBody(const FCGX_Request &request)
 {
 	FCGX_Stream *in; 
     char * clenstr = FCGX_GetParam("CONTENT_LENGTH", request.envp);
-    unsigned long clen = STDIN_MAX;
+    unsigned long int clen = STDIN_MAX;
+
     vector<unsigned char> content;
 
     if (clenstr)
     {
-        clen = strtol(clenstr, &clenstr, 10);
+        clen = strtoul(clenstr, &clenstr, 10);
         if (*clenstr)
         {
            
@@ -79,11 +82,52 @@ void outputErrorMessage(const string& error)
           << "<html><p>400 " << error << "</p></html>";
 }
 
-void outputSuccessMessage() {
+void outputSuccessMessage(const unordered_map<string, string>& info) {
 	cout << "Status: 200\r\n"
 		 << "Content-type: text/html\r\n"
 		 << "\r\n"
-		 << "<html><p> 200 OK </p></html>";
+		 << "<html><p> 200 OK </p>\n"
+         << "<p> Hash: " << info.find("hash")->second << "</p>\n"
+         << "<p> Data: " << info.find("data")->second << "</p>\n"
+         << "<p> IP: " << info.find("ip")->second << "</p>\n"
+         << "</html>\n";
+}
+
+/** 
+*   Returns ifconfig's eth0 information.
+*/
+string getEth0Info() {
+    FILE *fp;
+    char ipBuffer[64];
+    string eth0;
+
+    fp = popen("/sbin/ifconfig eth0", "r");
+
+    while (fgets(ipBuffer, 64, fp) != NULL) {
+        eth0 += ipBuffer;
+    }
+
+    pclose(fp);
+    return eth0;
+}
+
+/**
+*   Parses eth0 information for IP address.
+*   @param ip: string containing IP address
+*   Returns 0 upon success and nonzero otherwise.
+*/
+int getIPAddress(string& ip) {
+    string eth0 = getEth0Info();
+    string begin = "inet addr";
+
+    // Verify that the inet addr exists
+    int beginPos = eth0.find(begin);
+    if (beginPos == string::npos) {
+        return 1;
+    }
+
+    ip = eth0.substr(beginPos + begin.length() + 1, 13);
+    return 0;
 }
 
 /*
@@ -126,11 +170,12 @@ int main(void) {
 
     FCGX_Request request;
 
-    FCGX_Init();
-    FCGX_InitRequest(&request, 0, 0);
+    int status = FCGX_Init();
+    status = FCGX_InitRequest(&request, 0, 0);
 
     while (FCGX_Accept_r(&request) == 0)
     {
+
     	// Note that the default bufsize (0) will cause the use of iostream
         // methods that require positioning (such as peek(), seek(),
         // unget() and putback()) to fail (in favour of more efficient IO).
@@ -154,6 +199,7 @@ int main(void) {
 
         // Get data from POST request
         vector<unsigned char> content = getRequestBody(request);
+        unordered_map<string, string> successInfo;
 
         char* query_string = FCGX_GetParam("QUERY_STRING", request.envp);
         string errorMsg = "Invalid Input";
@@ -179,25 +225,42 @@ int main(void) {
         leveldb::DB *db;
     	leveldb::Options options;
     	options.create_if_missing = true;
-    	leveldb::Status status = leveldb::DB::Open(options, "/var/www/html/mydb", &db);
-    	if (!status.ok()) {
-        	outputErrorMessage(status.ToString());
-        	continue;
-    	}
+        leveldb::Status status;
+        do {
+            status = leveldb::DB::Open(options, "/var/www/html/mydb", &db);
+            sleep(2);
+        } while (!status.ok());
     	
     	leveldb::WriteOptions woptions;
 
     	// Insert into DB
     	pair<string, string> blockPair = constructKV(blockHash, content);
-    	status = db->Put(woptions, blockPair.first, blockPair.second);
+        do {
+            status = db->Put(woptions, blockPair.first, blockPair.second);
+            sleep(1);
+        } while (!status.ok());
     	if (!status.ok()) {
     		outputErrorMessage(status.ToString());
+            delete db;
     		continue;
     	}
 
-    	outputSuccessMessage();
+        string ip;
+        int getIPSuccess = getIPAddress(ip);
+        if (getIPSuccess != 0) {
+            outputErrorMessage("Unable to retrieve IP address");
+            delete db;
+            continue;
+        }
 
-    	delete db;
+        successInfo["hash"] = blockPair.first;
+        successInfo["data"] = blockPair.second;
+        successInfo["ip"] = ip;
+
+        delete db;
+
+    	outputSuccessMessage(successInfo);
+
     }
 
 #if HAVE_IOSTREAM_WITHASSIGN_STREAMBUF

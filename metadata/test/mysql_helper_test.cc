@@ -73,7 +73,7 @@ int test_missing_block_hashes(MySQLHelper &h)
 
 int test_get_recent_first_hashes(MySQLHelper &h)
 {
-    cout << "--GET RECENT FIRST HASHES TEST--" << endl;
+    cout << endl << "--GET RECENT FIRST HASHES TEST--" << endl;
     vector<string> hashes;
     if (h.getRecentFirstHashes("steven", 4, hashes) != 0) {
         return -1;
@@ -86,7 +86,7 @@ int test_get_recent_first_hashes(MySQLHelper &h)
 }
 int test_get_user_file_names(MySQLHelper &h)
 {
-    cout << "--GET USER FILE NAMES TEST--" << endl;
+    cout << endl << "--GET USER FILE NAMES TEST--" << endl;
     vector<string> fileNames;
     if (h.getUserFileNames("steven", fileNames) != 0) {
         return -1;
@@ -98,6 +98,77 @@ int test_get_user_file_names(MySQLHelper &h)
     return 0;
 }
 
+int test_get_caches(MySQLHelper &h)
+{
+    cout << endl << "--GET CACHES TEST--" << endl;
+    vector<string> caches;
+    if (h.getCaches("steven", 10, caches) != 0) {
+        return -1;
+    }
+
+    for (unsigned int i = 0; i < caches.size(); ++i) {
+        cout << caches[i] << endl;
+    }
+    return 0;
+}
+int test_remove_cache(MySQLHelper &h)
+{
+    cout << endl << "--REMOVE CACHE TEST--" << endl;
+    vector<string> caches;
+    if (h.removeCache("steven", "10.1.1.1") != 0) {
+        return -1;
+    }
+    h.getCaches("steven",10,caches);
+    if(caches.size() != 0) {
+      cout << "Failed to remove steven -> 10.1.1.1 cache association!" << endl;
+      return -1;
+    }
+
+    return 0;
+}
+int test_remove_file(MySQLHelper &h)
+{
+    string uid = "steven";
+    string filename = "testfile";
+
+    cout << endl << "--REMOVE FILE TEST--" << endl;
+    if (h.removeFile(uid, filename) != 0) {
+        return -1;
+    }
+    vector<string> fileHashes;
+    unsigned int vers;
+    h.getFileBlockList(uid,filename,fileHashes, vers);
+    
+    if(fileHashes.size() != 0) {
+      cout << "Failed to remove " + uid + " filename: " + filename << endl;
+      return -1;
+    }
+
+    return 0;
+}
+int test_add_cache(MySQLHelper& h)
+{
+  string uid = "testuser";
+  string ipAddr = "127.0.0.1";
+
+  cout << endl << "--ADD CACHE TEST--" << endl;
+  
+  if (h.addCache(uid, ipAddr)) {
+    return -1;
+  }
+
+  vector<string> ipAddrs;
+  h.getCaches(uid, 10, ipAddrs);
+  if (ipAddrs.size() == 0) {
+    cout << "Failed to add user-cache association!" << endl;
+    return -1;
+  }
+
+  for (int i = 0; i < ipAddrs.size(); ++i) {
+    cout << ipAddrs[i] << endl;
+  }
+  return 0;
+}
 int main(void)
 {
     cout << "---MYSQL HELPER TEST---"<<endl<<endl;
@@ -150,9 +221,37 @@ int main(void)
     else {
         cout << "get user file names test suceeeded!" << endl;
     }
-    
+    if (test_get_caches(h) != 0) {
+      failed++;
+      cout << "get caches test failed!" << endl;
+    } 
+    else {
+        cout << "get caches test suceeeded!" << endl;
+    }
+
+    if (test_remove_cache(h) != 0) {
+      failed++;
+      cout << "remove cache test failed!" << endl;
+    } 
+    else {
+        cout << "remove cache test suceeeded!" << endl;
+    }
+    if (test_remove_file(h) != 0) {
+      failed++;
+      cout << "remove file test failed!" << endl;
+    } 
+    else {
+        cout << "remove file test suceeeded!" << endl;
+    }
+    if (test_add_cache(h) != 0) {
+      failed++;
+      cout << "add cache test failed!" << endl;
+    } 
+    else {
+        cout << "add cache test suceeeded!" << endl;
+    }
     if(h.close() == 0) {
-        printf("Successfully closed mysql connection!\n");
+        cout << endl << "Successfully closed mysql connection!" << endl;
     }
     else {
         failed++;

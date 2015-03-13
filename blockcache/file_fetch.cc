@@ -65,16 +65,44 @@ void outputErrorMessage(const string& error)
      cout << "Status: 400\r\n"
           <<  "Content-type: text/html\r\n"
           <<  "\r\n"
-          << "<html><p>400 " << error << "</p></html>";
+          << "<html><p>400 " << error << "</p></html>\n";
 }
 
-void outputNormalMessage(int &count)
-{
-     cout << "Content-type: text/html\r\n"
-          <<  "\r\n"
-          <<  "<TITLE>file_comp</TITLE>\n"
-          <<  "<H1>file_comp</H1>\n"
-          <<  "<H4>Request Number: " << ++count << "</H4>\n";
+/** 
+*   Returns ifconfig's eth0 information.
+*/
+string getEth0Info() {
+    FILE *fp;
+    char ipBuffer[64];
+    string eth0;
+
+    fp = popen("/sbin/ifconfig eth0", "r");
+
+    while (fgets(ipBuffer, 64, fp) != NULL) {
+        eth0 += ipBuffer;
+    }
+
+    pclose(fp);
+    return eth0;
+}
+
+/**
+*   Parses eth0 information for IP address.
+*   @param ip: string containing IP address
+*   Returns 0 upon success and nonzero otherwise.
+*/
+int getIPAddress(string& ip) {
+    string eth0 = getEth0Info();
+    string begin = "inet addr";
+
+    // Verify that the inet addr exists
+    int beginPos = eth0.find(begin);
+    if (beginPos == string::npos) {
+        return 1;
+    }
+
+    ip = eth0.substr(beginPos + begin.length() + 1, 13);
+    return 0;
 }
 
 /*
@@ -151,14 +179,14 @@ int main(void) {
             continue;
         }
 
-        string dbName = "mydb";
+        string dbName = "/var/www/html/mydb";
         leveldb::DB *db;
     	leveldb::Options options;
-    	leveldb::Status status = leveldb::DB::Open(options, "mydb", &db);
-    	if (!status.ok()) {
-        	outputErrorMessage(status.ToString());
-        	continue;
-    	}
+    	leveldb::Status status;
+    	 do {
+            status = leveldb::DB::Open(options, "/var/www/html/mydb", &db);
+            sleep(1);
+        } while (!status.ok());
     	
     	leveldb::ReadOptions roptions;
     	string binaryData;
@@ -167,10 +195,11 @@ int main(void) {
     	// Key not found
     	if (!status.ok()) {
     		outputErrorMessage("Key does not exist");
+            delete db;
     		continue;
     	}
 
-    	cout << "Content-type: application/binary\r\n"
+    	cout << "Content-Type: application/binary\r\n"
     		 << "Content-Length: " << binaryData.size() << "\r\n"
     		 << "\r\n";
 

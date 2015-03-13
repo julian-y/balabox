@@ -1,5 +1,5 @@
 /**
- * Sends responses for recent hashes requests
+ * allows the user to associate themselves with a cache 
  * See metadata_api.md for more info
 */
 
@@ -117,46 +117,38 @@ int main (void)
               continue;
         }
                     
-        vector<string> hashes;
-        Json::Value jsonHashes;
         string param = query_string;
-        string user_id;
-        string max_hashesStr;
+        string user_id, cache_ip;
         int getParamSuccess1 = getQueryParam(param, "user_id", user_id);    
-        int getParamSuccess2 = getQueryParam(param, "max_hashes", max_hashesStr);
-
-        if (getParamSuccess1 != 0 || getParamSuccess2 != 0)
+        int getParamSuccess2 = getQueryParam(param, "cache_ip", cache_ip);    
+       
+        if (getParamSuccess1 != 0 || getParamSuccess2 !=0)
         {
             outputErrorMessage();
             continue;
         }
         
-        int max_hashes = atoi(max_hashesStr.c_str());
         
         // Connect and query the database
         MySQLHelper helper;
         helper.connect();
-        int getHashesSuccess = helper.getRecentFirstHashes(user_id, max_hashes, hashes);
-        if (getHashesSuccess == 0)
+        int CacheAddSuccess = helper.addCache(user_id, cache_ip);
+        if (CacheAddSuccess == 0)
         {             
             outputNormalMessage();            
-            stringToJson(hashes, jsonHashes);
-            response["block_list"] = jsonHashes;            
         }
         else
         {
             outputErrorMessage();
-            continue; 
         }
         helper.close();
-        cout.write(styledWriter.write(response).c_str(), styledWriter.write(response).length());
         
         //Testing
         /*string temp;
         stringstream out; 
-        out << max_hashes;
+        out << cache_ip;
         temp = out.str();
-        string output2 = "<p>user_id: " + paramMap["user_id"] + " max_hashes: " + temp + "</p>";
+        string output2 = "<p>user_id: " + paramMap["user_id"] + " cache_ip: " + temp + "</p>";
         cout.write(output2.c_str(), output2.length()); 
         */
         if (content) delete []content;

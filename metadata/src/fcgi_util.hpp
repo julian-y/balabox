@@ -10,12 +10,17 @@
 using namespace std;
 
 //Maximum number of bytes allowed to be read from stdin 
-const unsigned long STDIN_MAX = 1000000;
+const unsigned long STDIN_MAX = 10000000;
 
 /**
   error code 400 in the HTTP header when an error is encountered
 */
 void outputErrorMessage();
+
+/**
+  error code 400 in the HTTP header and output no entry for user
+*/
+void outputNoEntryMessage();
 
 /**
   HTTP status 200 when no error is encountered
@@ -31,5 +36,16 @@ void stringToJson(vector<string> &stringVals, Json::Value &jsonVals);
   converts a list of Json values into a vector of strings 
 */
 void jsonToString(Json::Value &jsonVals, vector<string> &stringVals);
+
+/**
+  converts an integer to a string
+*/
+string intToStr(int i);
+
+/**
+  parses query string
+*/
+int getQueryParam(const std::string& query_string, const std::string& param, std::string& value);
+
 
 #endif /* SHARED_FUNCTIONS */

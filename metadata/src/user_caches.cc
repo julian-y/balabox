@@ -1,5 +1,5 @@
 /**
- * Sends responses for recent hashes requests
+ * Sends responses for recent caches requests
  * See metadata_api.md for more info
 */
 
@@ -117,35 +117,34 @@ int main (void)
               continue;
         }
                     
-        vector<string> hashes;
-        Json::Value jsonHashes;
+        vector<string> ipAddrs;
+        Json::Value jsonVals;
         string param = query_string;
-        string user_id;
-        string max_hashesStr;
+        string user_id, maxStr;
         int getParamSuccess1 = getQueryParam(param, "user_id", user_id);    
-        int getParamSuccess2 = getQueryParam(param, "max_hashes", max_hashesStr);
+        int getParamSuccess2 = getQueryParam(param, "max", maxStr);
 
-        if (getParamSuccess1 != 0 || getParamSuccess2 != 0)
+        if (getParamSuccess1 != 0 && getParamSuccess2 != 0)
         {
             outputErrorMessage();
             continue;
         }
         
-        int max_hashes = atoi(max_hashesStr.c_str());
+        int max = atoi(maxStr.c_str());
         
         // Connect and query the database
         MySQLHelper helper;
         helper.connect();
-        int getHashesSuccess = helper.getRecentFirstHashes(user_id, max_hashes, hashes);
-        if (getHashesSuccess == 0)
+        int getCachesSuccess = helper.getCaches(user_id, max, ipAddrs);
+        if (getCachesSuccess == 0)
         {             
             outputNormalMessage();            
-            stringToJson(hashes, jsonHashes);
-            response["block_list"] = jsonHashes;            
+            stringToJson(ipAddrs, jsonVals);
+            response["caches"] = jsonVals;            
         }
         else
         {
-            outputErrorMessage();
+            outputNoEntryMessage();
             continue; 
         }
         helper.close();
@@ -154,9 +153,9 @@ int main (void)
         //Testing
         /*string temp;
         stringstream out; 
-        out << max_hashes;
+        out << max;
         temp = out.str();
-        string output2 = "<p>user_id: " + paramMap["user_id"] + " max_hashes: " + temp + "</p>";
+        string output2 = "<p>user_id: " + paramMap["user_id"] + " max: " + temp + "</p>";
         cout.write(output2.c_str(), output2.length()); 
         */
         if (content) delete []content;

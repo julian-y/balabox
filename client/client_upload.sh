@@ -1,40 +1,53 @@
 #!/bin/bash
 
-if [ "$#" -ne 1 ]; then
-    echo "Please enter 1 parameter: filename (foo.txt) to upload"
+dir="$(dirname "$0")"
+source $dir/defFunctions.sh #include functions
+
+#uncomment line below for debugging
+#set -vx
+
+hostname="http://104.236.169.138" 
+port="" #Format ":<port number>"
+blache_hostname="http://104.236.169.138"
+blache_port=""
+
+
+function parseJson {
+	local jsonVal=`cat $1 | python -c 'import sys, json; print json.load(sys.stdin)[sys.argv[1]]' $2`
+	echo "$jsonVal"
+}
+
+if [ "$#" -ne 2 ]; then
+    echo "Please enter 2 parameters: filename (foo.txt) to upload and user_id"
     exit 1
 fi
 
 filename=$1
+user=$2
+fileExists "$filename"
 
-#SET THESE
-hostname="http://localhost"
-port="8000"
-
-#TO DO create more functions to make script more readable...
-
-function checkStatus {
-	status_code=$(echo "$1" |  grep "HTTP/" | awk '{print $2}')
-	echo -e "HTTP status: $status_code"
-	if [[ "$status_code" = "400" ]]
-	then
-		echo "HTTP Status Code: 400. Check Input"
-		exit 1
-	fi
-	#TO-DO catch more statuses 
-}
-
-
-`sudo mkdir -p temp`
+`sudo mkdir -p blocks`
 `sudo mkdir -p hashes`
 `sudo mkdir -p responses`
+`sudo mkdir -p versions`
+`sudo chmod 777 responses`
+`sudo chmod 777 hashes`
+`sudo chmod 777 versions`
 
-`sudo split -b 4m $filename ./temp/${filename}_`
-echo -e "Split $filename into 4MB files in temp directory...\n"
+FILEBLOCKS=blocks/${filename}_blocks
+HTTPRESP=responses/${filename}_responses
+`sudo mkdir -p $FILEBLOCKS`
+`sudo mkdir -p $HTTPRESP`
+`sudo chmod 777 $FILEBLOCKS`
+`sudo chmod 777 $HTTPRESP`
+`sudo rm $FILEBLOCKS/*`
+
+`sudo split -b 4m $filename $FILEBLOCKS/${filename}_`
+echo -e "Split $filename into 4MB files in $FILEBLOCKS ...\n"
 
 
-#Creates one file with all its blocks' hashes
-for file in "./temp/*"
+#Creates one file with all its blocks' hashe
+for file in "$FILEBLOCKS/*"
 do
 	`shasum -a 256 $file  > "./hashes/${filename}_hash"`
 done
@@ -54,98 +67,112 @@ list+=" ]"
 
 
 #HTTP POST to metaserver block_query to see what blocks need to be sent to the block server
-#url="http://192.168.1.130/block_query.fcgid" 
-user="cs188@balabox" #change this to parameter or function
-
 echo -e "\nSending HTTP post to metadata..." 
-echo -e "curl -i -X POST -H "Content-Type:application/json" -H "Accept: application/json" -d '{ \"user_id\":\"${user}\", \"file_name\":\"${filename}\", \"block_list\":${list} }'  ${hostname}:${port}/block_query.fcgid\n"
 
-response=$(curl -i -X POST -H "Content-Type:application/json" -H "Accept: application/json" -d '{ \"user_id\":\"${user}\", \"file_name\":\"${filename}\", \"block_list\":${list} }'  ${hostname}:${port}/block_query.fcgid)
-
-
-echo -e "${response}\n"
-
-checkStatus "${response}"
+RESPONSE="${HTTPRESP}/block_query_response"
+status=`curl -s -w %{http_code} --header "Content-Type: application/json" --header "Accept: application/json" --data '{ "user_id":"'"$user"'", "file_name":"'"$filename"'", "block_list":'"$list"' }'  "${hostname}${port}/block_query" -o $RESPONSE`
 
 
-sudo echo "${response}" | sudo python -mjson.tool &>./responses/${filename}_md_response
+checkStatus "$status"
+echo "block_query Response:"
+cat $RESPONSE
 
 
-
-nb=$(cat ./responses/${filename}_md_response | python -c 'import sys, json; print json.load(sys.stdin)[sys.argv[1]]' nb)
+nb=`parseJson "$RESPONSE" "nb"`
 
 
 #Check if client needs to send blocks
 if [[ "$nb" = False ]]
 then
-	echo "File is synced. No blocks need to be sent."
+	echo "File $filename is synced. No blocks need to be sent."
+	exitUpload
+elif [[ "$nb" != True ]]
+then
+	echo "Error invalid value for nb"
 	exit 1
 fi
 
 #parse hashes string then send corresponding blocks to cache server
 echo "Need to send blocks for these hashes:"
 
+#run bootstrap to isntall jq
+needed_blocks="$(cat $RESPONSE | jq '.needed_blocks[]')"
 
-#sudo apt-get install jq if you don't have it yet installed
+block_list=`cat $RESPONSE | jq '.needed_blocks[]'| sed 's/\"//g'`
+echo $block_list
 
-needed_blocks="$(cat ./responses/${filename}_md_response | jq '.needed_blocks[]' | sed "s/\"//g")"
-echo -e "$needed_blocks"
-
-
-#TO-D0: Optimize this...
-while read -r line
+#TO-D0: Optimize
+#Might change so filename is hash and content is file block name
+while read -r block_list_hash
 do
+	
 	while read in
 	do
+		
 		#remove block file name and append only hash
-		temp="$(echo "$in" | awk '{print $1}')"
-		if [[ "$line" =  "$temp" ]]
+		file_hash="$(echo "$in" | awk '{print $1}')"
+
+		if [[ "$block_list_hash" =  "$file_hash" ]]
 		then
+			
+			block_name="$(echo "$in" | awk '{print $2}')"
+			
+    		fileExists "$block_name"
 
-			file="$(echo "$in" | awk '{print $2}')"
-			if [ ! -f $file ]; then
-    			echo "File not found!"
-			fi
+			echo -e "\nSending HTTP POST to cache server with binary data for $block_name..."
 
-			echo -e "\nSending HTTP POST to cache server with binary data for $file..."
 
-			response_cache=$(curl -i -X POST --data-binary "@${file}"  ${hostname}:${port}/file_store.fcgid)
-			echo -e "${response_cache}\n"
-
-			checkStatus "${response_cache}"
-			#TO-DO handle error sending blocks
+			RESPONSE=${HTTPRESP}/file_store_response
+			status=`curl -s -w %{http_code} --data-binary "@$block_name" "$blache_hostname$blache_port/file_store?hash=$file_hash" -o $RESPONSE`
+			
+			checkStatus "$status"
+			echo "file_store for block $block_name Response:"
+			cat $RESPONSE
+						
 		fi
 
 	done < "./hashes/${filename}_hash"
-done <<< "$needed_blocks"
+done <<< "$block_list"
 
+
+echo -e "\nSuccessfully retrieved blocks for hashes"
+if echo $needed_blocks | sed -e 's/[[:space:]]/, /g'; then 
+	hash_send="[ $(echo $needed_blocks | sed -e 's/[[:space:]]/, /g') ]"
+else
+	hash_send="[ $needed_blocks ]"	
+fi
 
 echo -e "\nSending HTTP POST to metadata to commit blocks..." 
-hash_send="[$(cat ./responses/${filename}_md_response | jq '.needed_blocks[]'| sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/, /g')]"
-#echo "$hash_send"
-echo -e "curl -i -X POST -H "Content-Type:application/json" -H "Accept: application/json" -d '{ \"user_id\":\"${user}\", \"file_name\":\"${filename}\", \"block_list\":${hash_send} }'  ${hostname}:${port}/file_commit.fcgid\n"
 
+if [ ! -f  "versions/${filename}_version" ]; then
+    echo "First version of file. Version 0"
+    version="0"
+else
+    oldversion=$(head -n 1 versions/${filename}_version)
+    version=$((oldversion+1))
+fi 
 
-response_fc=$(curl -i -X POST -H "Content-Type:application/json" -H "Accept: application/json" -d '{ \"user_id\":\"${user}\", \"file_name\":\"${filename}\", \"block_list\":${hash_send} }'  ${hostname}:${port}/file_commit.fcgid)
+RESPONSE=${HTTPRESP}/file_commit_response
 
-echo -e "${response_fc}\n"
+status=`curl -s -w %{http_code} --header "Content-Type: application/json" --header "Accept: application/json" --data '{ "user_id":"'"$user"'", "file_name":"'"$filename"'", "block_list":'"$hash_send"', "version":"'"$version"'" }' "${hostname}${port}/file_commit" -o $RESPONSE`
 
-checkStatus "${response_fc}"
+checkStatus "$status"
+echo "file_commit_response for file $filename:"
+cat $RESPONSE
 
-sudo echo "${response}" | sudo python -mjson.tool &>./responses/${filename}_md_response2
+metadata_updated=`parseJson $RESPONSE "metadata_updated"`
 
-
-metadata_updated=$(cat ./responses/${filename}_md_response2 | python -c 'import sys, json; print json.load(sys.stdin)[sys.argv[1]]' metadata_updated)
 
 if [[ "$metadata_updated" = True ]]
 then
-	echo -e "File $file_name successfully committed to metadata\n"
+	echo -e "File $file_name successfully committed to metadata"
+	echo -e "Currently version $version"
+	`sudo echo "$version" > versions/${filename}_version`
 else
-	echo -e "Error committing file $file_name to metadata"
-	exit 1
-	#resend?
+	message=`parseJson "$RESPONSE" "message"`
+	echo -e "Error committing file $file_name to metadata: ${message}"
+	exitUpload
 fi
 
 
-`sudo rm -r "./temp"`
-echo -e "Deleted temp directory\n"
+exitUpload 

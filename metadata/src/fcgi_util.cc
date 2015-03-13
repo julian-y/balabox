@@ -6,6 +6,7 @@
 #include <jsoncpp/json/json.h>
 #include <vector>
 #include <string>
+#include <sstream>
 #include "fcgi_util.hpp"
 using namespace std;
 
@@ -18,9 +19,20 @@ void outputErrorMessage()
           << "\r\n";
 }
 
+
+void outputNoEntryMessage()
+{
+          cout << "Status: 400\r\n"
+               << "Content-type: text/html\r\n"
+               << "\r\n"
+               << "<html><p>400 NO ENTRY FOR USER</p></html>"
+               << "\r\n";
+}
+
+
 void outputNormalMessage()
 {
-     cout << "Content-type: text/html\r\n"
+     cout << "Content-type: application/json\r\n"
           <<  "\r\n";
 }
 
@@ -40,3 +52,34 @@ void jsonToString(Json::Value &jsonVals, vector<string> &stringVals)
    }
 }
 
+string intToStr(int i)
+{
+   string temp;
+   stringstream out;
+   out << i;
+   return out.str();
+}
+
+int getQueryParam(const std::string& query_string, 
+         const std::string& param, std::string& value) {
+
+      // Verify that the parameter required is found
+      int paramPos = query_string.find(param + "=");
+
+      if (paramPos == string::npos) {
+           return 1;
+      }   
+
+      int valuePos = query_string.find("=", paramPos) + 1;
+      int nextParam = query_string.find("&", valuePos);
+                
+      //if there is another parameter after the one
+      //we're searching for
+      if (nextParam == string::npos) {
+          value = query_string.substr(valuePos);    
+      } else {
+          value = query_string.substr(valuePos, nextParam - valuePos);
+      }   
+
+      return 0;
+}

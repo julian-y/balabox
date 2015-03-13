@@ -1,5 +1,5 @@
 /**
- * Sends responses for recent hashes requests
+ * Sends responses for file_list requests
  * See metadata_api.md for more info
 */
 
@@ -17,13 +17,13 @@ extern char ** environ;
 #include <jsoncpp/json/json.h>
 #include <vector> 
 #include <map>
-#include <sstream>
 
 /* mysql access helpers*/
 #include "mysql_helper.hpp"
 
-/* shared function helpers */
+/* shared function helpers*/
 #include "fcgi_util.hpp"
+
 using namespace std;
 
 static long gstdin(FCGX_Request * request, char ** content)
@@ -67,6 +67,7 @@ static long gstdin(FCGX_Request * request, char ** content)
 
     return clen;
 }
+
 
 int main (void)
 {
@@ -117,31 +118,27 @@ int main (void)
               continue;
         }
                     
-        vector<string> hashes;
-        Json::Value jsonHashes;
+        vector<string> filenames;
+        Json::Value jsonNames;
         string param = query_string;
         string user_id;
-        string max_hashesStr;
-        int getParamSuccess1 = getQueryParam(param, "user_id", user_id);    
-        int getParamSuccess2 = getQueryParam(param, "max_hashes", max_hashesStr);
-
-        if (getParamSuccess1 != 0 || getParamSuccess2 != 0)
+        int getParamSuccess = getQueryParam(param, "user_id", user_id);    
+        
+        if (getParamSuccess != 0)
         {
             outputErrorMessage();
             continue;
         }
         
-        int max_hashes = atoi(max_hashesStr.c_str());
-        
         // Connect and query the database
         MySQLHelper helper;
         helper.connect();
-        int getHashesSuccess = helper.getRecentFirstHashes(user_id, max_hashes, hashes);
-        if (getHashesSuccess == 0)
+        int getFileSuccess = helper.getUserFileNames(user_id, filenames);             
+        if (getFileSuccess == 0)
         {             
             outputNormalMessage();            
-            stringToJson(hashes, jsonHashes);
-            response["block_list"] = jsonHashes;            
+            stringToJson(filenames, jsonNames);
+            response["files"] = jsonNames;   
         }
         else
         {
@@ -151,14 +148,6 @@ int main (void)
         helper.close();
         cout.write(styledWriter.write(response).c_str(), styledWriter.write(response).length());
         
-        //Testing
-        /*string temp;
-        stringstream out; 
-        out << max_hashes;
-        temp = out.str();
-        string output2 = "<p>user_id: " + paramMap["user_id"] + " max_hashes: " + temp + "</p>";
-        cout.write(output2.c_str(), output2.length()); 
-        */
         if (content) delete []content;
 
         // If the output streambufs had non-zero bufsizes and

@@ -21,3 +21,19 @@ Content-length: 30
 
 {"hash1":"123","hash2":"abcd"}
 
+
+Use curls to test steven's droplet:
+test block server:
+
+sudo curl --data-binary "z" --header "Host: www.stevendroplet.com" http://stevendroplet.com/file_store?hash=12345
+
+sudo curl --header "Host: www.stevendroplet.com" http://stevendroplet.com/file_fetch?hash=12345
+
+test cache:
+
+sudo curl --data-binary "blah" --header "Host: www.stevendroplet.com" http://stevendroplet.com/cache_file_store?hash=12345
+
+sudo curl --header "Host: www.stevendroplet.com" "http://stevendroplet.com/cache_file_fetch?hash=12345&user=5"
+
+sudo curl --header "Host: www.stevendroplet.com" "http://stevendroplet.com/cache_file_fetch?user=5&hash=12345"
+

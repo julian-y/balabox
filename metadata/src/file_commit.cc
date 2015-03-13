@@ -164,10 +164,7 @@ int main (void)
                     response["message"] = "Old client version.";
                 else 
                 {
-                    string temp; 
-                    stringstream out;
-                    out << updateFileData;
-                    string msg = "Database has encountered problems while updating the files. Please try again later. error code: " + out.str();
+                    string msg = "Database has encountered problems while updating the files. Please try again later. error code: " + intToStr(updateFileData);
                     response["message"] = msg;
                 }
             }

@@ -126,7 +126,6 @@ MySQLHelper::updateFileData(const string& userId, const string& filename,
     string deleteStmt = "DELETE FROM FileBlock WHERE user_id='" + userId + 
           "' AND file_name='" + filename + "'";
     if (mysql_query(m_conn,deleteStmt.c_str())) {
-      cout << "delete stmt: " << deleteStmt << endl;  
       return mysql_errno(m_conn);
     }
     // insert new rows for file 
@@ -140,6 +139,18 @@ MySQLHelper::updateFileData(const string& userId, const string& filename,
     }       
     mysql_free_result(res);
     return 0;
+}
+
+int
+MySQLHelper::removeFile(const string& userId, const string& filename)
+{
+  string removeStmt = "DELETE FROM FileBlock WHERE user_id='" + userId + 
+          "' AND file_name='" + filename + "'";
+  if (mysql_query(m_conn, removeStmt.c_str())) {
+    return mysql_errno(m_conn);
+  }
+
+  return 0;
 }
 
 int
@@ -175,7 +186,7 @@ int
 MySQLHelper::getUserFileNames(const std::string& userId, std::vector<std::string>& fileNames)
 {
     // perform a query for each hash in user hashes, add hash to missingHashes if it wasnt in db
-    string userFilesQuery = "SELECT file_name FROM FileBlock WHERE user_id='" 
+    string userFilesQuery = "SELECT DISTINCT file_name FROM FileBlock WHERE user_id='" 
         + userId + "'";
     
     if (mysql_query(m_conn, userFilesQuery.c_str()) != 0) {
@@ -226,6 +237,58 @@ MySQLHelper::getRecentFirstHashes(const std::string& userId, unsigned int maxHas
 
     mysql_free_result(res);
     return 0;
+}
+
+int
+MySQLHelper::getCaches(const std::string& userId, unsigned int maxCaches, 
+    std::vector<std::string>& ipAddrs)
+{
+    // perform a query for each hash in user hashes, add hash to missingHashes if it wasnt in db
+    string getCachesQuery = "SELECT cache_server_ip FROM UserCache WHERE user_id='" 
+        + userId + "' LIMIT " + intToStr(maxCaches);
+
+    if (mysql_query(m_conn, getCachesQuery.c_str()) != 0) {
+        return mysql_errno(m_conn);
+    }
+
+    MYSQL_RES *res = mysql_store_result(m_conn);
+    if (res == NULL) {
+        return mysql_errno(m_conn);
+    }
+
+    MYSQL_ROW row;
+    while ( (row = mysql_fetch_row(res)) ) {
+        string ipAddrStr = row[0];
+        ipAddrs.push_back(ipAddrStr);
+    }
+
+    mysql_free_result(res);
+    return 0;
+}
+
+int
+MySQLHelper::addCache(const string& userId, const string& ipAddr)
+{
+  string insertStmt = "INSERT INTO UserCache(user_id, cache_server_ip) VALUES('" 
+        + userId + "','" + ipAddr + "')";
+
+  if (mysql_query(m_conn, insertStmt.c_str()) != 0) {
+        return mysql_errno(m_conn);
+  }
+
+  return 0; 
+}
+
+int
+MySQLHelper::removeCache(const std::string& userId, const std::string& ipAddr)
+{
+  string removeCacheStmt = "DELETE FROM UserCache WHERE user_id='" + userId + 
+          "' AND cache_server_ip='" + ipAddr + "'";
+  if (mysql_query(m_conn, removeCacheStmt.c_str()) != 0) {
+        return mysql_errno(m_conn);
+  }
+
+  return 0;
 }
 
 string MySQLHelper::intToStr(int i)
