@@ -41,7 +41,7 @@ cache_file_store: cache_file_store.cpp
 	$(CC) $(CXXFLAGS) http_helper.o leveldb_helper.cc cache_file_store.cpp $(JSON_LIB) -o fcgid/cache_file_store $(CACHE_OPTS)
 
 prefetch: prefetch.cpp
-	$(CC) $(CXXFLAGS) http_helper.o prefetch.cpp leveldb_helper.cc $(JSON_LIB) -g prefetch $(CACHE_OPTS)
+	$(CC) $(CXXFLAGS) http_helper.o prefetch.cpp leveldb_helper.cc $(JSON_LIB) prefetch -g $(CACHE_OPTS)
 
 
 install: 
