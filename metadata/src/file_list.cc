@@ -133,12 +133,21 @@ int main (void)
         // Connect and query the database
         MySQLHelper helper;
         helper.connect();
-        int getFileSuccess = helper.getUserFileNames(user_id, filenames);             
+        vector<string> versions;
+        int getFileSuccess = helper.getUserFileNames(user_id, filenames, versions);             
         if (getFileSuccess == 0)
         {             
-            outputNormalMessage();            
-            stringToJson(filenames, jsonNames);
-            response["files"] = jsonNames;   
+            outputNormalMessage();
+            Json::Value files; 
+            // add filenames, versions 
+            for (int i = 0; i < filenames.size(); ++i) {
+                Json::Value pair;
+                pair[0] = filenames[i];
+                pair[1] = atoi(versions[i].c_str());
+                files[i] = pair;
+            }     
+            
+            response["files"] = files;
         }
         else
         {

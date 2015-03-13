@@ -63,7 +63,7 @@
 * parameters: 
   * user_id: id of user
 * returns: JSON document containing a user's file names
-  * files: array of file names
+  * files: an array of [filename, version] arrays
 * error codes:
   * 400: invalid input
 
