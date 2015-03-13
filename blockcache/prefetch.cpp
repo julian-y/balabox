@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
               error("ERROR on binding");
 
     // Open the database
-    LevelDBHelper db("cachedb");
+    LevelDBHelper db("cacheDB");
 
     printf("listening on port 8080\n");
     while (1) {
@@ -158,8 +158,12 @@ int main(int argc, char *argv[]) {
                 string curHash = hashesToRetrieve[i];
                 string responseContentType;
                 string block;
-                HttpHelper::requestFromBlockServer(curHash, responseContentType, block);
-                db.put(curHash, block);
+                string responseCode;
+                HttpHelper::requestFromBlockServer(curHash, responseContentType, block, responseCode);
+                if(atoi(responseCode.c_str()) == 200) {
+                    cout << "fetched hash " << hash << endl;
+                    db.put(curHash, block);
+                }
             }
             
         }
