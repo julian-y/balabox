@@ -161,8 +161,9 @@ int main(int argc, char *argv[]) {
                 string responseCode;
                 HttpHelper::requestFromBlockServer(curHash, responseContentType, block, responseCode);
                 if(atoi(responseCode.c_str()) == 200) {
-                    cout << "fetched hash " << hash << endl;
+                    cout << "fetched hash " << curHash << endl;
                     db.put(curHash, block);
+                    cout << "stored hash " << curHash << " into cacheDB" << endl;
                 }
             }
             
