@@ -162,13 +162,7 @@ int main(int argc, char *argv[]) {
                 HttpHelper::requestFromBlockServer(curHash, responseContentType, block, responseCode);
                 if(atoi(responseCode.c_str()) == 200) {
                     cout << "fetched hash " << hash << endl;
-                    cout << "block: " << endl << block << endl;
-                    
                     db.put(curHash, block);
-                    cout << "saved hash!" << endl;
-                }
-                else {
-                    cout << "failed to fetch hash: " << curHash << endl;
                 }
             }
             
