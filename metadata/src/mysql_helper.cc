@@ -183,10 +183,11 @@ MySQLHelper::getFileBlockList(const std::string& userId, const std::string& file
 }
 
 int 
-MySQLHelper::getUserFileNames(const std::string& userId, std::vector<std::string>& fileNames)
+MySQLHelper::getUserFileNames(const std::string& userId, std::vector<std::string>& fileNames,
+    std::vector<std::string>& versions)
 {
     // perform a query for each hash in user hashes, add hash to missingHashes if it wasnt in db
-    string userFilesQuery = "SELECT DISTINCT file_name FROM FileBlock WHERE user_id='" 
+    string userFilesQuery = "SELECT DISTINCT file_name,version FROM FileBlock WHERE user_id='" 
         + userId + "'";
     
     if (mysql_query(m_conn, userFilesQuery.c_str()) != 0) {
@@ -202,7 +203,9 @@ MySQLHelper::getUserFileNames(const std::string& userId, std::vector<std::string
     MYSQL_ROW row;
     while ( (row = mysql_fetch_row(res)) ) {
         string file_name = row[0];
+        string version = row[1];
         fileNames.push_back(file_name);
+        versions.push_back(version);
     }
 
     mysql_free_result(res);

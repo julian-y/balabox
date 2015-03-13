@@ -88,12 +88,13 @@ int test_get_user_file_names(MySQLHelper &h)
 {
     cout << endl << "--GET USER FILE NAMES TEST--" << endl;
     vector<string> fileNames;
-    if (h.getUserFileNames("steven", fileNames) != 0) {
+    vector<string> versions;
+    if (h.getUserFileNames("steven", fileNames, versions) != 0) {
         return -1;
     }
 
     for (unsigned int i = 0; i < fileNames.size(); ++i) {
-        cout << fileNames[i] << endl;
+        cout << fileNames[i] << " " << versions[i] << endl;
     }
     return 0;
 }
@@ -221,7 +222,6 @@ int main(void)
     else {
         cout << "get user file names test suceeeded!" << endl;
     }
-   
     if (test_get_caches(h) != 0) {
       failed++;
       cout << "get caches test failed!" << endl;

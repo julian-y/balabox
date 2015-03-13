@@ -89,10 +89,14 @@ public:
      * Retrieves a list of all file names for a given user
      * @param userId id of the user
      * @param fileNames reference to vector that will be filled with the user's file names
+     * @param versions reference to vector to fill with file versions
+     *                 one to one relationship with fileNames.  
      * @return 0 on success, non-zero on failure
+     *
      */
     int
-    getUserFileNames(const std::string& userId, std::vector<std::string>& fileNames);
+    getUserFileNames(const std::string& userId, std::vector<std::string>& fileNames,
+        std::vector<std::string>& versions);
     
     /**
      * Retreives recent hashes for a user's files starting with the beginning blocks.
