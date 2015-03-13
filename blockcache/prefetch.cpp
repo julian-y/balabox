@@ -87,8 +87,12 @@ vector<string> pickHashes(Json::Value recent_hashes, LevelDBHelper* db) {
         string curHash = recent_hashes[i].asString();
         
         // if curHash already exists in leveldb, skip it
-        if(!db->alreadyExists(curHash))
+        if(!db->alreadyExists(curHash)) {
             hashes.push_back(curHash);
+	    cout << "push hash " << curHash << "into pull vector" << endl;
+	} else {
+	    cout << "cacheDB already has hash " << curHash << endl;
+	}
     }
    
     return hashes;
@@ -155,12 +159,13 @@ int main(int argc, char *argv[]) {
         } else {
 
             vector<string> hashesToRetrieve = pickHashes(block_list, db);
-    
+		cout << "There are " << hashesToRetrieve.size() << " hashes to retrieve" << endl;    
 	  for(int i = 0; i < hashesToRetrieve.size(); i++) {
                 string curHash = hashesToRetrieve[i];
                 string responseContentType;
                 string block;
                 string responseCode;
+		cout << "Fetching hash " << curHash << "..." << endl;
                 HttpHelper::requestFromBlockServer(curHash, responseContentType, block, responseCode);
                 if(atoi(responseCode.c_str()) == 200) {
                     cout << "fetched hash " << curHash << endl;
