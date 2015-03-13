@@ -31,8 +31,10 @@ int LevelDBHelper::get(const string& block_hash, string& data) {
 
 int LevelDBHelper::put(const string& block_hash, const string& data) {
     if(m_db == NULL) {
-        cerr << "m_db was NULL!" << endl;
+        cout << "m_db was NULL!" << endl;
         return 1;
+    } else {
+        cout << "m_db was NOT NULL!" << endl;
     }
 	leveldb::Status status = m_db->Put(writeoptions, block_hash, data);
 	if (!status.ok()) {

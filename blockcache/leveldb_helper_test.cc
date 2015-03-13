@@ -17,7 +17,7 @@ int main() {
 
 	// Get
 	string value;
-	status = test.getD("bala", value);
+	status = test.get("bala", value);
 	assert(status == 0);
 	assert(value == "box");
 	status = test.get("box", value);
