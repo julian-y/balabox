@@ -12,15 +12,15 @@ int main() {
 	LevelDBHelper test(db_name);
 
 	// Put
-	int status = test.putKV("bala", "box");
+	int status = test.put("bala", "box");
 	assert(status == 0);
 
 	// Get
 	string value;
-	status = test.getData("bala", value);
+	status = test.getD("bala", value);
 	assert(status == 0);
 	assert(value == "box");
-	status = test.getData("box", value);
+	status = test.get("box", value);
 	assert(status == 1);
 	assert(value == "box");
 
