@@ -112,7 +112,7 @@ int main(void)
 {
     int count = 0;
     //Open the database
-//    LevelDBHelper db("cachedb");
+    LevelDBHelper db("cacheDB");
     streambuf * cin_streambuf  = cin.rdbuf();
     streambuf * cout_streambuf = cout.rdbuf();
     streambuf * cerr_streambuf = cerr.rdbuf();
@@ -166,23 +166,23 @@ int main(void)
         
         //add (to metadata) the association of this cache to the user we're serving 
 
-       //if (db.alreadyExists(hash)) {
-       //    string data;
-       //    db.get(hash, data);
-       //    printf("Content-Type: application/binary\r\n\r\n");
-       //    printf("%s", data.c_str());
-       //    return 0;  
-       //}  
-       //else {
-        string response;
-        string responseContentType;
-        string responseCode;
-        HttpHelper::requestFromBlockServer(hash, responseContentType, response, responseCode);
-        cout << "Status: " << responseCode << "\r\n";
-        cout << "Content-Type: " << responseContentType << "\r\n\r\n";
-        cout.write(response.data(), response.size());
-
-      //}
+        if (db.alreadyExists(hash)) {
+            string data;
+            db.get(hash, data);
+            cout << "Status: 200\r\n";
+            cout << "Content-Type: application/binary\r\n\r\n";
+            cout.write(data.data(), data.size());
+            return 0;  
+        }  
+        else {
+            string response;
+            string responseContentType;
+            string responseCode;
+            HttpHelper::requestFromBlockServer(hash, responseContentType, response, responseCode);
+            cout << "Status: " << responseCode << "\r\n";
+            cout << "Content-Type: " << responseContentType << "\r\n\r\n";
+            cout.write(response.data(), response.size());
+        }
 }
 
 #if HAVE_IOSTREAM_WITHASSIGN_STREAMBUF
