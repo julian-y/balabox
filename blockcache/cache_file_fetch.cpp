@@ -165,8 +165,9 @@ int main(void)
         sendMsg(msg);
         
         //add (to metadata) the association of this cache to the user we're serving 
-
-        LevelDBHelper* db = new LevelDBHelper();
+        zmq::context_t context(1);
+        zmq::socket_t socket(context, ZMQ_REQ);
+        LevelDBHelper* db = new LevelDBHelper(context, socket);
         
          if (db->alreadyExists(hash)) {
             string data;

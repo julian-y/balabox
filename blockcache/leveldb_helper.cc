@@ -8,23 +8,22 @@
 
 using namespace std;
 
-LevelDBHelper::LevelDBHelper(zmq::context_t context, zmq::socket_t socket)
-:context(context), socket(socket) {
-	socket.connect("ipc://test.ipc");
+LevelDBHelper::LevelDBHelper(zmq::context_t& context, zmq::socket_t& socket)
+:m_context(context), m_socket(socket) {
+	m_socket.connect("ipc://test.ipc");
 }
 
 LevelDBHelper::~LevelDBHelper() {
-	close();
 }
 
 int LevelDBHelper::get(const string& block_hash, string& data) {
 	string command("get," + block_hash);
 	zmq::message_t request(command.size());
 	memcpy((void*) request.data(), command.data(), command.size());
-	socket.send(request);
+	m_socket.send(request);
 
 	zmq::message_t response;
-	socket.recv(&response);
+	m_socket.recv(&response);
 
 	string response_data((char*)response.data(), response.size());
 	if (response_data == "Operation failed")
@@ -38,10 +37,10 @@ int LevelDBHelper::put(const string& block_hash, const string& data) {
 	string command("put," + block_hash + "," + data);
 	zmq::message_t request(command.size());
 	memcpy((void*) request.data(), command.data(), command.size());
-	socket.send(request);
+	m_socket.send(request);
 
 	zmq::message_t response;
-	socket.recv(&response);
+	m_socket.recv(&response);
 	string response_data((char*)response.data(), response.size());
 	if (response_data == "Operation failed")
 		return 1;
