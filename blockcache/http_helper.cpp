@@ -98,7 +98,7 @@ int HttpHelper::sendHttpRequest(string host_ip, string path, string reqType,
     return 0;
 }
 
-void error(const char *msg)
+void HttpHelper::error(const char *msg)
 {
     perror(msg);
     exit(0);

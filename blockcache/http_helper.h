@@ -20,9 +20,10 @@ public:
     const static std::string metadata_ip; 
     const static std::string block_ip;
     const static int prefetch_portno;
-    const static int LevelDBHelper;
+    const static int leveldb_portno;
 private:
     static int httpResponseReader(void *data, const char *buf, size_t len);
+    static void error(const char *msg);
 };
 
 #endif
