@@ -16,6 +16,7 @@
 #include <neon/ne_request.h>
 #include <neon/ne_session.h>
 
+#include <zmq.hpp>
 #include "http_helper.h"
 #include "leveldb_helper.hpp"
 #include <vector>
@@ -116,7 +117,9 @@ int main(int argc, char *argv[]) {
               error("ERROR on binding");
 
     // Open the database
-    LevelDBHelper* db = new LevelDBHelper();
+    zmq::context_t context(1);
+    zmq::socket_t socket(context, ZMQ_REQ);      
+    LevelDBHelper* db = new LevelDBHelper(context, socket);
 
     printf("listening on port 8080\n");
     while (1) {

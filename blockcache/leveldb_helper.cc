@@ -8,14 +8,13 @@
 
 using namespace std;
 
-zmq::context_t defaultContext(1);
-
-LevelDBHelper::LevelDBHelper()
-:context(defaultContext), socket(context, ZMQ_REQ) {
+LevelDBHelper::LevelDBHelper(zmq::context_t context, zmq::socket_t socket)
+:context(context), socket(socket) {
 	socket.connect("ipc://test.ipc");
 }
 
 LevelDBHelper::~LevelDBHelper() {
+	close();
 }
 
 int LevelDBHelper::get(const string& block_hash, string& data) {
