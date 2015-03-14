@@ -165,6 +165,7 @@ int main(void)
         
         //add (to metadata) the association of this cache to the user we're serving 
 
+        leveldb::DB *db;
         leveldb::Options options;
         leveldb::Status status;
         do {
@@ -173,17 +174,14 @@ int main(void)
         } while (!status.ok());
         
         leveldb::ReadOptions roptions;
-        string binaryData;
-        status = db->Get(roptions, blockHash, &binaryData);
+        string data;
+        status = db->Get(roptions, hash, &data);
 
-        if (db->alreadyExists(hash)) {
-            string data;
-            db->get(hash, data);
+        if (!status.IsNotFound()) {
             cout << "Status: 200\r\n";
             cout << "Server: Cache Server\r\n";
             cout << "Content-Type: application/binary\r\n\r\n";
             cout.write(data.data(), data.size());
-            delete db;
         }  
         else {
             string response;
@@ -195,6 +193,8 @@ int main(void)
             cout << "Content-Type: " << responseContentType << "\r\n\r\n";
             cout.write(response.data(), response.size());
         }
+
+        delete db;
 }
 
 #if HAVE_IOSTREAM_WITHASSIGN_STREAMBUF
