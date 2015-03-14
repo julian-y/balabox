@@ -41,7 +41,7 @@ cache_file_store: cache_file_store.cpp
 	$(CC) $(CXXFLAGS) http_helper.o leveldb_helper.cc cache_file_store.cpp $(JSON_LIB) -o fcgid/cache_file_store $(CACHE_OPTS)
 
 prefetch: prefetch.cpp
-	$(CC) $(CXXFLAGS) -g http_helper.o prefetch.cpp leveldb_helper.cc $(JSON_LIB) -o prefetch $(CACHE_OPTS)
+	$(CC) $(CXXFLAGS) -g http_helper.o prefetch.cpp leveldb_helper.cc $(JSON_LIB) -o fcgid/prefetch $(CACHE_OPTS)
 install: 
 #	sudo rm /var/www/html/file_fetch.fcgid
 #	sudo rm /var/www/html/file_store.fcgid
@@ -50,6 +50,7 @@ install:
 	sudo rm /var/www/html/file_store
 	sudo rm /var/www/html/cache_file_fetch
 	sudo rm /var/www/html/cache_file_store
+	sudo rm /var/www/html/prefetch
 
 	sudo cp fcgid/* -t /var/www/html
 	sudo chmod 777 /var/www/html/*
