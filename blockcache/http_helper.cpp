@@ -4,7 +4,22 @@
 #include <neon/ne_request.h>
 #include <neon/ne_session.h>
 
+//socket sending stuff:
+#include <strings.h>
+#include <stdio.h>
+// definitions of a number of data types used in socket.h and netinet/in.h
+#include <sys/types.h>   
+#include <sys/socket.h>  
+// definitions of structures needed for sockets, e.g. sockaddr
+#include <netinet/in.h>
+#include <netdb.h>
+// constants and structures needed for 
+// internet domain addresses, e.g. sockaddr_in
+#include <unistd.h>
+
 using namespace std;
+
+int const MSG_SIZE = 5000;
 
 const string  HttpHelper::metadata_ip = "104.236.169.138";
 const string  HttpHelper::block_ip = "104.236.169.138";
@@ -82,4 +97,87 @@ int HttpHelper::sendHttpRequest(string host_ip, string path, string reqType,
     return 0;
 }
 
+int HttpHelper::sendLocalMsg(string msg, int portno) {
+    //Code taken from CS118 project
+    int sockfd, newsockfd;
+    struct sockaddr_in serv_addr;
+    socklen_t addrlen = sizeof(serv_addr);
+    //contains tons of information, including the server's IP address
+    struct hostent *server;
 
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0); //create a new socket
+    if (sockfd < 0) {
+        error("ERROR opening socket");
+    }
+
+    server = gethostbyname("127.0.0.1"); 
+        if (server == NULL) {
+        fprintf(stderr,"ERROR, no such host\n");
+        exit(1);
+    }
+
+    bzero((char *) &serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET; //initialize server's address
+    bcopy((char *)server->h_addr, 
+            (char *)&serv_addr.sin_addr.s_addr, 
+            server->h_length);
+    serv_addr.sin_port = htons(portno);
+
+    char buffer[MSG_SIZE];
+    bzero(buffer, MSG_SIZE);
+
+    msg.copy(buffer, msg.length());
+
+    if(sendto(sockfd, buffer, MSG_SIZE, 0, 
+                    (struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0 ) {
+            //perror("sendto failed");
+            printf("sendto failed");
+            return 1;
+    }
+
+    return 0;
+
+}
+
+int HttpHelper::recvLocalMsg(string &msg, int portno) {
+    //Code taken from CS118 project
+    int sockfd, newsockfd;
+    struct sockaddr_in serv_addr;
+    socklen_t addrlen = sizeof(serv_addr);
+    //contains tons of information, including the server's IP address
+    struct hostent *server;
+
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0); //create a new socket
+    if (sockfd < 0) {
+        error("ERROR opening socket");
+    }
+
+    server = gethostbyname("127.0.0.1"); 
+        if (server == NULL) {
+        fprintf(stderr,"ERROR, no such host\n");
+        exit(1);
+    }
+
+    bzero((char *) &serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET; //initialize server's address
+    bcopy((char *)server->h_addr, 
+            (char *)&serv_addr.sin_addr.s_addr, 
+            server->h_length);
+    serv_addr.sin_port = htons(portno);
+
+    char buffer[MSG_SIZE];
+    bzero(buffer, MSG_SIZE);
+
+    int bytesRcvd = recvfrom(sockfd, buffer, MSG_SIZE, 0,
+                    (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+
+    while (bytesRcvd < 0) {
+        bytesRcvd = recvfrom(sockfd, buffer, MSG_SIZE, 0, 
+                    (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+    }
+
+    msg = string(buffer, bytesRcvd);
+    
+    return 0;
+
+}
