@@ -9,7 +9,7 @@
 using namespace std;
 
 LevelDBHelper::LevelDBHelper()
-:context(context_t::context_t(1)), socket(socket_t::socket_t(context), ZMQ_REQ) {
+:context(context_t(1)), socket(socket_t(context), ZMQ_REQ) {
 	socket.connect("ipc://test.ipc");
 }
 

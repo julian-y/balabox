@@ -3,6 +3,7 @@
 
 #include <string>
 #include "leveldb/db.h"
+#include <zmq.hpp>
 
 class LevelDBHelper {
 public:

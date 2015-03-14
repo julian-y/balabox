@@ -37,4 +37,4 @@ cd ~/balabox/blockcache/zeromq-4.1.0
 sudo ldconfig
 
 # Move C++ binding
-sudo mv zmq.hpp /usr/local/include/
+sudo cp zmq.hpp /usr/local/include/
