@@ -47,7 +47,8 @@ bool get(const std::string& key, std::string& value) {
 }
 
 void sendLevelDBMsg(std::string msg) {
-    HttpHelper::sendLocalMsg(msg, HttpHelper::leveldb_portno);
+    std::string dummy;
+    HttpHelper::sendLocalMsg(msg, dummy, HttpHelper::leveldb_portno, false);
 }
 /**
  * retrieve all the values associated with a key

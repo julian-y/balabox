@@ -14,7 +14,7 @@ public:
 
     static int requestFromBlockServer(std::string hash, std::string &responseContentType, std::string &response, std::string &responseCode);
 
-    static int sendLocalMsg(std::string msg, std::string &resp, int portno);
+    static int sendLocalMsg(std::string msg, std::string &resp, int portno, bool getResp);
     static int recvLocalMsg(std::string &msg, int portno);
 
     const static std::string metadata_ip; 

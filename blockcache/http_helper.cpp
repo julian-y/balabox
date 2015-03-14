@@ -104,7 +104,7 @@ void HttpHelper::error(const char *msg)
     exit(0);
 }
 
-int HttpHelper::sendLocalMsg(string msg, string &resp, int portno) {
+int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp) {
     //Code taken from CS118 project
     int sockfd, newsockfd;
     struct sockaddr_in serv_addr;
@@ -142,6 +142,7 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno) {
             return 1;
     }
 
+    if(getResp) {
     int bytesRcvd = recvfrom(sockfd, buffer, MSG_SIZE, 0, 
                     (struct sockaddr *)&serv_addr, &addrlen);
 
@@ -151,7 +152,7 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno) {
     }
 
     resp = string(buffer, bytesRcvd);
-
+    }
 
     return 0;
 
