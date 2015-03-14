@@ -68,6 +68,7 @@ void sendLevelDBMsg(std::string msg) {
     bzero(buffer, MSG_SIZE);
     memcpy(buffer, msg.c_str(), msg.length());
 
+    std::cout << "Sending msg: " << msg << std::endl;
     sendto(sockfd, buffer, MSG_SIZE, 0, 
                       (struct sockaddr *) &cli_addr, clilen);
 

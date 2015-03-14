@@ -143,15 +143,16 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
     }
 
     if(getResp) {
-    int bytesRcvd = recvfrom(sockfd, buffer, MSG_SIZE, 0, 
+        printf("Waiting for response!\n");
+        int bytesRcvd = recvfrom(sockfd, buffer, MSG_SIZE, 0, 
                     (struct sockaddr *)&serv_addr, &addrlen);
 
-    while (bytesRcvd < 0) {
+        while (bytesRcvd < 0) {
                 bytesRcvd = recvfrom(sockfd, buffer, MSG_SIZE, 0, 
                    (struct sockaddr *)&serv_addr, &addrlen);
-    }
-
-    resp = string(buffer, bytesRcvd);
+            }
+        printf("Got response!\n");
+        resp = string(buffer, bytesRcvd);
     }
 
     return 0;
