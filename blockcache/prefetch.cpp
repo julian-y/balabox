@@ -122,7 +122,6 @@ int main(int argc, char *argv[]) {
     //zmq::socket_t socket(context, ZMQ_REQ);      
     LevelDBHelper* db = new LevelDBHelper();
 
-    printf("listening on port 8080\n");
     while (1) {
         int recvlen = recvfrom(sockfd, buffer, MSG_SIZE, 0, 
                     (struct sockaddr *) &cli_addr, &clilen);
