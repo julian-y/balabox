@@ -10,6 +10,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <sys/syscall.h>
+#include "http_helper.h"
 
 leveldb::DB* db;
 /**
@@ -43,6 +44,10 @@ bool get(const std::string& key, std::string& value) {
     std::cerr << s.ToString() << std::endl; 
   }
   return s.ok();
+}
+
+void sendLevelDBMsg(std::string msg) {
+    HttpHelper::sendLocalMsg(msg, HttpHelper::leveldb_portno);
 }
 /**
  * retrieve all the values associated with a key
@@ -168,17 +173,18 @@ void* worker_routine(void* arg) {
 void run_mono_thread(const std::string& folder) {
 
   create_db(folder);
-  zmq::context_t context(1);
-
-  zmq::socket_t socket(context,ZMQ_REP);
-  std::string pipe = "ipc://" + folder + "/pipe.ipc";
-  socket.bind(pipe.c_str());
+//  zmq::context_t context(1);
+//
+//  zmq::socket_t socket(context,ZMQ_REP);
+//  std::string pipe = "ipc://" + folder + "/pipe.ipc";
+//  socket.bind(pipe.c_str());
 
   std::cout << "mono-thread server is ready " << std::endl;
   while(true) {
-    zmq::message_t request;
-    socket.recv(&request);
-
+//    zmq::message_t request;
+//    socket.recv(&request);
+    std::string request;
+    HttpHelper::recvLocalMsg(request, HttpHelper::leveldb_portno);
     Operation operation;
     std::string command((char*)request.data(),request.size());
     bool success=do_operation(std::string((char*)request.data(),request.size()),operation);
@@ -186,17 +192,21 @@ void run_mono_thread(const std::string& folder) {
 
     if(success) {
       if(operation._type==GET) {
-        send_data(socket,operation._value);
+        //send_data(socket,operation._value);
+        sendLevelDBMsg(operation._value);
       }
       else if(operation._type==PUT) {
-        send_data(socket,"OK");
+        //send_data(socket,"OK");
+        sendLevelDBMsg("OK");
       }
       else {
-        send_data(socket,"Wrong action");
+        //send_data(socket,"Wrong action");
+        sendLevelDBMsg("Wrong action");
       }
     }
     else {
-      send_data(socket,"Operation failed");
+      //send_data(socket,"Operation failed");
+      sendLevelDBMsg("Operation failed");
     }
   }
   delete db;

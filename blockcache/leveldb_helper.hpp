@@ -7,7 +7,7 @@
 
 class LevelDBHelper {
 public:
-	LevelDBHelper(zmq::context_t& context, zmq::socket_t& socket);
+	LevelDBHelper();
 	~LevelDBHelper();
 
 	/**
