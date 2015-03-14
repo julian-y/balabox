@@ -90,10 +90,10 @@ vector<string> pickHashes(Json::Value recent_hashes, LevelDBHelper* db) {
         // if curHash already exists in leveldb, skip it
         if(!db->alreadyExists(curHash)) {
             hashes.push_back(curHash);
-	    cout << "push hash " << curHash << "into pull vector" << endl;
-	} else {
-	    cout << "cacheDB already has hash " << curHash << endl;
-	}
+            cout << "push hash " << curHash << "into pull vector" << endl;
+        } else {
+            cout << "cacheDB already has hash " << curHash << endl;
+        }
     }
    
     return hashes;
@@ -101,6 +101,7 @@ vector<string> pickHashes(Json::Value recent_hashes, LevelDBHelper* db) {
 
 int main(int argc, char *argv[]) {
     cout << "starting prefetcher" << endl;
+    
     char buffer[MSG_SIZE];
     bzero(buffer, MSG_SIZE);
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -162,25 +163,26 @@ int main(int argc, char *argv[]) {
         } else {
 
             vector<string> hashesToRetrieve = pickHashes(block_list, db);
-		cout << "There are " << hashesToRetrieve.size() << " hashes to retrieve" << endl;    
-	  for(int i = 0; i < hashesToRetrieve.size(); i++) {
+            cout << "There are " << hashesToRetrieve.size() << " hashes to retrieve" << endl;    
+            for(int i = 0; i < hashesToRetrieve.size(); i++) {
                 string curHash = hashesToRetrieve[i];
                 string responseContentType;
                 string block;
                 string responseCode;
-		cout << "Fetching hash " << curHash << "..." << endl;
+                cout << "Fetching hash " << curHash << "..." << endl;
                 HttpHelper::requestFromBlockServer(curHash, responseContentType, block, responseCode);
                 if(atoi(responseCode.c_str()) == 200) {
                     cout << "fetched hash " << curHash << endl;
                     cout << "block: " << endl << block << endl << "---" << endl;
-		    int status = db->put(curHash, block);
-		    if (status != 0) {
-		    	cout << "Error inserting into database" << endl;
-	 	    }
+                    int status = db->put(curHash, block);
+                    
+                    if (status != 0) {
+                        cout << "Error inserting into database" << endl;
+                    }
                     cout << "stored hash " << curHash << " into cacheDB" << endl;
                 }
             }
-            
+                
         }
     }
     delete db;
