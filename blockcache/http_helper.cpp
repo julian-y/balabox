@@ -24,6 +24,7 @@ int const MSG_SIZE = 5000;
 const string  HttpHelper::metadata_ip = "104.236.169.138";
 const string  HttpHelper::block_ip = "104.236.169.138";
 const int     HttpHelper::prefetch_portno = 8888;
+const int     HttpHelper::leveldb_portno = 8889;
 
 int HttpHelper::getQueryParam(const std::string& query_string, 
         const std::string& param, std::string& value) {
