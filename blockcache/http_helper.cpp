@@ -175,11 +175,11 @@ int HttpHelper::recvLocalMsg(string &msg, int portno) {
     bzero(buffer, MSG_SIZE);
 
     int bytesRcvd = recvfrom(sockfd, buffer, MSG_SIZE, 0,
-                    (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+                    (struct sockaddr *) &serv_addr, &addrlen);
 
     while (bytesRcvd < 0) {
         bytesRcvd = recvfrom(sockfd, buffer, MSG_SIZE, 0, 
-                    (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+                    (struct sockaddr *) &serv_addr &addrlen);
     }
 
     msg = string(buffer, bytesRcvd);
