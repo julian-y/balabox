@@ -97,6 +97,12 @@ int HttpHelper::sendHttpRequest(string host_ip, string path, string reqType,
     return 0;
 }
 
+void error(const char *msg)
+{
+    perror(msg);
+    exit(0);
+}
+
 int HttpHelper::sendLocalMsg(string msg, int portno) {
     //Code taken from CS118 project
     int sockfd, newsockfd;
