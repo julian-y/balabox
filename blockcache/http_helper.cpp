@@ -141,6 +141,8 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
             printf("sendto failed");
             return 1;
     }
+    
+    bzero(buffer, MSG_SIZE);
 
     if(getResp) {
         printf("Waiting for response!\n");
