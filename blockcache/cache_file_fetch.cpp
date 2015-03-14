@@ -28,7 +28,7 @@
 // constants and structures needed for 
 // internet domain addresses, e.g. sockaddr_in
 #include "http_helper.h"
-#include "leveldb_helper.hpp"
+//#include "leveldb_helper.hpp"
 
 //using namespace cgicc;
 using namespace std;
@@ -165,7 +165,16 @@ int main(void)
         
         //add (to metadata) the association of this cache to the user we're serving 
 
-        LevelDBHelper* db = new LevelDBHelper("cacheDB");
+        leveldb::Options options;
+        leveldb::Status status;
+        do {
+            status = leveldb::DB::Open(options, "cacheDB", &db);
+            sleep(1);
+        } while (!status.ok());
+        
+        leveldb::ReadOptions roptions;
+        string binaryData;
+        status = db->Get(roptions, blockHash, &binaryData);
 
         if (db->alreadyExists(hash)) {
             string data;
