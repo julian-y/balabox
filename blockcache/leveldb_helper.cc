@@ -4,46 +4,49 @@
 #include <string>
 #include <iostream>
 #include <unistd.h>		// sleep()
+#include <zmq.hpp>
 
 using namespace std;
 
-LevelDBHelper::LevelDBHelper(const string& db_name) {
-	options.create_if_missing = true;
-	writeoptions.sync = true;
-	leveldb::Status status;
-	do {
-            status = leveldb::DB::Open(options, db_name, &m_db);
-            sleep(1);
-    } while (!status.ok());
-	// else {
-	// 	cerr << db_name << " successfully opened/created!" << endl;
-	// }
+LevelDBHelper::LevelDBHelper() {
+	zmq::context_t context(1);
+	zmq::socket_t socket(context, ZMQ_REQ);
+	socket.connect("ipc://test.ipc");
 }
 
 LevelDBHelper::~LevelDBHelper() {
-	delete m_db;
-	m_db = nullptr;
 }
 
 int LevelDBHelper::get(const string& block_hash, string& data) {
-	string value;
-	leveldb::Status status = m_db->Get(readoptions, block_hash, &value);
-	if (status.IsNotFound()) {
+	string command("get," + block_hash);
+	zmq::message_t request(command.size());
+	memcpy((void*) request.data(), command.data(), command.size());
+	socket.send(request);
+
+	zmq::message_t response;
+	socket.recv(&response);
+
+	string response_data((char*)response.data(), response.size());
+	if (response_data == "Operation failed")
 		return 1;
-	}
-	data = value;
+	else 
+		data = response_data;
 	return 0;
 }
 
 int LevelDBHelper::put(const string& block_hash, const string& data) {
-	leveldb::Status status = m_db->Put(writeoptions, block_hash, data);
+	string command("put," + block_hash + "," + data);
+	zmq::message_t request(command.size());
+	memcpy((void*) request.data(), command.data(), command.size());
+	socket.send(request);
 
-	if (!status.ok()) {
-		cout << status.ToString() << endl;
+	zmq::message_t response;
+	socket.recv(&response);
+	string response_data((char*)response.data(), response.size());
+	if (response_data == "Operation failed")
 		return 1;
-	} 
-	// cout << "(" << block_hash << "," << data << ") succesfully inserted!" << endl;
-	return 0;
+	else
+		return 0;
 }
 
 bool LevelDBHelper::alreadyExists(const string& block_hash) {

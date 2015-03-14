@@ -183,7 +183,7 @@ int main(void) {
         leveldb::DB *db;
     	leveldb::Options options;
     	leveldb::Status status;
-    	 do {
+    	do {
             status = leveldb::DB::Open(options, "/var/www/html/mydb", &db);
             sleep(1);
         } while (!status.ok());

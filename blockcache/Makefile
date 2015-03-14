@@ -6,6 +6,7 @@ export LEVELDB_DIR = ~/leveldb
 CC = g++ 
 CXXFLAGS=-std=c++11
 OPTS = -lfcgi++ -lfcgi -L/usr/lib/x86_64-linux-gnu $(LEVELDB_DIR)/libleveldb.a -lpthread -I $(LEVELDB_DIR)/include 
+ZEROMQ_OPTS = -lzmq -I/usr/local/include 
 
 JSON_LIB = /usr/lib/x86_64-linux-gnu/libjsoncpp.so
 CACHE_OPTS = -l neon $(OPTS)
@@ -35,13 +36,17 @@ http_helper: http_helper.cpp
 
 #cache_file_fetch
 cache_file_fetch: cache_file_fetch.cpp
-	$(CC) $(CXXFLAGS) http_helper.o leveldb_helper.cc cache_file_fetch.cpp $(JSON_LIB) -o fcgid/cache_file_fetch $(CACHE_OPTS)
+	$(CC) $(CXXFLAGS) http_helper.o leveldb_helper.cc cache_file_fetch.cpp $(JSON_LIB) -o fcgid/cache_file_fetch $(ZEROMQ_OPTS) $(CACHE_OPTS)
 
 cache_file_store: cache_file_store.cpp
-	$(CC) $(CXXFLAGS) http_helper.o leveldb_helper.cc cache_file_store.cpp $(JSON_LIB) -o fcgid/cache_file_store $(CACHE_OPTS)
+	$(CC) $(CXXFLAGS) http_helper.o leveldb_helper.cc cache_file_store.cpp $(JSON_LIB) -o fcgid/cache_file_store $(ZEROMQ_OPTS) $(CACHE_OPTS)
 
 prefetch: prefetch.cpp
 	$(CC) $(CXXFLAGS) -g http_helper.o prefetch.cpp leveldb_helper.cc $(JSON_LIB) -o fcgid/prefetch $(CACHE_OPTS)
+
+server: leveldb_server.cpp
+	$(CC) $(CXXFLAGS) leveldb_server.cpp -o fcgid/server $(ZEROMQ_OPTS) $(OPTS)
+
 install: 
 #	sudo rm /var/www/html/file_fetch.fcgid
 #	sudo rm /var/www/html/file_store.fcgid
