@@ -6,7 +6,7 @@
 
 class LevelDBHelper {
 public:
-	LevelDBHelper(const std::string& db_name);
+	LevelDBHelper();
 	~LevelDBHelper();
 
 	/**
@@ -33,17 +33,8 @@ public:
 	bool alreadyExists(const std::string& block_hash);
 	
 private:
-	// database
-	leveldb::DB *m_db;
-
-	// database options used
-	leveldb::Options options;
-
-	// database read options used
-	leveldb::ReadOptions readoptions;
-
-	// database write options used
-	leveldb::WriteOptions writeoptions;
+	zmq::socket_t socket;
+	zmq::context_t context;
 };
 
 #endif // LEVELDB_HELPER_HPP

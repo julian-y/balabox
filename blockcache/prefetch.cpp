@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
               error("ERROR on binding");
 
     // Open the database
-    LevelDBHelper* db = new LevelDBHelper("cacheDB");
+    LevelDBHelper* db = new LevelDBHelper();
 
     printf("listening on port 8080\n");
     while (1) {

@@ -166,7 +166,7 @@ int main(void)
         
         //add (to metadata) the association of this cache to the user we're serving 
 
-        LevelDBHelper* db = new LevelDBHelper("cacheDB");
+        LevelDBHelper* db = new LevelDBHelper();
         
          if (db->alreadyExists(hash)) {
             string data;
