@@ -230,6 +230,7 @@ void run_mono_thread(const std::string& folder) {
     std::string request(buffer, recvlen);
 
     std::cout << "Received local msg!" << std::endl;
+    std::cout << "Local msg: " << request << std::endl;
     Operation operation;
     std::string command((char*)request.data(),request.size());
     bool success=do_operation(std::string((char*)request.data(),request.size()),operation);
