@@ -29,6 +29,8 @@
 // internet domain addresses, e.g. sockaddr_in
 #include "http_helper.h"
 //#include "leveldb_helper.hpp"
+#include "leveldb/db.h"
+#include <unistd.h>
 
 //using namespace cgicc;
 using namespace std;
