@@ -162,7 +162,8 @@ int main(void)
 
         //send message to another process running on cache server to prefetch
         string msg = "{\"userID\": \"" + userId + "\", \"hash\": \"" + hash + "\" }"; 
-        HttpHelper::sendLocalMsg(msg, HttpHelper::prefetch_portno);
+        string response;
+        HttpHelper::sendLocalMsg(msg, response, HttpHelper::prefetch_portno, false);
         
         //add (to metadata) the association of this cache to the user we're serving 
         //zmq::context_t context(1);
