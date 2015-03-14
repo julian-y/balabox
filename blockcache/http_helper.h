@@ -17,13 +17,15 @@ public:
     static int sendLocalMsg(std::string msg, std::string &resp, int portno, bool getResp);
     static int recvLocalMsg(std::string &msg, int portno);
 
+    static void error(const char *msg);
+
     const static std::string metadata_ip; 
     const static std::string block_ip;
     const static int prefetch_portno;
     const static int leveldb_portno;
 private:
     static int httpResponseReader(void *data, const char *buf, size_t len);
-    static void error(const char *msg);
+    
 };
 
 #endif

@@ -12,7 +12,22 @@
 #include <sys/syscall.h>
 #include "http_helper.h"
 
+#include <stdio.h>
+// definitions of a number of data types used in socket.h and netinet/in.h
+#include <sys/types.h>   
+#include <sys/socket.h>  
+// definitions of structures needed for sockets, e.g. sockaddr
+#include <netinet/in.h>  
+// constants and structures needed for 
+// internet domain addresses, e.g. sockaddr_in
+
+
 leveldb::DB* db;
+const int MSG_SIZE = 5000;
+int sockfd, newsockfd, portno, pid;
+socklen_t clilen;
+struct sockaddr_in serv_addr, cli_addr;
+
 /**
  * open/create the database
  **/
@@ -48,7 +63,14 @@ bool get(const std::string& key, std::string& value) {
 
 void sendLevelDBMsg(std::string msg) {
     std::string dummy;
-    HttpHelper::sendLocalMsg(msg, dummy, HttpHelper::leveldb_portno, false);
+    //HttpHelper::sendLocalMsg(msg, dummy, HttpHelper::leveldb_portno, false);
+    char buffer[MSG_SIZE];
+    bzero(buffer, MSG_SIZE);
+    memcpy(buffer, msg.c_str(), msg.length());
+
+    sendto(sockfd, buffer, MSG_SIZE, 0, 
+                      (struct sockaddr *) &cli_addr, clilen);
+
 }
 /**
  * retrieve all the values associated with a key
@@ -180,14 +202,33 @@ void run_mono_thread(const std::string& folder) {
 //  std::string pipe = "ipc://" + folder + "/pipe.ipc";
 //  socket.bind(pipe.c_str());
 
+  char buffer[MSG_SIZE];
+    bzero(buffer, MSG_SIZE);
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sockfd < 0) 
+       HttpHelper::error("ERROR opening socket");
+    bzero((char *) &serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
+    serv_addr.sin_port = htons(HttpHelper::leveldb_portno);
+    
+    if (bind(sockfd, (struct sockaddr *) &serv_addr,
+              sizeof(serv_addr)) < 0) 
+              HttpHelper::error("ERROR on binding");
+
   std::cout << "mono-thread server is ready " << std::endl;
   std::cout << "entering while loop" << std::endl;
   while(true) {
 //    zmq::message_t request;
 //    socket.recv(&request);
-    std::string request;
     std::cout << "Waiting for local msg" << std::endl;
-    HttpHelper::recvLocalMsg(request, HttpHelper::leveldb_portno);
+    //HttpHelper::recvLocalMsg(request, HttpHelper::leveldb_portno);
+    int recvlen = recvfrom(sockfd, buffer, MSG_SIZE, 0, 
+                    (struct sockaddr *) &cli_addr, &clilen);
+        //cout << "received a message: " << buffer << endl;
+        
+    std::string request(buffer, recvlen);
+
     std::cout << "Received local msg!" << std::endl;
     Operation operation;
     std::string command((char*)request.data(),request.size());
