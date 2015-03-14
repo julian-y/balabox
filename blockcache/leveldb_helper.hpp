@@ -34,8 +34,8 @@ public:
 	bool alreadyExists(const std::string& block_hash);
 	
 private:
-	zmq::socket_t& m_socket;
-	zmq::context_t& m_context;
+//	zmq::socket_t& m_socket;
+//	zmq::context_t& m_context;
 };
 
 #endif // LEVELDB_HELPER_HPP

@@ -180,11 +180,14 @@ void run_mono_thread(const std::string& folder) {
 //  socket.bind(pipe.c_str());
 
   std::cout << "mono-thread server is ready " << std::endl;
+  std::cout << "entering while loop" << std::endl;
   while(true) {
 //    zmq::message_t request;
 //    socket.recv(&request);
     std::string request;
+    std::cout << "Waiting for local msg" << std::endl;
     HttpHelper::recvLocalMsg(request, HttpHelper::leveldb_portno);
+    std::cout << "Received local msg!" << std::endl;
     Operation operation;
     std::string command((char*)request.data(),request.size());
     bool success=do_operation(std::string((char*)request.data(),request.size()),operation);

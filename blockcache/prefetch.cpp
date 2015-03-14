@@ -88,12 +88,12 @@ vector<string> pickHashes(Json::Value recent_hashes, LevelDBHelper* db) {
         string curHash = recent_hashes[i].asString();
         
         // if curHash already exists in leveldb, skip it
-        if(!db->alreadyExists(curHash)) {
-            hashes.push_back(curHash);
-            cout << "push hash " << curHash << "into pull vector" << endl;
-        } else {
-            cout << "cacheDB already has hash " << curHash << endl;
-        }
+        //if(!db->alreadyExists(curHash)) {
+        //    hashes.push_back(curHash);
+        //    cout << "push hash " << curHash << "into pull vector" << endl;
+        //} else {
+        //    cout << "cacheDB already has hash " << curHash << endl;
+        //}
     }
    
     return hashes;
@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
     // Open the database
     //zmq::context_t context(1);
     //zmq::socket_t socket(context, ZMQ_REQ);      
-    //LevelDBHelper* db = new LevelDBHelper(context, socket);
+    LevelDBHelper* db = new LevelDBHelper();
 
     printf("listening on port 8080\n");
     while (1) {
@@ -162,7 +162,7 @@ int main(int argc, char *argv[]) {
             cout << "block_list is empty, don't need to fetch stuff" << endl;
         } else {
 
-            vector<string> hashesToRetrieve = pickHashes(block_list, db);
+            vector<string> hashesToRetrieve = pickHashes(block_list, NULL);
             cout << "There are " << hashesToRetrieve.size() << " hashes to retrieve" << endl;    
             for(int i = 0; i < hashesToRetrieve.size(); i++) {
                 string curHash = hashesToRetrieve[i];
@@ -174,11 +174,11 @@ int main(int argc, char *argv[]) {
                 if(atoi(responseCode.c_str()) == 200) {
                     cout << "fetched hash " << curHash << endl;
                     cout << "block: " << endl << block << endl << "---" << endl;
-                    //int status = db->put(curHash, block);
-                    //
-                    //if (status != 0) {
-                    //    cout << "Error inserting into database" << endl;
-                    //}
+                    int status = db->put(curHash, block);
+                    
+                    if (status != 0) {
+                        cout << "Error inserting into database" << endl;
+                    }
                     cout << "stored hash " << curHash << " into cacheDB" << endl;
                 }
             }
