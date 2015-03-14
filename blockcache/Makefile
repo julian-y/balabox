@@ -42,7 +42,7 @@ cache_file_store: cache_file_store.cpp
 	$(CC) $(CXXFLAGS) http_helper.o leveldb_helper.cc cache_file_store.cpp $(JSON_LIB) -o fcgid/cache_file_store $(ZEROMQ_OPTS) $(CACHE_OPTS)
 
 prefetch: prefetch.cpp
-	$(CC) $(CXXFLAGS) -g http_helper.o prefetch.cpp leveldb_helper.cc $(JSON_LIB) -o fcgid/prefetch $(CACHE_OPTS)
+	$(CC) $(CXXFLAGS) -g http_helper.o prefetch.cpp leveldb_helper.cc $(JSON_LIB) -o fcgid/prefetch $(ZEROMQ_OPTS) $(CACHE_OPTS)
 
 server: leveldb_server.cpp
 	$(CC) $(CXXFLAGS) leveldb_server.cpp -o fcgid/server $(ZEROMQ_OPTS) $(OPTS)
