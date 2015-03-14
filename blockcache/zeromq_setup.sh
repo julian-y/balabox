@@ -24,7 +24,7 @@ tar -xvzf zeromq-4.1.0-rc1.tar.gz
 #tar -xvzf m4-latest.tar.gz
 
 # ZeroMQ
-cd zeromq-4.1.0-rc1.tar.gz
+cd zeromq-4.1.0
 ./configure --prefix=/usr/local && make
 sudo make install
 
