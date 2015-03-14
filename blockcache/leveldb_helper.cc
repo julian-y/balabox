@@ -12,7 +12,7 @@ LevelDBHelper::LevelDBHelper(const string& db_name) {
 	writeoptions.sync = true;
 	leveldb::Status status;
 	do {
-            status = leveldb::DB::Open(options, db_name, &db);
+            status = leveldb::DB::Open(options, db_name, &m_db);
             sleep(1);
     } while (!status.ok());
 	// else {
