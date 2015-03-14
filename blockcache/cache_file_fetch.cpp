@@ -111,8 +111,7 @@ void outputErrorMessage(const string& error)
 int main(void)
 {
     int count = 0;
-    //Open the database
-    LevelDBHelper db("cacheDB");
+    
     streambuf * cin_streambuf  = cin.rdbuf();
     streambuf * cout_streambuf = cout.rdbuf();
     streambuf * cerr_streambuf = cerr.rdbuf();
@@ -166,14 +165,16 @@ int main(void)
         
         //add (to metadata) the association of this cache to the user we're serving 
 
-        if (db.alreadyExists(hash)) {
+        LevelDBHelper* db = new LevelDBHelper("cacheDB");
+
+        if (db->alreadyExists(hash)) {
             string data;
-            db.get(hash, data);
+            db->get(hash, data);
             cout << "Status: 200\r\n";
             cout << "Server: Cache Server\r\n";
             cout << "Content-Type: application/binary\r\n\r\n";
             cout.write(data.data(), data.size());
-            return 0;  
+            delete db;
         }  
         else {
             string response;
