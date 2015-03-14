@@ -56,6 +56,7 @@ install:
 	sudo rm /var/www/html/cache_file_fetch
 	sudo rm /var/www/html/cache_file_store
 	sudo rm /var/www/html/prefetch
+	sudo rm /var/www/html/server
 
 	sudo cp fcgid/* -t /var/www/html
 	sudo chmod 777 /var/www/html/*
