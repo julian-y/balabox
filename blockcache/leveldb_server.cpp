@@ -66,7 +66,7 @@ void sendLevelDBMsg(std::string msg) {
     //HttpHelper::sendLocalMsg(msg, dummy, HttpHelper::leveldb_portno, false);
     char buffer[MSG_SIZE];
     bzero(buffer, MSG_SIZE);
-    memcpy(buffer, msg.c_str(), msg.length());
+    memcpy(buffer, msg.c_str(), MSG_SIZE);
 
     std::cout << "Sending msg: " << msg << std::endl;
     sendto(sockfd, buffer, MSG_SIZE, 0, 
