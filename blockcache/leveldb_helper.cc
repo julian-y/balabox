@@ -3,16 +3,18 @@
 #include "leveldb/write_batch.h"
 #include <string>
 #include <iostream>
+#include <unistd.h>		// sleep()
 
 using namespace std;
 
 LevelDBHelper::LevelDBHelper(const string& db_name) {
 	options.create_if_missing = true;
 	writeoptions.sync = true;
-	leveldb::Status status = leveldb::DB::Open(options, db_name, &m_db);
-	if (!status.ok()) {
-		cout << status.ToString() << endl;
-	} 
+	leveldb::Status status;
+	do {
+            status = leveldb::DB::Open(options, db_name, &db);
+            sleep(1);
+    } while (!status.ok());
 	// else {
 	// 	cerr << db_name << " successfully opened/created!" << endl;
 	// }

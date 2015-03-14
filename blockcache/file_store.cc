@@ -228,7 +228,7 @@ int main(void) {
         leveldb::Status status;
         do {
             status = leveldb::DB::Open(options, "/var/www/html/mydb", &db);
-            sleep(2);
+            sleep(1);
         } while (!status.ok());
     	
     	leveldb::WriteOptions woptions;
