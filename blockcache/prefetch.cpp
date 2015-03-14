@@ -118,9 +118,9 @@ int main(int argc, char *argv[]) {
               error("ERROR on binding");
 
     // Open the database
-    zmq::context_t context(1);
-    zmq::socket_t socket(context, ZMQ_REQ);      
-    LevelDBHelper* db = new LevelDBHelper(context, socket);
+    //zmq::context_t context(1);
+    //zmq::socket_t socket(context, ZMQ_REQ);      
+    //LevelDBHelper* db = new LevelDBHelper(context, socket);
 
     printf("listening on port 8080\n");
     while (1) {
@@ -174,11 +174,11 @@ int main(int argc, char *argv[]) {
                 if(atoi(responseCode.c_str()) == 200) {
                     cout << "fetched hash " << curHash << endl;
                     cout << "block: " << endl << block << endl << "---" << endl;
-                    int status = db->put(curHash, block);
-                    
-                    if (status != 0) {
-                        cout << "Error inserting into database" << endl;
-                    }
+                    //int status = db->put(curHash, block);
+                    //
+                    //if (status != 0) {
+                    //    cout << "Error inserting into database" << endl;
+                    //}
                     cout << "stored hash " << curHash << " into cacheDB" << endl;
                 }
             }
