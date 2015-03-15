@@ -16,7 +16,7 @@ public:
 
     static int sendLocalMsg(std::string msg, std::string &resp, int portno, bool getResp);
 
-    static void createBuffer(char* data, int dataSize, char* buffer);
+    static void createBuffer(const char* data, int dataSize, char* buffer);
     static void extractBuffer(char* buffer, char* data, int &dataSize);
 
     static void error(const char *msg);

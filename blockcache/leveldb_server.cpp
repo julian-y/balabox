@@ -67,7 +67,7 @@ void sendLevelDBMsg(std::string msg) {
     //HttpHelper::sendLocalMsg(msg, dummy, HttpHelper::leveldb_portno, false);
     char buffer[MSG_SIZE];
     bzero(buffer, MSG_SIZE);
-    memcpy(buffer, msg.c_str(), MSG_SIZE);
+    HttpHelper::createBuffer(msg.c_str(), msg.length(), buffer);
 
     std::cout << "Sending msg: " << msg << std::endl;
     
@@ -234,7 +234,11 @@ void run_mono_thread(const std::string& folder) {
                     (struct sockaddr *) &cli_addr, &clilen);
         //cout << "received a message: " << buffer << endl;
         
-    std::string request(buffer, recvlen);
+    char data[MSG_SIZE];
+    int dataSize = 0;
+    bzero(data, MSG_SIZE);
+    HttpHelper::extractBuffer(buffer, data, dataSize);
+    std::string request(data, dataSize);
 
     std::cout << "Received local msg!" << std::endl;
     std::cout << "Local msg: " << request << std::endl;
