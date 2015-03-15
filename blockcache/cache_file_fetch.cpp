@@ -187,6 +187,9 @@ int main(void)
             cout << "Origin: Block Server\r\n";
             cout << "Content-Type: " << responseContentType << "\r\n\r\n";
             cout.write(response.data(), response.size());
+
+            //save the response into cache
+            db->put(hash, response);
        }
 
         delete db;
