@@ -74,9 +74,9 @@ void sendLevelDBMsg(std::string msg) {
     int status = sendto(sockfd, &msg, MSG_SIZE, 0, 
                       (struct sockaddr *) &cli_addr, clilen);
     if (status  < 0) {
-	std::cout << "Sendto failed" << std::endl;
-	printf("errno %d\n", errno);
-	}
+        std::cout << "Sendto failed" << std::endl;
+        printf("errno %d\n", errno);
+    }
 
 }
 /**
