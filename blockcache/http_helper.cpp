@@ -1,9 +1,9 @@
 #include "http_helper.h"
 #include <string>
-
+#include <cstring>
 #include <neon/ne_request.h>
 #include <neon/ne_session.h>
-
+#include <cstdlib>
 //socket sending stuff:
 #include <strings.h>
 #include <stdio.h>
@@ -174,10 +174,10 @@ void HttpHelper::createBuffer(char* data, int dataSize, char* buffer) {
  
 // "unparse" returns the current packet in raw char* form
 // char* buffer is already initialized with the message
-void HttpHelper::extractBuffer(char* buffer, char* data, int dataSize) {
+void HttpHelper::extractBuffer(char* buffer, char* data, int &dataSize) {
     data = (char*) malloc(MSG_SIZE);
     int* intBuffer = (int*) buffer;
     dataSize = *(intBuffer);
-    memcpy(data, (intBuffer + 1), payloadSize);
+    memcpy(data, (intBuffer + 1), dataSize);
 }
 
