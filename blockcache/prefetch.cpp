@@ -130,7 +130,7 @@ int main(int argc, char *argv[]) {
         int dataSize = 0;
         char data[MSG_SIZE];
         HttpHelper::extractBuffer(buffer, data, dataSize);
-        string msg(buffer);
+        string msg(data);
         //parse json
         Json::Value msg_root;
         Json::Reader msg_reader;
