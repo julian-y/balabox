@@ -28,7 +28,7 @@ file_store: file_store.cc
 	$(CC) $(CXXFLAGS) file_store.cc -o fcgid/file_store  $(OPTS)
 
 leveldb_helper_test: leveldb_helper_test.cc	
-	$(CC) $(CXXFLAGS) leveldb_helper_test.cc leveldb_helper.cc -o leveldb_helper_test $(OPTS)
+	$(CC) $(CXXFLAGS) -g http_helper.o leveldb_helper_test.cc leveldb_helper.cc -o leveldb_helper_test $(CACHE_OPTS)
 
 #http helper
 http_helper: http_helper.cpp
@@ -45,7 +45,7 @@ prefetch: prefetch.cpp
 	$(CC) $(CXXFLAGS) -g http_helper.o prefetch.cpp leveldb_helper.cc $(JSON_LIB) -o fcgid/prefetch $(ZEROMQ_OPTS) $(CACHE_OPTS)
 
 server: leveldb_server.cpp
-	$(CC) $(CXXFLAGS) http_helper.o leveldb_server.cpp -o fcgid/server $(ZEROMQ_OPTS) $(CACHE_OPTS)
+	$(CC) $(CXXFLAGS) -g http_helper.o leveldb_server.cpp -o fcgid/server $(ZEROMQ_OPTS) $(CACHE_OPTS)
 
 install: 
 #	sudo rm /var/www/html/file_fetch.fcgid
