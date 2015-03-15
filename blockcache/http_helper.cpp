@@ -98,13 +98,13 @@ int HttpHelper::sendHttpRequest(string host_ip, string path, string reqType,
     return 0;
 }
 
-void error(const char *msg)
+void HttpHelper::error(const char *msg)
 {
     perror(msg);
     exit(0);
 }
 
-int HttpHelper::sendLocalMsg(string msg, int portno) {
+int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp) {
     //Code taken from CS118 project
     int sockfd, newsockfd;
     struct sockaddr_in serv_addr;
@@ -141,6 +141,22 @@ int HttpHelper::sendLocalMsg(string msg, int portno) {
             printf("sendto failed");
             return 1;
     }
+    
+    bzero(buffer, MSG_SIZE);
+
+    if(getResp) {
+        printf("Waiting for response!\n");
+        int bytesRcvd = recvfrom(sockfd, buffer, 5, 0, 
+                    (struct sockaddr *)&serv_addr, &addrlen);
+
+	printf("bytes received: %d \n", bytesRcvd);
+        while (bytesRcvd < 0) {
+                bytesRcvd = recvfrom(sockfd, buffer, MSG_SIZE, 0, 
+                   (struct sockaddr *)&serv_addr, &addrlen);
+            }
+        printf("Got response!\n");
+        resp = string(buffer, bytesRcvd);
+    }
 
     return 0;
 
@@ -148,32 +164,25 @@ int HttpHelper::sendLocalMsg(string msg, int portno) {
 
 int HttpHelper::recvLocalMsg(string &msg, int portno) {
     //Code taken from CS118 project
-    int sockfd, newsockfd;
+    int sockfd;
     struct sockaddr_in serv_addr;
     socklen_t addrlen = sizeof(serv_addr);
     //contains tons of information, including the server's IP address
-    struct hostent *server;
-
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0); //create a new socket
-    if (sockfd < 0) {
-        error("ERROR opening socket");
-    }
-
-    server = gethostbyname("127.0.0.1"); 
-        if (server == NULL) {
-        fprintf(stderr,"ERROR, no such host\n");
-        exit(1);
-    }
-
-    bzero((char *) &serv_addr, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET; //initialize server's address
-    bcopy((char *)server->h_addr, 
-            (char *)&serv_addr.sin_addr.s_addr, 
-            server->h_length);
-    serv_addr.sin_port = htons(portno);
 
     char buffer[MSG_SIZE];
     bzero(buffer, MSG_SIZE);
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sockfd < 0) 
+       error("ERROR opening socket");
+    bzero((char *) &serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
+    serv_addr.sin_port = htons(portno);
+    
+    if (bind(sockfd, (struct sockaddr *) &serv_addr,
+              sizeof(serv_addr)) < 0) 
+              error("ERROR on binding");
+ 
 
     int bytesRcvd = recvfrom(sockfd, buffer, MSG_SIZE, 0,
                     (struct sockaddr *) &serv_addr, &addrlen);

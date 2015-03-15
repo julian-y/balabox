@@ -5,12 +5,12 @@
 #include <iostream>
 #include <unistd.h>		// sleep()
 #include <zmq.hpp>
+#include "http_helper.h"
 
 using namespace std;
 
-LevelDBHelper::LevelDBHelper(zmq::context_t& context, zmq::socket_t& socket)
-:m_context(context), m_socket(socket) {
-	m_socket.connect("ipc://test.ipc");
+LevelDBHelper::LevelDBHelper()
+{
 }
 
 LevelDBHelper::~LevelDBHelper() {
@@ -18,15 +18,17 @@ LevelDBHelper::~LevelDBHelper() {
 
 int LevelDBHelper::get(const string& block_hash, string& data) {
 	string command("get," + block_hash);
-	zmq::message_t request(command.size());
-	memcpy((void*) request.data(), command.data(), command.size());
-	m_socket.send(request);
+//	zmq::message_t request(command.size());
+//	memcpy((void*) request.data(), command.data(), command.size());
+//	m_socket.send(request);
+//
+//	zmq::message_t response;
+//	m_socket.recv(&response);
 
-	zmq::message_t response;
-	m_socket.recv(&response);
-
-	string response_data((char*)response.data(), response.size());
-	if (response_data == "Operation failed")
+//	string response_data((char*)response.data(), response.size());
+    string response_data;
+    HttpHelper::sendLocalMsg(command, response_data, HttpHelper::leveldb_portno, true);
+    if (response_data == "Operation failed")
 		return 1;
 	else 
 		data = response_data;
@@ -35,14 +37,16 @@ int LevelDBHelper::get(const string& block_hash, string& data) {
 
 int LevelDBHelper::put(const string& block_hash, const string& data) {
 	string command("put," + block_hash + "," + data);
-	zmq::message_t request(command.size());
-	memcpy((void*) request.data(), command.data(), command.size());
-	m_socket.send(request);
-
-	zmq::message_t response;
-	m_socket.recv(&response);
-	string response_data((char*)response.data(), response.size());
-	if (response_data == "Operation failed")
+//	zmq::message_t request(command.size());
+//	memcpy((void*) request.data(), command.data(), command.size());
+//	m_socket.send(request);
+//
+//	zmq::message_t response;
+//	m_socket.recv(&response);
+//	string response_data((char*)response.data(), response.size());
+    string response_data;
+    HttpHelper::sendLocalMsg(command, response_data, HttpHelper::leveldb_portno, true);
+    if (response_data == "Operation failed")
 		return 1;
 	else
 		return 0;

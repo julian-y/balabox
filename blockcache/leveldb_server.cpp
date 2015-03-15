@@ -10,8 +10,24 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <sys/syscall.h>
+#include "http_helper.h"
+
+#include <stdio.h>
+// definitions of a number of data types used in socket.h and netinet/in.h
+#include <sys/types.h>   
+#include <sys/socket.h>  
+// definitions of structures needed for sockets, e.g. sockaddr
+#include <netinet/in.h>  
+// constants and structures needed for 
+// internet domain addresses, e.g. sockaddr_in
+#include <errno.h>
 
 leveldb::DB* db;
+const int MSG_SIZE = 5000;
+int sockfd, newsockfd, portno, pid;
+socklen_t clilen;
+struct sockaddr_in serv_addr, cli_addr;
+
 /**
  * open/create the database
  **/
@@ -20,8 +36,9 @@ void create_db(const std::string& db_name) {
   options.create_if_missing = true;
   leveldb::Status status=leveldb::DB::Open(options, db_name, &db);
   if(!status.ok()) {
-    std::cerr << "Unable to create database, " << status.ToString() << std::endl;
+    std::cout << "Unable to create database, " << status.ToString() << std::endl;
   }
+  std::cout << "Created database" << std::endl;
 }
 /**
  * add new key/value to the database
@@ -43,6 +60,24 @@ bool get(const std::string& key, std::string& value) {
     std::cerr << s.ToString() << std::endl; 
   }
   return s.ok();
+}
+
+void sendLevelDBMsg(std::string msg) {
+    std::string dummy;
+    //HttpHelper::sendLocalMsg(msg, dummy, HttpHelper::leveldb_portno, false);
+//    char buffer[MSG_SIZE];
+//    bzero(buffer, MSG_SIZE);
+//    memcpy(buffer, msg.c_str(), MSG_SIZE);
+
+    std::cout << "Sending msg: " << msg << std::endl;
+    
+    int status = sendto(sockfd, &msg, MSG_SIZE, 0, 
+                      (struct sockaddr *) &cli_addr, clilen);
+    if (status  < 0) {
+	std::cout << "Sendto failed" << std::endl;
+	printf("errno %d\n", errno);
+	}
+
 }
 /**
  * retrieve all the values associated with a key
@@ -87,7 +122,7 @@ bool do_operation(const std::string& command, Operation& operation) {
       
       std::getline(ss,key,delim);
       std::getline(ss,value,delim);
-    
+//      std::cout << "Put" << std::endl;    
       operation._type = PUT;
       operation._key = key;
       operation._value = value;
@@ -96,7 +131,7 @@ bool do_operation(const std::string& command, Operation& operation) {
     }
     else if(action=="get") {
       std::getline(ss,key,delim);
-      
+//      std::cout << "Get" << std::endl;
       operation._type = GET;
       operation._key = key;
       operation._status = get(key,value);
@@ -168,17 +203,41 @@ void* worker_routine(void* arg) {
 void run_mono_thread(const std::string& folder) {
 
   create_db(folder);
-  zmq::context_t context(1);
-
-  zmq::socket_t socket(context,ZMQ_REP);
-  std::string pipe = "ipc://" + folder + "/pipe.ipc";
-  socket.bind(pipe.c_str());
+//  zmq::context_t context(1);
+//
+//  zmq::socket_t socket(context,ZMQ_REP);
+//  std::string pipe = "ipc://" + folder + "/pipe.ipc";
+//  socket.bind(pipe.c_str());
+    clilen = sizeof(cli_addr);
+  char buffer[MSG_SIZE];
+    bzero(buffer, MSG_SIZE);
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sockfd < 0) 
+       HttpHelper::error("ERROR opening socket");
+    bzero((char *) &serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
+    serv_addr.sin_port = htons(HttpHelper::leveldb_portno);
+    
+    if (bind(sockfd, (struct sockaddr *) &serv_addr,
+              sizeof(serv_addr)) < 0) 
+              HttpHelper::error("ERROR on binding");
 
   std::cout << "mono-thread server is ready " << std::endl;
+  std::cout << "entering while loop" << std::endl;
   while(true) {
-    zmq::message_t request;
-    socket.recv(&request);
+//    zmq::message_t request;
+//    socket.recv(&request);
+    std::cout << "Waiting for local msg" << std::endl;
+    //HttpHelper::recvLocalMsg(request, HttpHelper::leveldb_portno);
+    int recvlen = recvfrom(sockfd, buffer, MSG_SIZE, 0, 
+                    (struct sockaddr *) &cli_addr, &clilen);
+        //cout << "received a message: " << buffer << endl;
+        
+    std::string request(buffer, recvlen);
 
+    std::cout << "Received local msg!" << std::endl;
+    std::cout << "Local msg: " << request << std::endl;
     Operation operation;
     std::string command((char*)request.data(),request.size());
     bool success=do_operation(std::string((char*)request.data(),request.size()),operation);
@@ -186,17 +245,21 @@ void run_mono_thread(const std::string& folder) {
 
     if(success) {
       if(operation._type==GET) {
-        send_data(socket,operation._value);
+        //send_data(socket,operation._value);
+        sendLevelDBMsg(operation._value);
       }
       else if(operation._type==PUT) {
-        send_data(socket,"OK");
+        //send_data(socket,"OK");
+        sendLevelDBMsg("OK");
       }
       else {
-        send_data(socket,"Wrong action");
+        //send_data(socket,"Wrong action");
+        sendLevelDBMsg("Wrong action");
       }
     }
     else {
-      send_data(socket,"Operation failed");
+      //send_data(socket,"Operation failed");
+      sendLevelDBMsg("Operation failed");
     }
   }
   delete db;

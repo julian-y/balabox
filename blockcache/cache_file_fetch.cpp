@@ -162,19 +162,20 @@ int main(void)
 
         //send message to another process running on cache server to prefetch
         string msg = "{\"userID\": \"" + userId + "\", \"hash\": \"" + hash + "\" }"; 
-        sendMsg(msg);
+        string resp;
+        HttpHelper::sendLocalMsg(msg, resp, HttpHelper::prefetch_portno, false);
         
         //add (to metadata) the association of this cache to the user we're serving 
-        zmq::context_t context(1);
-        zmq::socket_t socket(context, ZMQ_REQ);
-        LevelDBHelper* db = new LevelDBHelper(context, socket);
-        
-         if (db->alreadyExists(hash)) {
+        //zmq::context_t context(1);
+        //zmq::socket_t socket(context, ZMQ_REQ);
+        LevelDBHelper* db = new LevelDBHelper();
+	        
+       if (db->alreadyExists(hash)) {
             string data;
             db->get(hash, data);
             cout << "Status: 200\r\n";
             cout << "Origin: Cache Server\r\n";
-	    cout << "Content-Type: application/binary\r\n\r\n";
+            cout << "Content-Type: application/binary\r\n\r\n";
             cout.write(data.data(), data.size());
         }  
         else {
@@ -186,7 +187,7 @@ int main(void)
             cout << "Origin: Block Server\r\n";
             cout << "Content-Type: " << responseContentType << "\r\n\r\n";
             cout.write(response.data(), response.size());
-        }
+       }
 
         delete db;
 }

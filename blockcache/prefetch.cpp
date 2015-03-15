@@ -118,11 +118,10 @@ int main(int argc, char *argv[]) {
               error("ERROR on binding");
 
     // Open the database
-    zmq::context_t context(1);
-    zmq::socket_t socket(context, ZMQ_REQ);      
-    LevelDBHelper* db = new LevelDBHelper(context, socket);
+    //zmq::context_t context(1);
+    //zmq::socket_t socket(context, ZMQ_REQ);      
+    LevelDBHelper* db = new LevelDBHelper();
 
-    printf("listening on port 8080\n");
     while (1) {
         int recvlen = recvfrom(sockfd, buffer, MSG_SIZE, 0, 
                     (struct sockaddr *) &cli_addr, &clilen);
@@ -162,7 +161,7 @@ int main(int argc, char *argv[]) {
             cout << "block_list is empty, don't need to fetch stuff" << endl;
         } else {
 
-            vector<string> hashesToRetrieve = pickHashes(block_list, db);
+            vector<string> hashesToRetrieve = pickHashes(block_list, NULL);
             cout << "There are " << hashesToRetrieve.size() << " hashes to retrieve" << endl;    
             for(int i = 0; i < hashesToRetrieve.size(); i++) {
                 string curHash = hashesToRetrieve[i];

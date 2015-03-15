@@ -9,18 +9,18 @@ using namespace std;
 const string db_name = "temp";
 
 int main() {
-	LevelDBHelper test(db_name);
+	LevelDBHelper *db = new LevelDBHelper();
 
 	// Put
-	int status = test.put("bala", "box");
+	int status = db->put("bala", "box");
 	assert(status == 0);
 
 	// Get
 	string value;
-	status = test.get("bala", value);
+	status = db->get("bala", value);
 	assert(status == 0);
 	assert(value == "box");
-	status = test.get("box", value);
+	status = db->get("box", value);
 	assert(status == 1);
 	assert(value == "box");
 
