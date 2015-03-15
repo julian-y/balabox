@@ -65,13 +65,13 @@ bool get(const std::string& key, std::string& value) {
 void sendLevelDBMsg(std::string msg) {
     std::string dummy;
     //HttpHelper::sendLocalMsg(msg, dummy, HttpHelper::leveldb_portno, false);
-//    char buffer[MSG_SIZE];
-//    bzero(buffer, MSG_SIZE);
-//    memcpy(buffer, msg.c_str(), MSG_SIZE);
+    char buffer[MSG_SIZE];
+    bzero(buffer, MSG_SIZE);
+    memcpy(buffer, msg.c_str(), MSG_SIZE);
 
     std::cout << "Sending msg: " << msg << std::endl;
     
-    int status = sendto(sockfd, &msg, MSG_SIZE, 0, 
+    int status = sendto(sockfd, buffer, MSG_SIZE, 0, 
                       (struct sockaddr *) &cli_addr, clilen);
     if (status  < 0) {
         std::cout << "Sendto failed" << std::endl;
