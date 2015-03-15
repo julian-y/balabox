@@ -127,6 +127,9 @@ int main(int argc, char *argv[]) {
                     (struct sockaddr *) &cli_addr, &clilen);
         //cout << "received a message: " << buffer << endl;
         
+        int dataSize = 0;
+        char data[MSG_SIZE];
+        HttpHelper::extractBuffer(buffer, data, dataSize);
         string msg(buffer);
         //parse json
         Json::Value msg_root;
