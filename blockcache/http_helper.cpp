@@ -146,7 +146,7 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
     bzero(buffer, MSG_SIZE);
 
     if(getResp) {
-        printf("Waiting for response!\n");
+        //printf("Waiting for response!\n");
         int bytesRcvd = recvfrom(sockfd, buffer, MSG_SIZE, 0, 
                     (struct sockaddr *)&serv_addr, &addrlen);
 
@@ -159,7 +159,7 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
         int dataSize = 0;
         HttpHelper::extractBuffer(buffer, data, dataSize);
         resp = string(data, dataSize);
-        cout << "response received: " << resp << endl;
+        //cout << "response received: " << resp << endl;
     }
 
     return 0;
