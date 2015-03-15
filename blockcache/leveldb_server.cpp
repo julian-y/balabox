@@ -228,7 +228,7 @@ void run_mono_thread(const std::string& folder) {
   while(true) {
 //    zmq::message_t request;
 //    socket.recv(&request);
-    std::cout << "Waiting for local msg" << std::endl;
+    std::cout << "------Waiting for local msg------" << std::endl;
     //HttpHelper::recvLocalMsg(request, HttpHelper::leveldb_portno);
     int recvlen = recvfrom(sockfd, buffer, MSG_SIZE, 0, 
                     (struct sockaddr *) &cli_addr, &clilen);

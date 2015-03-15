@@ -186,6 +186,8 @@ int main(int argc, char *argv[]) {
             }
                 
         }
+        cout << "------Finished Processing Request------" << endl;
+
     }
     delete db;
 }
