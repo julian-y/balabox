@@ -16,6 +16,7 @@
 // constants and structures needed for 
 // internet domain addresses, e.g. sockaddr_in
 #include <unistd.h>
+#include <iostream>
 
 using namespace std;
 
@@ -146,54 +147,20 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
 
     if(getResp) {
         printf("Waiting for response!\n");
-        int bytesRcvd = recvfrom(sockfd, buffer, 5, 0, 
+        int bytesRcvd = recvfrom(sockfd, buffer, MSG_SIZE, 0, 
                     (struct sockaddr *)&serv_addr, &addrlen);
 
-        printf("bytes received: %d \n", bytesRcvd);
         while (bytesRcvd < 0) {
                 bytesRcvd = recvfrom(sockfd, buffer, MSG_SIZE, 0, 
                    (struct sockaddr *)&serv_addr, &addrlen);
             }
-        printf("Got response!\n");
-        resp = string(buffer, bytesRcvd);
+        
+	resp = string(buffer, bytesRcvd);
+	cout << "response received: " << resp << endl;
     }
 
     return 0;
 
 }
 
-int HttpHelper::recvLocalMsg(string &msg, int portno) {
-    //Code taken from CS118 project
-    int sockfd;
-    struct sockaddr_in serv_addr;
-    socklen_t addrlen = sizeof(serv_addr);
-    //contains tons of information, including the server's IP address
 
-    char buffer[MSG_SIZE];
-    bzero(buffer, MSG_SIZE);
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sockfd < 0) 
-       error("ERROR opening socket");
-    bzero((char *) &serv_addr, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons(portno);
-    
-    if (bind(sockfd, (struct sockaddr *) &serv_addr,
-              sizeof(serv_addr)) < 0) 
-              error("ERROR on binding");
- 
-
-    int bytesRcvd = recvfrom(sockfd, buffer, MSG_SIZE, 0,
-                    (struct sockaddr *) &serv_addr, &addrlen);
-
-    while (bytesRcvd < 0) {
-        bytesRcvd = recvfrom(sockfd, buffer, MSG_SIZE, 0, 
-                    (struct sockaddr *) &serv_addr, &addrlen);
-    }
-
-    msg = string(buffer, bytesRcvd);
-    
-    return 0;
-
-}
