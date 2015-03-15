@@ -15,7 +15,9 @@ public:
     static int requestFromBlockServer(std::string hash, std::string &responseContentType, std::string &response, std::string &responseCode);
 
     static int sendLocalMsg(std::string msg, std::string &resp, int portno, bool getResp);
-    static int recvLocalMsg(std::string &msg, int portno);
+
+    static void createBuffer(char* data, int dataSize, char* buffer);
+    static void extractBuffer(char* buffer, char* data, int dataSize);
 
     static void error(const char *msg);
 
