@@ -163,4 +163,21 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
 
 }
 
+// create a buffer for sending
+// char* data is already initialized with the data
+void HttpHelper::createBuffer(char* data, int dataSize, char* buffer) {
+    buffer = (char*) malloc(MSG_SIZE);
+    int* intBuffer = (int*) buffer;
+    *(intBuffer) = dataSize;
+    memcpy((intBuffer + 1), data, dataSize);
+}
+ 
+// "unparse" returns the current packet in raw char* form
+// char* buffer is already initialized with the message
+void HttpHelper::extractBuffer(char* buffer, char* data, int dataSize) {
+    data = (char*) malloc(MSG_SIZE);
+    int* intBuffer = (int*) buffer;
+    dataSize = *(intBuffer);
+    memcpy(data, (intBuffer + 1), payloadSize);
+}
 
