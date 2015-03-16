@@ -12,4 +12,4 @@ A Dropbox-like service with CDN capabilities
 * cache-sfo.raycoll.me
 * client-sfo.raycoll.me
 * cache-lndn.raycoll.me
-* cache-lndn.raycoll.me
+* client-lndn.raycoll.me
