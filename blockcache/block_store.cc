@@ -84,6 +84,7 @@ void outputErrorMessage(const string& error)
 
 void outputSuccessMessage(const unordered_map<string, string>& info) {
 	cout << "Status: 200\r\n"
+         << "Origin: Block Server\r\n"
 		 << "Content-type: text/html\r\n"
 		 << "\r\n"
 		 << "<html><p> 200 OK </p>\n"
