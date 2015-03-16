@@ -43,12 +43,13 @@ public:
     const static std::string block_ip;
     const static int prefetch_portno;
     const static int leveldb_portno;
+    static const int MSG_SIZE; 
+
 
 private:
     static int httpResponseReader(void *data, const char *buf, size_t len);
     
     //size is measured in bytes
-    static const int MSG_SIZE; 
 };
 
 #endif

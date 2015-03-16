@@ -22,7 +22,6 @@
 #include <errno.h>
 
 leveldb::DB* db;
-const int MSG_SIZE = 5000;
 int sockfd, newsockfd, portno, pid;
 socklen_t clilen;
 struct sockaddr_in serv_addr, cli_addr;
@@ -69,7 +68,7 @@ void sendLevelDBMsg(std::string msg) {
 
     std::cout << "Sending msg: " << msg << std::endl;
     
-    int status = sendto(sockfd, buffer, MSG_SIZE, 0, 
+    int status = sendto(sockfd, buffer, HttpHelper::MSG_SIZE, 0, 
                       (struct sockaddr *) &cli_addr, clilen);
     if (status  < 0) {
         std::cout << "Sendto failed" << std::endl;
@@ -162,8 +161,6 @@ void run_mono_thread(const std::string& folder) {
 
     create_db(folder);
     clilen = sizeof(cli_addr);
-    char buffer[MSG_SIZE];
-    bzero(buffer, MSG_SIZE);
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0) 
        HttpHelper::error("ERROR opening socket");
@@ -175,21 +172,24 @@ void run_mono_thread(const std::string& folder) {
     if (bind(sockfd, (struct sockaddr *) &serv_addr,
               sizeof(serv_addr)) < 0) 
               HttpHelper::error("ERROR on binding");
+    
+    char* buffer = (char*) malloc(HttpHelper::MSG_SIZE);;
+    bzero(buffer, HttpHelper::MSG_SIZE);
 
   std::cout << "mono-thread server is ready " << std::endl;
   std::cout << "entering while loop" << std::endl;
   while(true) {
     std::cout << "------Waiting for local msg------" << std::endl;
     //HttpHelper::recvLocalMsg(request, HttpHelper::leveldb_portno);
-    int recvlen = recvfrom(sockfd, buffer, MSG_SIZE, 0, 
+    int recvlen = recvfrom(sockfd, buffer, HttpHelper::MSG_SIZE, 0, 
                     (struct sockaddr *) &cli_addr, &clilen);
         //cout << "received a message: " << buffer << endl;
         
-    char data[MSG_SIZE];
+    char* data;
     int dataSize = 0;
-    bzero(data, MSG_SIZE);
     HttpHelper::extractBuffer(buffer, data, dataSize);
     std::string request(data, dataSize);
+    delete data;
 
     std::cout << "Received local msg!" << std::endl;
     std::cout << "Local msg: " << request << std::endl;
@@ -211,7 +211,10 @@ void run_mono_thread(const std::string& folder) {
     else {
       sendLevelDBMsg("Operation failed");
     }
+
+    bzero(buffer, HttpHelper::MSG_SIZE);
   }
+  delete buffer;
   delete db;
 }
 
