@@ -159,15 +159,15 @@ int main(void)
         //add (to metadata) the association of this cache to the user we're serving 
         LevelDBHelper* db = new LevelDBHelper();
 	        
-       if (db->alreadyExists(hash)) {
-            string data;
-            db->get(hash, data);
-            cout << "Status: 200\r\n";
-            cout << "Origin: Cache Server\r\n";
-            cout << "Content-Type: application/binary\r\n\r\n";
-            cout.write(data.data(), data.size());
-        }  
-        else {
+//       if (db->alreadyExists(hash)) {
+//            string data;
+//            db->get(hash, data);
+//            cout << "Status: 200\r\n";
+//            cout << "Origin: Cache Server\r\n";
+//            cout << "Content-Type: application/binary\r\n\r\n";
+//            cout.write(data.data(), data.size());
+//        }  
+//        else {
             string response;
             string responseContentType;
             string responseCode;
@@ -178,8 +178,8 @@ int main(void)
             cout.write(response.data(), response.size());
 
             //save the response into cache
-            db->put(hash, response);
-        }
+           db->put(hash, response);
+//        }
 
         //we want to send the prefetch message after requesting the original
         //block so that cache_file_fetch can return as possible (leveldb_server

@@ -183,11 +183,12 @@ void run_mono_thread(const std::string& folder) {
     //HttpHelper::recvLocalMsg(request, HttpHelper::leveldb_portno);
     int recvlen = recvfrom(sockfd, buffer, HttpHelper::MSG_SIZE, 0, 
                     (struct sockaddr *) &cli_addr, &clilen);
-        //cout << "received a message: " << buffer << endl;
-        
+    std::cout << "received a message: " << buffer << std::endl;
+    std::cout << "recieved buffer message" << std::endl;      
     char* data;
     int dataSize = 0;
     HttpHelper::extractBuffer(buffer, data, dataSize);
+    std::cout << "extracted buffer to data" << std::endl;
     std::string request(data, dataSize);
     delete data;
 
