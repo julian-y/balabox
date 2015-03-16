@@ -179,7 +179,7 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
 
 // create a buffer for sending
 // char* data is already initialized with the data
-void HttpHelper::createBuffer(const char* data, int dataSize, char* buffer) {
+void HttpHelper::createBuffer(const char* data, int dataSize, char* &buffer) {
     buffer = (char*) malloc(HttpHelper::MSG_SIZE);
     bzero(buffer, HttpHelper::MSG_SIZE);
     int* intBuffer = (int*) buffer;

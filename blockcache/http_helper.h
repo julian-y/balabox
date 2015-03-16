@@ -31,11 +31,11 @@ public:
 
     //creates a "buffer" formatted from char* data and int dataSize, this buffer
     //can then be sent through UDP socket
-    static void createBuffer(const char* data, int dataSize, char* buffer);
+    static void createBuffer(const char* data, int dataSize, char* &buffer);
 
     //extracts char* data and int dataSize from the buffer received from UDP
     //socket
-    static void extractBuffer(char* buffer, char* data, int &dataSize);
+    static void extractBuffer(char* buffer, char* &data, int &dataSize);
 
     static void error(const char *msg);
 
