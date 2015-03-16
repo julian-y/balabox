@@ -89,7 +89,7 @@ void outputSuccessMessage(const unordered_map<string, string>& info) {
 		 << "\r\n"
 		 << "<html><p> 200 OK </p>\n"
          << "<p> Hash: " << info.find("hash")->second << "</p>\n"
-         << "<p> Data: " << info.find("data")->second << "</p>\n"
+         //<< "<p> Data: " << info.find("data")->second << "</p>\n"
          << "<p> IP: " << info.find("ip")->second << "</p>\n"
          << "</html>\n";
 }

@@ -174,7 +174,7 @@ int main(int argc, char *argv[]) {
                 HttpHelper::requestFromBlockServer(curHash, responseContentType, block, responseCode);
                 if(responseCode.compare("200") == 0) {
                     cout << "fetched hash " << curHash << endl;
-                    cout << "block: " << endl << block << endl << "---" << endl;
+                    //cout << "block: " << endl << block << endl << "---" << endl;
                     int status = db->put(curHash, block);
                     
                     if (status != 0) {
