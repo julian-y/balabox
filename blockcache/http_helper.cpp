@@ -26,7 +26,7 @@ const string    HttpHelper::metadata_ip = "162.243.132.35";
 const string    HttpHelper::block_ip = "104.236.143.21";
 const int       HttpHelper::prefetch_portno = 8888;
 const int       HttpHelper::leveldb_portno = 8889;
-const int       HttpHelper::MSG_SIZE = 5050;
+const int       HttpHelper::MSG_SIZE = 5000000;
 
 int HttpHelper::getQueryParam(const std::string& query_string, 
         const std::string& param, std::string& value) {
@@ -135,8 +135,7 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
     char * buffer = (char*) malloc(HttpHelper::MSG_SIZE);
     bzero(buffer, HttpHelper::MSG_SIZE);
     HttpHelper::createBuffer(msg.c_str(), msg.length(), buffer);
-    //msg.copy(buffer, msg.length());
-
+    
     if(sendto(sockfd, buffer, HttpHelper::MSG_SIZE, 0, 
                     (struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0 ) {
             //perror("sendto failed");
