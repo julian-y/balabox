@@ -157,8 +157,6 @@ int main(void)
         HttpHelper::getQueryParam(query_string, "user", userId);
         
         //add (to metadata) the association of this cache to the user we're serving 
-        //zmq::context_t context(1);
-        //zmq::socket_t socket(context, ZMQ_REQ);
         LevelDBHelper* db = new LevelDBHelper();
 	        
        if (db->alreadyExists(hash)) {

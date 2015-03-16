@@ -4,7 +4,6 @@
 #include <iostream>
 #include <sstream>
 
-#include <zmq.hpp>
 #include <leveldb/db.h>
 
 #include <pthread.h>
@@ -159,57 +158,11 @@ bool do_operation(const std::string& command, Operation& operation) {
   return false;
 }
 
-void send_data(zmq::socket_t& socket, const std::string& data) {
-
-  zmq::message_t reply(data.size());
-  memcpy((void*)reply.data(),data.data(),data.size());
-  socket.send(reply);
-}
-
-void* worker_routine(void* arg) {
-
-    //create file for duration of operations    
-    zmq::context_t* context = (zmq::context_t*)arg;
-    zmq::socket_t socket(*context,ZMQ_REP);
-
-    socket.connect( "inproc://workers");
-
-    while(true) {
-        zmq::message_t request;
-        socket.recv(&request);
-
-        Operation operation;
-        std::string command((char*)request.data(),request.size());
-        bool success=do_operation(std::string((char*)request.data(),request.size()),operation);
-        if(success) {
-            if(operation._type==GET) {
-                send_data(socket,operation._value);
-            }
-            else if(operation._type==PUT) {
-                send_data(socket,"OK");
-             }
-            else if(operation._type==MGET) {
-                send_data(socket,operation._value);
-             }
-            else {
-                send_data(socket,"Wrong action");
-            }
-        }
-        else {
-            send_data(socket,"Operation failed");
-        }
-    }
-}
 void run_mono_thread(const std::string& folder) {
 
-  create_db(folder);
-//  zmq::context_t context(1);
-//
-//  zmq::socket_t socket(context,ZMQ_REP);
-//  std::string pipe = "ipc://" + folder + "/pipe.ipc";
-//  socket.bind(pipe.c_str());
+    create_db(folder);
     clilen = sizeof(cli_addr);
-  char buffer[MSG_SIZE];
+    char buffer[MSG_SIZE];
     bzero(buffer, MSG_SIZE);
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0) 
@@ -226,8 +179,6 @@ void run_mono_thread(const std::string& folder) {
   std::cout << "mono-thread server is ready " << std::endl;
   std::cout << "entering while loop" << std::endl;
   while(true) {
-//    zmq::message_t request;
-//    socket.recv(&request);
     std::cout << "------Waiting for local msg------" << std::endl;
     //HttpHelper::recvLocalMsg(request, HttpHelper::leveldb_portno);
     int recvlen = recvfrom(sockfd, buffer, MSG_SIZE, 0, 
@@ -249,84 +200,31 @@ void run_mono_thread(const std::string& folder) {
 
     if(success) {
       if(operation._type==GET) {
-        //send_data(socket,operation._value);
         sendLevelDBMsg(operation._value);
       }
       else if(operation._type==PUT) {
-        //send_data(socket,"OK");
         sendLevelDBMsg("OK");
       }
       else {
-        //send_data(socket,"Wrong action");
         sendLevelDBMsg("Wrong action");
       }
     }
     else {
-      //send_data(socket,"Operation failed");
       sendLevelDBMsg("Operation failed");
     }
   }
   delete db;
 }
 
-void run_multi_thread(const std::string& folder,int nbWorkers) {
-    create_db(folder);
-    zmq::context_t context(1);
-
-  //
-  //client application use IPC socket to connect to the server
-  //
-  zmq::socket_t socket(context,ZMQ_XREP);
-  std::string pipe = "ipc://" + folder + "/pipe.ipc";
-  socket.bind(pipe.c_str());
-
-  //
-  //create end point for worker threads
-  //
-  zmq::socket_t workers(context,ZMQ_XREQ);
-  workers.bind("inproc://workers");
-
-  //
-  // create the worker threads
-  //
-  if (nbWorkers>0) {
-      for(int i=0;i<nbWorkers;i++) {
-        pthread_t worker;
-        int r = pthread_create(&worker,NULL,worker_routine,(void*)&context);
-        if(r!=0) {
-            std::cerr << "Unable to start worker " << i+1 << std::endl;
-        }
-    }
-  }
-
-    std::cout << "server is ready (" << nbWorkers << " threads)" << std::endl;
-
-    zmq_device(ZMQ_QUEUE,socket,workers);
-    
-    std::cout << "server done" << std::endl;
-
-}
 int main(int argc, char** argv) {
 
-    int nbWorkers = 1;
     if(argc==1) {
-        std::cout << "server folder_database number_of_threads" << std::endl;
+        std::cout << "server folder_database" << std::endl;
         return -1;
     }
 
     std::string folder = argv[1];
 
-    if (argc==3) {
-        std::string strWorkers = argv[2];
-        //nbWorkers = boost::lexical_cast<int>(strWorkers);
-        nbWorkers = atoi(strWorkers.c_str());
-    }
-
-    if(nbWorkers==1) {
-        run_mono_thread(folder);
-    }
-    else {
-        run_multi_thread(folder,nbWorkers);
-    }
+    run_mono_thread(folder);
 }
 
