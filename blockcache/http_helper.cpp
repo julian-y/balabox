@@ -139,11 +139,11 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
     int bytesLeft = HttpHelper::MSG_SIZE;
     char * bufferPtr = buffer;
     while(bytesLeft > 0) {
-	std::cout << bytesLeft << std::endl;
-	int sendSize = HttpHelper::PACKET_SIZE;
-	if(bytesLeft < HttpHelper::PACKET_SIZE) {
-	    sendSize = bytesLeft;
-	}
+    	std::cout << bytesLeft << std::endl;
+    	int sendSize = HttpHelper::PACKET_SIZE;
+    	if(bytesLeft < HttpHelper::PACKET_SIZE) {
+    	    sendSize = bytesLeft;
+    	}
         if(sendto(sockfd, bufferPtr, sendSize, 0, 
                         (struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0 ) {
                 //perror("sendto failed");

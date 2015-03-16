@@ -71,7 +71,11 @@ void sendLevelDBMsg(std::string msg) {
     int bytesLeft = HttpHelper::MSG_SIZE;
     char * bufferPtr = buffer;
     while(bytesLeft > 0) {
-        if(sendto(sockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0, 
+        int sendSize = HttpHelper::PACKET_SIZE;
+        if(bytesLeft < HttpHelper::PACKET_SIZE) {
+            sendSize = bytesLeft;
+        }
+        if(sendto(sockfd, bufferPtr, sendSize, 0, 
                           (struct sockaddr *) &cli_addr, clilen)  < 0) {
             std::cout << "Sendto failed" << std::endl;
             printf("errno %d\n", errno);
@@ -194,7 +198,7 @@ void run_mono_thread(const std::string& folder) {
         bytesRcvd += recvfrom(sockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0, 
                         (struct sockaddr *) &cli_addr, &clilen);
         bufferPtr += HttpHelper::PACKET_SIZE;
-	std::cout << "bytesRcvd: " << bytesRcvd << std::endl;
+	    std::cout << "bytesRcvd: " << bytesRcvd << std::endl;
     }
 
     //std::cout << "received a message: " << buffer << std::endl;
