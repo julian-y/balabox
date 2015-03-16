@@ -64,8 +64,7 @@ bool get(const std::string& key, std::string& value) {
 void sendLevelDBMsg(std::string msg) {
     std::string dummy;
     //HttpHelper::sendLocalMsg(msg, dummy, HttpHelper::leveldb_portno, false);
-    char buffer[MSG_SIZE];
-    bzero(buffer, MSG_SIZE);
+    char* buffer;
     HttpHelper::createBuffer(msg.c_str(), msg.length(), buffer);
 
     std::cout << "Sending msg: " << msg << std::endl;
@@ -77,6 +76,7 @@ void sendLevelDBMsg(std::string msg) {
         printf("errno %d\n", errno);
     }
 
+    delete buffer;
 }
 /**
  * retrieve all the values associated with a key

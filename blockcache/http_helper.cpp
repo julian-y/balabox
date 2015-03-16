@@ -132,8 +132,7 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
             server->h_length);
     serv_addr.sin_port = htons(portno);
 
-    char buffer[HttpHelper::MSG_SIZE];
-    bzero(buffer, HttpHelper::MSG_SIZE);
+    char * buffer;
     HttpHelper::createBuffer(msg.c_str(), msg.length(), buffer);
     //msg.copy(buffer, msg.length());
 
@@ -156,13 +155,15 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
                    (struct sockaddr *)&serv_addr, &addrlen);
             }
         
-        char data[HttpHelper::MSG_SIZE];
+        char* data;
         int dataSize = 0;
         HttpHelper::extractBuffer(buffer, data, dataSize);
         resp = string(data, dataSize);
         //cout << "response received: " << resp << endl;
+        delete data;
     }
 
+    delete buffer;
     return 0;
 
 }
@@ -170,7 +171,8 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
 // create a buffer for sending
 // char* data is already initialized with the data
 void HttpHelper::createBuffer(const char* data, int dataSize, char* buffer) {
-    //buffer = (char*) malloc(HttpHelper::MSG_SIZE);
+    buffer = (char*) malloc(HttpHelper::MSG_SIZE);
+    bzero(buffer, HttpHelper::MSG_SIZE);
     int* intBuffer = (int*) buffer;
     *(intBuffer) = dataSize;
     memcpy((intBuffer + 1), data, dataSize);
@@ -179,7 +181,8 @@ void HttpHelper::createBuffer(const char* data, int dataSize, char* buffer) {
 // "unparse" returns the current packet in raw char* form
 // char* buffer is already initialized with the message
 void HttpHelper::extractBuffer(char* buffer, char* data, int &dataSize) {
-    //data = (char*) malloc(HttpHelper::MSG_SIZE);
+    data = (char*) malloc(HttpHelper::MSG_SIZE);
+    bzero(data, HttpHelper::MSG_SIZE);
     int* intBuffer = (int*) buffer;
     dataSize = *(intBuffer);
     memcpy(data, (intBuffer + 1), dataSize);
