@@ -4,7 +4,6 @@
 #include <string>
 #include <iostream>
 #include <unistd.h>		// sleep()
-#include <zmq.hpp>
 #include "http_helper.h"
 
 using namespace std;
