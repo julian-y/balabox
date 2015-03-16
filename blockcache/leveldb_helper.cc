@@ -25,7 +25,7 @@ int LevelDBHelper::get(const string& block_hash, string& data) {
 //	m_socket.recv(&response);
 
 //	string response_data((char*)response.data(), response.size());
-    string response_data;
+    string response_data = "";
     HttpHelper::sendLocalMsg(command, response_data, HttpHelper::leveldb_portno, true);
     if (response_data == "Operation failed")
 		return 1;
@@ -43,7 +43,7 @@ int LevelDBHelper::put(const string& block_hash, const string& data) {
 //	zmq::message_t response;
 //	m_socket.recv(&response);
 //	string response_data((char*)response.data(), response.size());
-    string response_data;
+    string response_data = "";
     HttpHelper::sendLocalMsg(command, response_data, HttpHelper::leveldb_portno, true);
     if (response_data == "Operation failed")
 		return 1;
