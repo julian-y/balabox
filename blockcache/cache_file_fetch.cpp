@@ -156,15 +156,6 @@ int main(void)
         HttpHelper::getQueryParam(query_string, "hash", hash);
         HttpHelper::getQueryParam(query_string, "user", userId);
         
-        //we want to send the prefetch message before requesting the original
-        //block so the prefetcher can get a "head start"; espcially since the 
-        //request to block-server is blocking.
-
-        //send message to another process running on cache server to prefetch
-        string msg = "{\"userID\": \"" + userId + "\", \"hash\": \"" + hash + "\" }"; 
-        string resp;
-        HttpHelper::sendLocalMsg(msg, resp, HttpHelper::prefetch_portno, false);
-        
         //add (to metadata) the association of this cache to the user we're serving 
         //zmq::context_t context(1);
         //zmq::socket_t socket(context, ZMQ_REQ);
@@ -190,8 +181,17 @@ int main(void)
 
             //save the response into cache
             db->put(hash, response);
-       }
+        }
 
+        //we want to send the prefetch message after requesting the original
+        //block so that cache_file_fetch can return as possible (leveldb_server
+        //uses a queue to serve requests)
+
+        //send message to another process running on cache server to prefetch
+        string msg = "{\"userID\": \"" + userId + "\", \"hash\": \"" + hash + "\" }"; 
+        string resp;
+        HttpHelper::sendLocalMsg(msg, resp, HttpHelper::prefetch_portno, false);
+        
         delete db;
 }
 
