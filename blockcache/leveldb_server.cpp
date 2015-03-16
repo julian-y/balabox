@@ -196,7 +196,6 @@ void run_mono_thread(const std::string& folder) {
     Operation operation;
     std::string command((char*)request.data(),request.size());
     bool success=do_operation(std::string((char*)request.data(),request.size()),operation);
-    zmq::message_t reply;
 
     if(success) {
       if(operation._type==GET) {
