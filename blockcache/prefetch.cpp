@@ -173,7 +173,7 @@ int main(int argc, char *argv[]) {
                 string responseCode;
                 cout << "Fetching hash " << curHash << "..." << endl;
                 HttpHelper::requestFromBlockServer(curHash, responseContentType, block, responseCode);
-                if(atoi(responseCode.c_str()) == 200) {
+                if(responseCode.compare("200") == 0) {
                     cout << "fetched hash " << curHash << endl;
                     cout << "block: " << endl << block << endl << "---" << endl;
                     int status = db->put(curHash, block);
@@ -182,6 +182,8 @@ int main(int argc, char *argv[]) {
                         cout << "Error inserting into database" << endl;
                     }
                     cout << "stored hash " << curHash << " into cacheDB" << endl;
+                } else {
+                    cout << "failed to fetch hash " << curHash << endl;
                 }
             }
                 
