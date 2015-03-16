@@ -11,9 +11,13 @@ ZEROMQ_OPTS = -lzmq -I/usr/local/include
 JSON_LIB = /usr/lib/x86_64-linux-gnu/libjsoncpp.so
 CACHE_OPTS = -l neon $(OPTS)
 
-all: http_helper file_fetch file_store leveldb_helper_test server 
+all: util block cache
 
-cache: http_helper cache_file_fetch cache_file_store prefetch
+util: http_helper leveldb_server 
+
+block: util file_fetch file_store 
+
+cache: util cache_file_fetch cache_file_store prefetch 
 	
 read: read.cc
 	$(CC) -o read read.cc $(OPTS)
@@ -44,7 +48,7 @@ cache_file_store: cache_file_store.cpp
 prefetch: prefetch.cpp
 	$(CC) $(CXXFLAGS) -g http_helper.o prefetch.cpp leveldb_helper.cc $(JSON_LIB) -o fcgid/prefetch $(ZEROMQ_OPTS) $(CACHE_OPTS)
 
-server: leveldb_server.cpp
+leveldb_server: leveldb_server.cpp
 	$(CC) $(CXXFLAGS) -g http_helper.o leveldb_server.cpp -o fcgid/server $(ZEROMQ_OPTS) $(CACHE_OPTS)
 
 install: 
@@ -59,10 +63,12 @@ install:
 	sudo rm -f /var/www/html/server
 
 	sudo cp fcgid/* -t /var/www/html
-	sudo chmod 777 /var/www/html/*
+	sudo chmod 777 -r /var/www/html
 
 clean:
-	sudo rm -rf read write file_fetch file_store leveldb_helper_test *.fcgid temp /var/www/html/mydb
+	sudo rm -rf fcgid/* temp /var/www/html/mydb /var/www/html/cacheDB
+	sudo mkdir /var/www/html/cacheDB
+	sudo mkdir /var/www/html/mydb
 
 test: all
 	./leveldb_helper_test
