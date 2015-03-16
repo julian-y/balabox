@@ -201,7 +201,7 @@ int main(void) {
 
 
     	cout << "Status: 200\r\n";
-             << "Origin: Block Server\r\n";
+             << "Origin: Block Server\r\n"
              << "Content-Type: application/binary\r\n"
     		 << "Content-Length: " << binaryData.size() << "\r\n"
     		 << "\r\n";
