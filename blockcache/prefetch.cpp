@@ -16,7 +16,6 @@
 #include <neon/ne_request.h>
 #include <neon/ne_session.h>
 
-#include <zmq.hpp>
 #include "http_helper.h"
 #include "leveldb_helper.hpp"
 #include <vector>
