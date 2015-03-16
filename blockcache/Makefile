@@ -63,7 +63,7 @@ install:
 	sudo rm -f /var/www/html/server
 
 	sudo cp fcgid/* -t /var/www/html
-	sudo chmod 777 -r /var/www/html
+	sudo chmod -R 777 /var/www/html
 
 clean:
 	sudo rm -rf fcgid/* temp /var/www/html/mydb /var/www/html/cacheDB
