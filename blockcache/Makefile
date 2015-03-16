@@ -10,6 +10,9 @@ OPTS = -lfcgi++ -lfcgi -L/usr/lib/x86_64-linux-gnu $(LEVELDB_DIR)/libleveldb.a -
 JSON_LIB = /usr/lib/x86_64-linux-gnu/libjsoncpp.so
 CACHE_OPTS = -l neon $(OPTS)
 
+tester: test.cpp
+	$(CC) -g -o test test.cpp http_helper.o $(CACHE_OPTS)
+
 all: util block cache
 
 util: http_helper leveldb_server 

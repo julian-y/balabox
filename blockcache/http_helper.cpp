@@ -139,7 +139,12 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
     int bytesLeft = HttpHelper::MSG_SIZE;
     char * bufferPtr = buffer;
     while(bytesLeft > 0) {
-        if(sendto(sockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0, 
+	std::cout << bytesLeft << std::endl;
+	int sendSize = HttpHelper::PACKET_SIZE;
+	if(bytesLeft < HttpHelper::PACKET_SIZE) {
+	    sendSize = bytesLeft;
+	}
+        if(sendto(sockfd, bufferPtr, sendSize, 0, 
                         (struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0 ) {
                 //perror("sendto failed");
                 printf("sendto failed");
@@ -189,7 +194,7 @@ void HttpHelper::createBuffer(const char* data, int dataSize, char* &buffer) {
  
 // "unparse" returns the current packet in raw char* form
 // char* buffer is already initialized with the message
-void HttpHelper::extractBuffer(char* buffer, char* data, int &dataSize) {
+void HttpHelper::extractBuffer(char* buffer, char* &data, int &dataSize) {
     data = (char*) malloc(HttpHelper::MSG_SIZE);
     bzero(data, HttpHelper::MSG_SIZE);
     int* intBuffer = (int*) buffer;

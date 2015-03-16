@@ -194,6 +194,7 @@ void run_mono_thread(const std::string& folder) {
         bytesRcvd += recvfrom(sockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0, 
                         (struct sockaddr *) &cli_addr, &clilen);
         bufferPtr += HttpHelper::PACKET_SIZE;
+	std::cout << "bytesRcvd: " << bytesRcvd << std::endl;
     }
 
     //std::cout << "received a message: " << buffer << std::endl;
