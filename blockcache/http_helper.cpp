@@ -54,7 +54,7 @@ int HttpHelper::getQueryParam(const std::string& query_string,
 //forwards the HTTP request to the actual Block Server
 int HttpHelper::requestFromBlockServer(string hash, string &responseContentType, string &response, std::string &responseCode) {
     //make request here.
-    string path = "/file_fetch?hash=" + hash;
+    string path = "/block_fetch?hash=" + hash;
 
     HttpHelper::sendHttpRequest(HttpHelper::block_ip, path, "GET", "", responseContentType, 
             response, responseCode);

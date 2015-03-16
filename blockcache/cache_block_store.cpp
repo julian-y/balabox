@@ -25,7 +25,7 @@ using namespace std;
 int storeToBlockServer(string hash, string block) {
     //make request here.
     //string host = "127.0.0.1";
-    string path = "/file_store?hash=" + hash;
+    string path = "/block_store?hash=" + hash;
     string responseContentType = "";
     string response = "";
     string responseCode = "";
