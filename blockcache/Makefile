@@ -15,9 +15,9 @@ all: util block cache
 
 util: http_helper leveldb_server 
 
-block: util file_fetch file_store 
+block: util block_fetch block_store 
 
-cache: util cache_file_fetch cache_file_store prefetch 
+cache: util cache_block_fetch cache_block_store prefetch 
 	
 read: read.cc
 	$(CC) -o read read.cc $(OPTS)
@@ -25,11 +25,11 @@ read: read.cc
 write: write.cc
 	$(CC) -o write write.cc $(OPTS)
 
-file_fetch: file_fetch.cc
-	$(CC) $(CXXFLAGS) file_fetch.cc -o fcgid/file_fetch  $(OPTS)
+block_fetch: block_fetch.cc
+	$(CC) $(CXXFLAGS) block_fetch.cc -o fcgid/block_fetch  $(OPTS)
 
-file_store: file_store.cc
-	$(CC) $(CXXFLAGS) file_store.cc -o fcgid/file_store  $(OPTS)
+block_store: block_store.cc
+	$(CC) $(CXXFLAGS) block_store.cc -o fcgid/block_store  $(OPTS)
 
 leveldb_helper_test: leveldb_helper_test.cc	
 	$(CC) $(CXXFLAGS) -g http_helper.o leveldb_helper_test.cc leveldb_helper.cc -o leveldb_helper_test $(CACHE_OPTS)
@@ -38,12 +38,12 @@ leveldb_helper_test: leveldb_helper_test.cc
 http_helper: http_helper.cpp
 	$(CC) $(CXXFLAGS) -c http_helper.cpp $(CACHE_OPTS)
 
-#cache_file_fetch
-cache_file_fetch: cache_file_fetch.cpp
-	$(CC) $(CXXFLAGS) http_helper.o leveldb_helper.cc cache_file_fetch.cpp $(JSON_LIB) -o fcgid/cache_file_fetch $(ZEROMQ_OPTS) $(CACHE_OPTS)
+#cache_block_fetch
+cache_block_fetch: cache_block_fetch.cpp
+	$(CC) $(CXXFLAGS) http_helper.o leveldb_helper.cc cache_block_fetch.cpp $(JSON_LIB) -o fcgid/cache_block_fetch $(ZEROMQ_OPTS) $(CACHE_OPTS)
 
-cache_file_store: cache_file_store.cpp
-	$(CC) $(CXXFLAGS) http_helper.o leveldb_helper.cc cache_file_store.cpp $(JSON_LIB) -o fcgid/cache_file_store $(ZEROMQ_OPTS) $(CACHE_OPTS)
+cache_block_store: cache_block_store.cpp
+	$(CC) $(CXXFLAGS) http_helper.o leveldb_helper.cc cache_block_store.cpp $(JSON_LIB) -o fcgid/cache_block_store $(ZEROMQ_OPTS) $(CACHE_OPTS)
 
 prefetch: prefetch.cpp
 	$(CC) $(CXXFLAGS) -g http_helper.o prefetch.cpp leveldb_helper.cc $(JSON_LIB) -o fcgid/prefetch $(ZEROMQ_OPTS) $(CACHE_OPTS)
@@ -52,13 +52,13 @@ leveldb_server: leveldb_server.cpp
 	$(CC) $(CXXFLAGS) -g http_helper.o leveldb_server.cpp -o fcgid/server $(ZEROMQ_OPTS) $(CACHE_OPTS)
 
 install: 
-#	sudo rm /var/www/html/file_fetch.fcgid
-#	sudo rm /var/www/html/file_store.fcgid
+#	sudo rm /var/www/html/block_fetch.fcgid
+#	sudo rm /var/www/html/block_store.fcgid
 #	sudo rm /var/www/html/*.fcgid
-	sudo rm -f /var/www/html/file_fetch
-	sudo rm -f /var/www/html/file_store
-	sudo rm -f /var/www/html/cache_file_fetch
-	sudo rm -f /var/www/html/cache_file_store
+	sudo rm -f /var/www/html/block_fetch
+	sudo rm -f /var/www/html/block_store
+	sudo rm -f /var/www/html/cache_block_fetch
+	sudo rm -f /var/www/html/cache_block_store
 	sudo rm -f /var/www/html/prefetch
 	sudo rm -f /var/www/html/server
 
