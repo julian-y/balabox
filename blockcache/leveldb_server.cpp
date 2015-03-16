@@ -68,11 +68,17 @@ void sendLevelDBMsg(std::string msg) {
 
     std::cout << "Sending msg: " << msg << std::endl;
     
-    int status = sendto(sockfd, buffer, HttpHelper::MSG_SIZE, 0, 
-                      (struct sockaddr *) &cli_addr, clilen);
-    if (status  < 0) {
-        std::cout << "Sendto failed" << std::endl;
-        printf("errno %d\n", errno);
+    int bytesLeft = HttpHelper::MSG_SIZE;
+    char * bufferPtr = buffer;
+    while(bytesLeft > 0) {
+        if(sendto(sockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0, 
+                          (struct sockaddr *) &cli_addr, clilen)  < 0) {
+            std::cout << "Sendto failed" << std::endl;
+            printf("errno %d\n", errno);
+        }
+
+        bytesLeft -= HttpHelper::PACKET_SIZE;
+        bufferPtr += HttpHelper::PACKET_SIZE;
     }
 
     delete buffer;
@@ -181,9 +187,16 @@ void run_mono_thread(const std::string& folder) {
   while(true) {
     std::cout << "------Waiting for local msg------" << std::endl;
     //HttpHelper::recvLocalMsg(request, HttpHelper::leveldb_portno);
-    int recvlen = recvfrom(sockfd, buffer, HttpHelper::MSG_SIZE, 0, 
-                    (struct sockaddr *) &cli_addr, &clilen);
-    std::cout << "received a message: " << buffer << std::endl;
+
+    char * bufferPtr = buffer;
+    int bytesRcvd = 0;
+    while(bytesRcvd < HttpHelper::MSG_SIZE) {
+        bytesRcvd += recvfrom(sockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0, 
+                        (struct sockaddr *) &cli_addr, &clilen);
+        bufferPtr += HttpHelper::PACKET_SIZE;
+    }
+
+    //std::cout << "received a message: " << buffer << std::endl;
     std::cout << "recieved buffer message" << std::endl;      
     char* data;
     int dataSize = 0;

@@ -44,6 +44,7 @@ public:
     const static int prefetch_portno;
     const static int leveldb_portno;
     static const int MSG_SIZE; 
+    static const int PACKET_SIZE;
 
 
 private:

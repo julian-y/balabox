@@ -101,8 +101,7 @@ vector<string> pickHashes(Json::Value recent_hashes, LevelDBHelper* db) {
 int main(int argc, char *argv[]) {
     cout << "starting prefetcher" << endl;
     
-    char buffer[MSG_SIZE];
-    bzero(buffer, MSG_SIZE);
+    
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0) 
        error("ERROR opening socket");
@@ -121,15 +120,24 @@ int main(int argc, char *argv[]) {
     //zmq::socket_t socket(context, ZMQ_REQ);      
     LevelDBHelper* db = new LevelDBHelper();
 
+    char* buffer = (char*) malloc(HttpHelper::MSG_SIZE);
+    
     while (1) {
-        int recvlen = recvfrom(sockfd, buffer, MSG_SIZE, 0, 
-                    (struct sockaddr *) &cli_addr, &clilen);
-        //cout << "received a message: " << buffer << endl;
-        
+        bzero(buffer, HttpHelper::MSG_SIZE);
+        char* bufferPtr = buffer;
+        int bytesRcvd = 0;
+        while(bytesRcvd < HttpHelper::MSG_SIZE) {
+            bytesRcvd += recvfrom(sockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0, 
+                        (struct sockaddr *) &cli_addr, &clilen);
+            bufferPtr += HttpHelper::PACKET_SIZE;
+            //cout << "received a message: " << buffer << endl;
+        }
+
         int dataSize = 0;
-        char data[MSG_SIZE];
+        char* data;  
         HttpHelper::extractBuffer(buffer, data, dataSize);
-        string msg(data);
+        string msg = string(data, dataSize);
+        delete data;
         //parse json
         Json::Value msg_root;
         Json::Reader msg_reader;

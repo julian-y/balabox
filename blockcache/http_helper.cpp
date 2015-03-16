@@ -27,6 +27,7 @@ const string    HttpHelper::block_ip = "104.236.143.21";
 const int       HttpHelper::prefetch_portno = 8888;
 const int       HttpHelper::leveldb_portno = 8889;
 const int       HttpHelper::MSG_SIZE = 5000000;
+const int       HttpHelper::PACKET_SIZE = 60000;
 
 int HttpHelper::getQueryParam(const std::string& query_string, 
         const std::string& param, std::string& value) {
@@ -132,29 +133,37 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
             server->h_length);
     serv_addr.sin_port = htons(portno);
 
-    char * buffer = (char*) malloc(HttpHelper::MSG_SIZE);
-    bzero(buffer, HttpHelper::MSG_SIZE);
+    char * buffer;
     HttpHelper::createBuffer(msg.c_str(), msg.length(), buffer);
     
-    if(sendto(sockfd, buffer, HttpHelper::MSG_SIZE, 0, 
-                    (struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0 ) {
-            //perror("sendto failed");
-            printf("sendto failed");
-            return 1;
+    int bytesLeft = HttpHelper::MSG_SIZE;
+    char * bufferPtr = buffer;
+    while(bytesLeft > 0) {
+        if(sendto(sockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0, 
+                        (struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0 ) {
+                //perror("sendto failed");
+                printf("sendto failed");
+                return 1;
+        }
+        
+        bytesLeft -= HttpHelper::PACKET_SIZE;
+        bufferPtr += HttpHelper::PACKET_SIZE;
     }
     
     bzero(buffer, HttpHelper::MSG_SIZE);
 
     if(getResp) {
         //printf("Waiting for response!\n");
-        int bytesRcvd = recvfrom(sockfd, buffer, HttpHelper::MSG_SIZE, 0, 
-                    (struct sockaddr *)&serv_addr, &addrlen);
-
-        while (bytesRcvd < 0) {
-                bytesRcvd = recvfrom(sockfd, buffer, HttpHelper::MSG_SIZE, 0, 
+        bytesLeft = HttpHelper::MSG_SIZE;
+        bufferPtr = buffer;
+        int bytesRcvd = 0;
+        while(bytesRcvd < HttpHelper::MSG_SIZE) {
+            bytesRcvd += recvfrom(sockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0, 
                    (struct sockaddr *)&serv_addr, &addrlen);
-            }
-        
+
+            bufferPtr += HttpHelper::PACKET_SIZE;
+        }
+
         char* data;
         int dataSize = 0;
         HttpHelper::extractBuffer(buffer, data, dataSize);
@@ -171,8 +180,8 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
 // create a buffer for sending
 // char* data is already initialized with the data
 void HttpHelper::createBuffer(const char* data, int dataSize, char* buffer) {
-//    buffer = (char*) malloc(HttpHelper::MSG_SIZE);
-//    bzero(buffer, HttpHelper::MSG_SIZE);
+    buffer = (char*) malloc(HttpHelper::MSG_SIZE);
+    bzero(buffer, HttpHelper::MSG_SIZE);
     int* intBuffer = (int*) buffer;
     *(intBuffer) = dataSize;
     memcpy((intBuffer + 1), data, dataSize);
@@ -181,8 +190,8 @@ void HttpHelper::createBuffer(const char* data, int dataSize, char* buffer) {
 // "unparse" returns the current packet in raw char* form
 // char* buffer is already initialized with the message
 void HttpHelper::extractBuffer(char* buffer, char* data, int &dataSize) {
-//    data = (char*) malloc(HttpHelper::MSG_SIZE);
-//    bzero(data, HttpHelper::MSG_SIZE);
+    data = (char*) malloc(HttpHelper::MSG_SIZE);
+    bzero(data, HttpHelper::MSG_SIZE);
     int* intBuffer = (int*) buffer;
     dataSize = *(intBuffer);
     memcpy(data, (intBuffer + 1), dataSize);
