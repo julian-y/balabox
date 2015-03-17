@@ -222,7 +222,7 @@ void run_mono_thread(const std::string& folder) {
 		bufferPtr += n;
 	}
         
-        std::cout << "bytesRcvd: " << bytesRcvd << std::endl;
+//        std::cout << "bytesRcvd: " << bytesRcvd << std::endl;
         usleep(20000);
         fflush(stdout);
       }

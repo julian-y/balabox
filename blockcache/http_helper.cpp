@@ -149,7 +149,7 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
     int bytesLeft = HttpHelper::MSG_SIZE;
     char * bufferPtr = buffer;
     while(bytesLeft > 0) {
-    	std::cout << bytesLeft << std::endl;
+//    	std::cout << bytesLeft << std::endl;
     	int sendSize = HttpHelper::PACKET_SIZE;
     	if(bytesLeft < HttpHelper::PACKET_SIZE) {
     	    sendSize = bytesLeft;
@@ -205,13 +205,13 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
 // create a buffer for sending
 // char* data is already initialized with the data
 void HttpHelper::createBuffer(const char* data, int dataSize, char* &buffer) {
-    printf("Data: %s\n", data);
+//    printf("Data: %s\n", data);
     buffer = (char*) malloc(HttpHelper::MSG_SIZE);
     bzero(buffer, HttpHelper::MSG_SIZE);
     int* intBuffer = (int*) buffer;
     *(intBuffer) = dataSize;
     memcpy((intBuffer + 1), data, dataSize);
-    printf("Buffer: %s\n", buffer);
+//    printf("Buffer: %s\n", buffer);
 }
  
 // "unparse" returns the current packet in raw char* form
