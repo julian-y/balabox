@@ -75,7 +75,7 @@ void sendLevelDBMsg(std::string msg) {
         if(bytesLeft < HttpHelper::PACKET_SIZE) {
             sendSize = bytesLeft;
         }
-        if(send(sockfd, bufferPtr, sendSize, 0)  < 0) {
+        if(send(newsockfd, bufferPtr, sendSize, 0)  < 0) {
             std::cout << "Sendto failed" << std::endl;
             printf("errno %d\n", errno);
         }
@@ -169,7 +169,7 @@ bool do_operation(const std::string& command, Operation& operation) {
 void run_mono_thread(const std::string& folder) {
 
     create_db(folder);
-    clilen = sizeof(cli_addr);
+  
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) 
        HttpHelper::error("ERROR opening socket");
@@ -192,19 +192,51 @@ void run_mono_thread(const std::string& folder) {
    while(true) {
     std::cout << "------Waiting for local msg------" << std::endl;
     //HttpHelper::recvLocalMsg(request, HttpHelper::leveldb_portno);
-
+    clilen = sizeof(cli_addr);
     newsockfd = accept(sockfd, (struct sockaddr*)&cli_addr, &clilen);
     if (newsockfd < 0) {
       HttpHelper::error("Error on Accept");
-      continue;
+      exit(1);
     }
 
-    char * bufferPtr = buffer;
-    int bytesRcvd = 0;
-    while (bytesRcvd < HttpHelper::MSG_SIZE) {
-      bytesRcvd += recv(newsockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0);
-      bufferPtr += HttpHelper::PACKET_SIZE;
+    while (true) {
+      char * bufferPtr = buffer;
+      int bytesRcvd = 0;
+      while (bytesRcvd < HttpHelper::MSG_SIZE) {
+        bytesRcvd += recv(newsockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0);
+        bufferPtr += HttpHelper::PACKET_SIZE;
+      }
+
+      std::cout << "recieved buffer message" << std::endl;      
+      char* data;
+      int dataSize = 0;
+      HttpHelper::extractBuffer(buffer, data, dataSize);
+      std::cout << "extracted buffer to data" << std::endl;
+      std::string request(data, dataSize);
+      delete data;
+
+      std::cout << "Received local msg!" << std::endl;
+      std::cout << "Local msg: " << request << std::endl;
+      Operation operation;
+      std::string command((char*)request.data(),request.size());
+      bool success=do_operation(std::string((char*)request.data(),request.size()),operation);
+
+      if(success) {
+        if(operation._type==GET) {
+          sendLevelDBMsg(operation._value);
+        }
+        else if(operation._type==PUT) {
+          sendLevelDBMsg("OK");
+        }
+        else {
+          sendLevelDBMsg("Wrong action");
+        }
+      }
+      else {
+        sendLevelDBMsg("Operation failed");
+      }
     }
+
    
     // int bytesRcvd = 0;
     // while(bytesRcvd < HttpHelper::MSG_SIZE) {
@@ -215,41 +247,14 @@ void run_mono_thread(const std::string& folder) {
     // }
 
     //std::cout << "received a message: " << buffer << std::endl;
-    std::cout << "recieved buffer message" << std::endl;      
-    char* data;
-    int dataSize = 0;
-    HttpHelper::extractBuffer(buffer, data, dataSize);
-    std::cout << "extracted buffer to data" << std::endl;
-    std::string request(data, dataSize);
-    delete data;
-
-    std::cout << "Received local msg!" << std::endl;
-    std::cout << "Local msg: " << request << std::endl;
-    Operation operation;
-    std::string command((char*)request.data(),request.size());
-    bool success=do_operation(std::string((char*)request.data(),request.size()),operation);
-
-    if(success) {
-      if(operation._type==GET) {
-        sendLevelDBMsg(operation._value);
-      }
-      else if(operation._type==PUT) {
-        sendLevelDBMsg("OK");
-      }
-      else {
-        sendLevelDBMsg("Wrong action");
-      }
-    }
-    else {
-      sendLevelDBMsg("Operation failed");
-    }
-
+    close(newsockfd);
     bzero(buffer, HttpHelper::MSG_SIZE);
   }
   close(sockfd);
-  close(newsockfd);
+  
   delete buffer;
   delete db;
+  return;
 }
 
 int main(int argc, char** argv) {
