@@ -46,6 +46,11 @@ bool put(const std::string& key, const std::string& value) {
   if(!s.ok()) { 
     std::cerr << s.ToString() << std::endl; 
   }
+  //std::string dummy;
+  //db->Get(leveldb::ReadOptions(),key,&dummy);
+  //std::cout << "value::" << value << std::endl;
+  //std::cout << "dummy::" << dummy << std::endl;
+  //std::cout << "string compare: " << value.compare(dummy) << std::endl;
   return s.ok();
 }
 /**
@@ -128,7 +133,9 @@ bool do_operation(const std::string& command, Operation& operation) {
     if(action=="put") {
       
       std::getline(ss,key,delim);
-      std::getline(ss,value,delim);
+      //std::getline(ss,value,delim);
+      int index = action.length() + key.length() + 2;
+      value = command.substr(index);
 //      std::cout << "Put" << std::endl;    
       operation._type = PUT;
       operation._key = key;
