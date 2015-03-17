@@ -89,7 +89,7 @@ vector<string> pickHashes(Json::Value recent_hashes, LevelDBHelper* db) {
         // if curHash already exists in leveldb, skip it
         if(!db->alreadyExists(curHash)) {
           hashes.push_back(curHash);
-            cout << "push hash " << curHash << "into pull vector" << endl;
+            cout << "push hash " << curHash << " into pull vector" << endl;
         } else {
             cout << "cacheDB already has hash " << curHash << endl;
         }
