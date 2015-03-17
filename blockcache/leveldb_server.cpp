@@ -75,8 +75,7 @@ void sendLevelDBMsg(std::string msg) {
         if(bytesLeft < HttpHelper::PACKET_SIZE) {
             sendSize = bytesLeft;
         }
-        if(sendto(sockfd, bufferPtr, sendSize, 0, 
-                          (struct sockaddr *) &cli_addr, clilen)  < 0) {
+        if(send(sockfd, bufferPtr, sendSize, 0)  < 0) {
             std::cout << "Sendto failed" << std::endl;
             printf("errno %d\n", errno);
         }
@@ -171,7 +170,7 @@ void run_mono_thread(const std::string& folder) {
 
     create_db(folder);
     clilen = sizeof(cli_addr);
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) 
        HttpHelper::error("ERROR opening socket");
     bzero((char *) &serv_addr, sizeof(serv_addr));
@@ -183,23 +182,37 @@ void run_mono_thread(const std::string& folder) {
               sizeof(serv_addr)) < 0) 
               HttpHelper::error("ERROR on binding");
     
+    listen(sockfd, 5);
+
     char* buffer = (char*) malloc(HttpHelper::MSG_SIZE);;
     bzero(buffer, HttpHelper::MSG_SIZE);
 
-  std::cout << "mono-thread server is ready " << std::endl;
-  std::cout << "entering while loop" << std::endl;
-  while(true) {
+   std::cout << "mono-thread server is ready " << std::endl;
+   std::cout << "entering while loop" << std::endl;
+   while(true) {
     std::cout << "------Waiting for local msg------" << std::endl;
     //HttpHelper::recvLocalMsg(request, HttpHelper::leveldb_portno);
 
+    newsockfd = accept(sockfd, (struct sockaddr*)&cli_addr, &clilen);
+    if (newsockfd < 0) {
+      HttpHelper::error("Error on Accept");
+      continue;
+    }
+
     char * bufferPtr = buffer;
     int bytesRcvd = 0;
-    while(bytesRcvd < HttpHelper::MSG_SIZE) {
-        bytesRcvd += recvfrom(sockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0, 
-                        (struct sockaddr *) &cli_addr, &clilen);
-        bufferPtr += HttpHelper::PACKET_SIZE;
-	    std::cout << "bytesRcvd: " << bytesRcvd << std::endl;
+    while (bytesRcvd < HttpHelper::MSG_SIZE) {
+      bytesRcvd += recv(newsockfd, bufferPtr, Http::PACKET_SIZE, 0);
+      bufferPtr += HttpHelper::PACKET_SIZE;
     }
+   
+    // int bytesRcvd = 0;
+    // while(bytesRcvd < HttpHelper::MSG_SIZE) {
+    //     bytesRcvd += recvfrom(sockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0, 
+    //                     (struct sockaddr *) &cli_addr, &clilen);
+    //     bufferPtr += HttpHelper::PACKET_SIZE;
+	   //  std::cout << "bytesRcvd: " << bytesRcvd << std::endl;
+    // }
 
     //std::cout << "received a message: " << buffer << std::endl;
     std::cout << "recieved buffer message" << std::endl;      
@@ -233,6 +246,8 @@ void run_mono_thread(const std::string& folder) {
 
     bzero(buffer, HttpHelper::MSG_SIZE);
   }
+  close(sockfd);
+  close(newsockfd);
   delete buffer;
   delete db;
 }

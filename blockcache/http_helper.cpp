@@ -115,7 +115,7 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
     //contains tons of information, including the server's IP address
     struct hostent *server;
 
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0); //create a new socket
+    sockfd = socket(AF_INET, SOCK_STREAM, 0); //create a new socket
     if (sockfd < 0) {
         error("ERROR opening socket");
     }
@@ -133,6 +133,8 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
             server->h_length);
     serv_addr.sin_port = htons(portno);
 
+    connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+
     char * buffer;
     HttpHelper::createBuffer(msg.c_str(), msg.length(), buffer);
     
@@ -144,10 +146,9 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
     	if(bytesLeft < HttpHelper::PACKET_SIZE) {
     	    sendSize = bytesLeft;
     	}
-        if(sendto(sockfd, bufferPtr, sendSize, 0, 
-                        (struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0 ) {
+        if(send(sockfd, bufferPtr, sendSize, 0)  < 0 ) {
                 //perror("sendto failed");
-                printf("sendto failed");
+                printf("send failed");
                 return 1;
         }
         
@@ -163,9 +164,9 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
         bufferPtr = buffer;
         int bytesRcvd = 0;
         while(bytesRcvd < HttpHelper::MSG_SIZE) {
-            bytesRcvd += recvfrom(sockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0, 
-                   (struct sockaddr *)&serv_addr, &addrlen);
-
+            // bytesRcvd += recvfrom(sockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0, 
+            //        (struct sockaddr *)&serv_addr, &addrlen);
+            bytesRcvd += recv(newsockfd, bufferPtr, Http::PACKET_SIZE, 0);
             bufferPtr += HttpHelper::PACKET_SIZE;
         }
 
@@ -178,6 +179,7 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
     }
 
     delete buffer;
+    close(sockfd);
     return 0;
 
 }
