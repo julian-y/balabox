@@ -71,7 +71,7 @@ void sendLevelDBMsg(std::string msg) {
     char* buffer;
     HttpHelper::createBuffer(msg.c_str(), msg.length(), buffer);
 
-    std::cout << "Sending msg: " << msg << std::endl;
+    std::cout << "Sending msg..." << std::endl;
     
     int bytesLeft = HttpHelper::MSG_SIZE;
     char * bufferPtr = buffer;
@@ -88,7 +88,8 @@ void sendLevelDBMsg(std::string msg) {
         bytesLeft -= HttpHelper::PACKET_SIZE;
         bufferPtr += HttpHelper::PACKET_SIZE;
     }
-
+    
+    std::cout << "Message sent!" << std::endl;
     delete buffer;
 }
 /**
@@ -243,7 +244,7 @@ void run_mono_thread(const std::string& folder) {
       delete data;
 
       std::cout << "Received local msg!" << std::endl;
-      std::cout << "Local msg: " << request << std::endl;
+      //std::cout << "Local msg: " << request << std::endl;
       Operation operation;
       std::string command((char*)request.data(),request.size());
       bool success=do_operation(std::string((char*)request.data(),request.size()),operation);
