@@ -24,8 +24,8 @@ using namespace std;
 
 
 
-const string    HttpHelper::metadata_ip = "104.236.169.138"; // "162.243.132.35";
-const string    HttpHelper::block_ip = "104.236.169.138";// "104.236.143.21";
+const string    HttpHelper::metadata_ip =  "162.243.132.35";
+const string    HttpHelper::block_ip =  "104.236.143.21";
 const int       HttpHelper::prefetch_portno = 8888;
 const int       HttpHelper::leveldb_portno = 8889;
 const int       HttpHelper::MSG_SIZE = 5000000;
