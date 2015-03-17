@@ -17,13 +17,15 @@
 // internet domain addresses, e.g. sockaddr_in
 #include <unistd.h>
 #include <iostream>
+#include <errno.h>
+#include <arpa/inet.h>
 
 using namespace std;
 
 
 
-const string    HttpHelper::metadata_ip = "162.243.132.35";
-const string    HttpHelper::block_ip = "104.236.143.21";
+const string    HttpHelper::metadata_ip = "104.236.169.138"; // "162.243.132.35";
+const string    HttpHelper::block_ip = "104.236.169.138";// "104.236.143.21";
 const int       HttpHelper::prefetch_portno = 8888;
 const int       HttpHelper::leveldb_portno = 8889;
 const int       HttpHelper::MSG_SIZE = 5000000;
@@ -121,19 +123,25 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
     }
 
     server = gethostbyname("127.0.0.1"); 
-        if (server == NULL) {
-        fprintf(stderr,"ERROR, no such host\n");
+     if (!server) {
+        printf("ERROR, no such host\n");
         exit(1);
     }
 
     bzero((char *) &serv_addr, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET; //initialize server's address
-    bcopy((char *)server->h_addr, 
+   /* bcopy((char *)server->h_addr, 
             (char *)&serv_addr.sin_addr.s_addr, 
-            server->h_length);
+            server->h_length);*/
+    inet_pton(AF_INET, server->h_addr_list[0], &(serv_addr.sin_addr));
     serv_addr.sin_port = htons(portno);
 
-    connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+    if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(struct sockaddr)) < 0) {
+    	printf("ERROR: connect\n");
+        printf("errno: %d\n", errno);
+        close(sockfd);
+        exit(1);
+    }
 
     char * buffer;
     HttpHelper::createBuffer(msg.c_str(), msg.length(), buffer);
@@ -159,15 +167,25 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
     bzero(buffer, HttpHelper::MSG_SIZE);
 
     if(getResp) {
-        //printf("Waiting for response!\n");
+        printf("Waiting for response!\n");
         bytesLeft = HttpHelper::MSG_SIZE;
         bufferPtr = buffer;
         int bytesRcvd = 0;
-        while(bytesRcvd < HttpHelper::MSG_SIZE) {
+        int n = 1;
+        while(bytesRcvd < HttpHelper::MSG_SIZE && n > 0) {
             // bytesRcvd += recvfrom(sockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0, 
             //        (struct sockaddr *)&serv_addr, &addrlen);
-            bytesRcvd += recv(sockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0);
-            bufferPtr += HttpHelper::PACKET_SIZE;
+      	    n = recv(sockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0);
+	    if (n == 0) {
+	    	printf("Server closed\n");
+		break;
+	    } else if (n < 0) {
+	    	printf("Errno %d\n", errno);
+		break;
+	    } else {
+	    	bytesRcvd += n;
+		bufferPtr += n;
+	    }
         }
 
         char* data;
@@ -187,11 +205,13 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
 // create a buffer for sending
 // char* data is already initialized with the data
 void HttpHelper::createBuffer(const char* data, int dataSize, char* &buffer) {
+    printf("Data: %s\n", data);
     buffer = (char*) malloc(HttpHelper::MSG_SIZE);
     bzero(buffer, HttpHelper::MSG_SIZE);
     int* intBuffer = (int*) buffer;
     *(intBuffer) = dataSize;
     memcpy((intBuffer + 1), data, dataSize);
+    printf("Buffer: %s\n", buffer);
 }
  
 // "unparse" returns the current packet in raw char* form

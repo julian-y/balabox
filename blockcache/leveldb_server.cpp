@@ -20,7 +20,7 @@
 // constants and structures needed for 
 // internet domain addresses, e.g. sockaddr_in
 #include <errno.h>
-
+#include <arpa/inet.h>
 leveldb::DB* db;
 int sockfd, newsockfd, portno, pid;
 socklen_t clilen;
@@ -179,12 +179,17 @@ void run_mono_thread(const std::string& folder) {
     serv_addr.sin_port = htons(HttpHelper::leveldb_portno);
     
     if (bind(sockfd, (struct sockaddr *) &serv_addr,
-              sizeof(serv_addr)) < 0) 
+              sizeof(struct sockaddr)) < 0) 
               HttpHelper::error("ERROR on binding");
     
-    listen(sockfd, 5);
+    if (listen(sockfd, 5) < 0) {
+	HttpHelper::error("Error on listening");
+    }
 
     char* buffer = (char*) malloc(HttpHelper::MSG_SIZE);;
+    if (buffer == 0) {
+    	HttpHelper::error("ERROR: Out of memory");
+    }
     bzero(buffer, HttpHelper::MSG_SIZE);
 
    std::cout << "mono-thread server is ready " << std::endl;
@@ -198,13 +203,28 @@ void run_mono_thread(const std::string& folder) {
       HttpHelper::error("Error on Accept");
       exit(1);
     }
-
-    while (true) {
+    std::cout << "Server got connction from client " << inet_ntoa(cli_addr.sin_addr) << std::endl;
+//    while (true) {
       char * bufferPtr = buffer;
       int bytesRcvd = 0;
-      while (bytesRcvd < HttpHelper::MSG_SIZE) {
-        bytesRcvd += recv(newsockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0);
-        bufferPtr += HttpHelper::PACKET_SIZE;
+      int n = 1;
+      while (bytesRcvd < HttpHelper::MSG_SIZE && n > 0) {
+        n = recv(newsockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0);
+        if (n == 0) {
+		std::cout << "Client closed" << std::endl;
+		continue;
+	}
+	else if (n < 0) {
+		printf("errno %d\n", errno);
+		continue;
+	} else {
+		bytesRcvd += n;
+		bufferPtr += n;
+	}
+        
+        std::cout << "bytesRcvd: " << bytesRcvd << std::endl;
+        usleep(20000);
+        fflush(stdout);
       }
 
       std::cout << "recieved buffer message" << std::endl;      
@@ -235,7 +255,7 @@ void run_mono_thread(const std::string& folder) {
       else {
         sendLevelDBMsg("Operation failed");
       }
-    }
+//    }
 
    
     // int bytesRcvd = 0;
@@ -254,7 +274,6 @@ void run_mono_thread(const std::string& folder) {
   
   delete buffer;
   delete db;
-  return;
 }
 
 int main(int argc, char** argv) {
