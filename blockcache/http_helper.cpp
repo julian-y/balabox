@@ -166,7 +166,7 @@ int HttpHelper::sendLocalMsg(string msg, string &resp, int portno, bool getResp)
         while(bytesRcvd < HttpHelper::MSG_SIZE) {
             // bytesRcvd += recvfrom(sockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0, 
             //        (struct sockaddr *)&serv_addr, &addrlen);
-            bytesRcvd += recv(newsockfd, bufferPtr, Http::PACKET_SIZE, 0);
+            bytesRcvd += recv(newsockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0);
             bufferPtr += HttpHelper::PACKET_SIZE;
         }
 

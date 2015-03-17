@@ -202,7 +202,7 @@ void run_mono_thread(const std::string& folder) {
     char * bufferPtr = buffer;
     int bytesRcvd = 0;
     while (bytesRcvd < HttpHelper::MSG_SIZE) {
-      bytesRcvd += recv(newsockfd, bufferPtr, Http::PACKET_SIZE, 0);
+      bytesRcvd += recv(newsockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0);
       bufferPtr += HttpHelper::PACKET_SIZE;
     }
    
