@@ -35,7 +35,7 @@
 using namespace std;
 #define BLOCK_SIZE 512
 
-int const MSG_SIZE = 1000;
+int const PREFETCH_MSG_SIZE = 1000;
 string const cache_ip = "1.2.3.4";
 
 
@@ -86,12 +86,12 @@ int sendMsg(string msg) {
             server->h_length);
     serv_addr.sin_port = htons(HttpHelper::prefetch_portno);
 
-    char buffer[MSG_SIZE];
-    bzero(buffer, MSG_SIZE);
+    char buffer[PREFETCH_MSG_SIZE];
+    bzero(buffer, PREFETCH_MSG_SIZE);
 
     msg.copy(buffer, msg.length());
 
-    if(sendto(sockfd, buffer, MSG_SIZE, 0, 
+    if(sendto(sockfd, buffer, PREFETCH_MSG_SIZE, 0, 
                     (struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0 ) {
             //perror("sendto failed");
             printf("sendto failed");
@@ -188,8 +188,8 @@ int main(void)
         //send message to another process running on cache server to prefetch
         string msg = "{\"userID\": \"" + userId + "\", \"hash\": \"" + hash + "\" }"; 
         string resp;
-        HttpHelper::sendLocalMsg(msg, resp, HttpHelper::prefetch_portno, false);
-        
+        //HttpHelper::sendLocalMsg(msg, resp, HttpHelper::prefetch_portno, false);
+        sendMsg(msg);
         delete db;
 }
 

@@ -26,7 +26,7 @@ const string maxHashes = "10";
 int sockfd, newsockfd, portno, pid;
 socklen_t clilen;
 struct sockaddr_in serv_addr, cli_addr;
-int MSG_SIZE = 1000;
+int PREFETCH_MSG_SIZE = 1000;
 
 void error(const char* msg)
 {
@@ -106,7 +106,6 @@ int main(int argc, char *argv[]) {
     if (sockfd < 0) 
        error("ERROR opening socket");
     bzero((char *) &serv_addr, sizeof(serv_addr));
-    portno = 8080;//atoi(argv[1]);
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(HttpHelper::prefetch_portno);
@@ -120,24 +119,16 @@ int main(int argc, char *argv[]) {
     //zmq::socket_t socket(context, ZMQ_REQ);      
     LevelDBHelper* db = new LevelDBHelper();
 
-    char* buffer = (char*) malloc(HttpHelper::MSG_SIZE);
-    
+    char buffer[PREFETCH_MSG_SIZE];
+    bzero(buffer, PREFETCH_MSG_SIZE);
     while (1) {
-        bzero(buffer, HttpHelper::MSG_SIZE);
-        char* bufferPtr = buffer;
-        int bytesRcvd = 0;
-        while(bytesRcvd < HttpHelper::MSG_SIZE) {
-            bytesRcvd += recvfrom(sockfd, bufferPtr, HttpHelper::PACKET_SIZE, 0, 
+        bzero(buffer, PREFETCH_MSG_SIZE);
+        int recvlen = recvfrom(sockfd, buffer, PREFETCH_MSG_SIZE, 0, 
                         (struct sockaddr *) &cli_addr, &clilen);
-            bufferPtr += HttpHelper::PACKET_SIZE;
-            //cout << "received a message: " << buffer << endl;
-        }
 
-        int dataSize = 0;
-        char* data;  
-        HttpHelper::extractBuffer(buffer, data, dataSize);
-        string msg = string(data, dataSize);
-        delete data;
+        string msg = string(buffer);
+
+
         //parse json
         Json::Value msg_root;
         Json::Reader msg_reader;
