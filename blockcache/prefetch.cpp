@@ -31,7 +31,7 @@ int PREFETCH_MSG_SIZE = 1000;
 void error(const char* msg)
 {
     perror(msg);
-    exit(0);
+    //exit(0);
 }
 
 int httpResponseReader(void *data, const char *buf, size_t len)
@@ -134,7 +134,8 @@ int main(int argc, char *argv[]) {
         Json::Reader msg_reader;
         bool parsedSuccess = msg_reader.parse(msg, msg_root, false);
         if(!parsedSuccess) {
-            errorParsing(msg);    
+            continue;
+            //errorParsing(msg);    
         }
         
         string userID = msg_root.get("userID", "-1").asString();
@@ -152,7 +153,8 @@ int main(int argc, char *argv[]) {
         Json::Reader recent_hashes_reader;
         parsedSuccess = recent_hashes_reader.parse(recent_hashes_json, recent_hashes_root, false);
         if(!parsedSuccess) {
-            errorParsing(recent_hashes_json);
+            //errorParsing(recent_hashes_json);
+            continue;
         }
 
         Json::Value block_list = recent_hashes_root.get("block_list", "");//.asString();
