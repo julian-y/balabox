@@ -46,6 +46,11 @@ bool put(const std::string& key, const std::string& value) {
   if(!s.ok()) { 
     std::cerr << s.ToString() << std::endl; 
   }
+  //std::string dummy;
+  //db->Get(leveldb::ReadOptions(),key,&dummy);
+  //std::cout << "value::" << value << std::endl;
+  //std::cout << "dummy::" << dummy << std::endl;
+  //std::cout << "string compare: " << value.compare(dummy) << std::endl;
   return s.ok();
 }
 /**
@@ -66,7 +71,7 @@ void sendLevelDBMsg(std::string msg) {
     char* buffer;
     HttpHelper::createBuffer(msg.c_str(), msg.length(), buffer);
 
-    std::cout << "Sending msg: " << msg << std::endl;
+    std::cout << "Sending msg..." << std::endl;
     
     int bytesLeft = HttpHelper::MSG_SIZE;
     char * bufferPtr = buffer;
@@ -83,7 +88,8 @@ void sendLevelDBMsg(std::string msg) {
         bytesLeft -= HttpHelper::PACKET_SIZE;
         bufferPtr += HttpHelper::PACKET_SIZE;
     }
-
+    
+    std::cout << "Message sent!" << std::endl;
     delete buffer;
 }
 /**
@@ -128,7 +134,9 @@ bool do_operation(const std::string& command, Operation& operation) {
     if(action=="put") {
       
       std::getline(ss,key,delim);
-      std::getline(ss,value,delim);
+      //std::getline(ss,value,delim);
+      int index = action.length() + key.length() + 2;
+      value = command.substr(index);
 //      std::cout << "Put" << std::endl;    
       operation._type = PUT;
       operation._key = key;
@@ -222,7 +230,7 @@ void run_mono_thread(const std::string& folder) {
 		bufferPtr += n;
 	}
         
-        std::cout << "bytesRcvd: " << bytesRcvd << std::endl;
+//        std::cout << "bytesRcvd: " << bytesRcvd << std::endl;
         usleep(20000);
         fflush(stdout);
       }
@@ -236,7 +244,7 @@ void run_mono_thread(const std::string& folder) {
       delete data;
 
       std::cout << "Received local msg!" << std::endl;
-      std::cout << "Local msg: " << request << std::endl;
+      //std::cout << "Local msg: " << request << std::endl;
       Operation operation;
       std::string command((char*)request.data(),request.size());
       bool success=do_operation(std::string((char*)request.data(),request.size()),operation);

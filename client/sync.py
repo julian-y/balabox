@@ -58,7 +58,7 @@ def clearDir(dir_clear):
 		os.unlink(del_path)
 
 #Send metadata server a block_list request
-#Returns: JSON from response containing block_list and version
+#Returns: JSON from response containing block_list and version or None
 def getBlockList(fi, user):
 	params={'file_name': fi, 'user_id': user}
 
@@ -77,7 +77,7 @@ class BlockQueryValues:
 		self.block_list=block_list
 
 #Send metadata server block_query request
-#Returns: JSON from response containing nb (True or False) and needed_blocks
+#Returns: JSON from response containing nb (True or False) and needed_blocks or None
 def getBlockQuery(fi, block_list, user_id):
 	values=BlockQueryValues(fi, block_list, user_id)
 	payload=json.dumps(vars(values))
@@ -96,7 +96,7 @@ def getBlockQuery(fi, block_list, user_id):
 #Send cache server block_store request
 #Returns: True or False if get good response back
 def postBlockStore(fi,block_hash, user):
-	print ("***Sending block %s to cache block_store for hash %s***" % (fi, block_hash))
+	print ("***Sending block %s to block_store for hash %s***" % (fi, block_hash))
 	#params={'hash': block_hash, 'user': user}
 	#files = {'file': open(fi, 'rb')}
 	#headers={'Content-Disposition': 'form-data', 'name':'file', 'filename':fi}
@@ -187,9 +187,9 @@ def upFile(fi, version):
 			print("sha256 for %s: %s" % (path, block_hash))
 			file_hashes.append(block_hash)
 			hash_to_file[block_hash]=path
-		print file_hashes, "\n"
+		#print file_hashes, "\n"
 	
-	#print "dict", hash_to_file
+	print "dict", hash_to_file
 
 	#Call block_query
 	block_query_json=getBlockQuery(fi, file_hashes, user)
@@ -203,7 +203,6 @@ def upFile(fi, version):
 	if( block_query_json["nb"] == False):
 		print("No blocks need to be sent")
 
-		#if (commit == True):
 		file_commit=postFileCommit(fi, file_hashes, user, version)
 		if(file_commit == False):
 			print("File commit for file %s failed" %fi)
@@ -261,18 +260,17 @@ def downFile(fi, block_list):
 	clearDir(blockDir)
 
 	new_filename = (fi+"_%05i" % i for i in count(1))
-	save_block=str(new_filename)
+	save_block=str(next(new_filename))
 	for block in block_list:
 		if(getBlockFetch(fi, block, user, blockDir+save_block) == False):
 			print("Failed to fetch block %s. Stopping download of file %s" % (block, fi) )
 			return False
-		next_filename=next(new_filename)
-		save_block=str(next_filename)
+		save_block=str(next(new_filename))
 
 	process = subprocess.Popen("cat "+blockDir+fi+"_* > "+fi, shell=True)
 	output = process.communicate()[0]
 
-	clearDir(blockDir)
+	#clearDir(blockDir)
 
 	print("DOWNLOADED %s \n" % fi)
 	return True
@@ -291,21 +289,20 @@ def addToVersionFile(fi, version):
 		json.dump(data, outfile, indent=4)
 		outfile.close()
 
-
+#If versions file does not exist. Create one with empty JSON object
 if not os.path.isfile('versions.json'):
 	with open('versions.json', 'w') as outfile:
 		json.dump({}, outfile)
 		outfile.close()
 
-exclude=set(["blocks"])
-#For every file in directory
+
+#For every file in current directory (just this level)
+#Does not sync files in subdirectories
 files = [f for f in os.listdir('.') if os.path.isfile(f)]
 for fi in files:
 	if not (fi =="sync.py" or fi=="versions.json"):
 		print("*************************CHECKING FILE %s" % fi)
 		#path= os.path.join(dire, fi)
-		#print("file: %s" % fi)
-		#print("path:  %s" % path)
 
 		block_list_json= getBlockList(fi, user)
 
@@ -314,7 +311,6 @@ for fi in files:
 			print("Block list failed for file %s" % fi)
 			continue
 
-		print block_list_json, "\n"
 		block_list=block_list_json["block_list"]
 		block_list_version=block_list_json["version"]
 
@@ -353,9 +349,9 @@ for fi in files:
 			(mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime) = os.stat(fi)
 			mod_time_actual=time.ctime(mtime)
 			saved_mod_time = datetime.datetime.strptime(mod_time_saved, "%a %b %d %H:%M:%S %Y")
-			last_mod_time = datetime.datetime.strptime(mod_time_actual, "%a %b %d %H:%M:%S %Y") 
+			actual_mod_time = datetime.datetime.strptime(mod_time_actual, "%a %b %d %H:%M:%S %Y") 
 				
-			if(saved_mod_time >= last_mod_time):
+			if(saved_mod_time >= actual_mod_time):
 				if (meta_version > client_version):	
 					#Download file
 					#Upate version file
@@ -419,6 +415,8 @@ def postFileDelete(fi):
 file_list_json = getFileList()
 if (file_list_json == None):
 	print("Error with file_list request")
+elif (file_list_json["files"] == None):
+	print("No files listed on metadata to sync")
 else:
 	file_list = tuple(x[0] for x in file_list_json["files"])
 
@@ -440,14 +438,12 @@ else:
 					print("Block list failed for file %s" % f)
 					continue
 
-				print block_list_json, "\n"
 				if(downFile(f, block_list_json["block_list"])==True):
 					addToVersionFile(f, block_list_json["version"])
 				
 				continue
 
 			#is in version json
-
 			file_delete_json=postFileDelete(f)
 			if(file_delete_json["is_delete"]!=True):
 				print("Failed to delete file %s from metadata server" % f)

@@ -68,7 +68,7 @@ int sendMsg(string msg) {
     //contains tons of information, including the server's IP address
     struct hostent *server;
 
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0); //create a new socket
+    sockfd = socket(AF_INET, SOCK_STREAM, 0); //create a new socket
     if (sockfd < 0) {
         error("ERROR opening socket");
     }
@@ -86,17 +86,25 @@ int sendMsg(string msg) {
             server->h_length);
     serv_addr.sin_port = htons(HttpHelper::prefetch_portno);
 
+    if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(struct sockaddr)) < 0) {
+        printf("ERROR: connect\n");
+        printf("errno: %d\n", errno);
+        close(sockfd);
+        //exit(1);
+    }
+
     char buffer[PREFETCH_MSG_SIZE];
     bzero(buffer, PREFETCH_MSG_SIZE);
 
     msg.copy(buffer, msg.length());
 
-    if(sendto(sockfd, buffer, PREFETCH_MSG_SIZE, 0, 
-                    (struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0 ) {
+    if(send(sockfd, buffer, PREFETCH_MSG_SIZE, 0) < 0 ) {
             //perror("sendto failed");
-            printf("sendto failed");
+            printf("send failed");
             return 1;
     }
+
+    close(sockfd);
 
     return 0;
 }
@@ -159,15 +167,15 @@ int main(void)
         //add (to metadata) the association of this cache to the user we're serving 
         LevelDBHelper* db = new LevelDBHelper();
 	        
-//       if (db->alreadyExists(hash)) {
-//            string data;
-//            db->get(hash, data);
-//            cout << "Status: 200\r\n";
-//            cout << "Origin: Cache Server\r\n";
-//            cout << "Content-Type: application/binary\r\n\r\n";
-//            cout.write(data.data(), data.size());
-//        }  
-//        else {
+       if (db->alreadyExists(hash)) {
+            string data;
+            db->get(hash, data);
+            cout << "Status: 200\r\n";
+            cout << "Origin: Cache Server\r\n";
+            cout << "Content-Type: application/binary\r\n\r\n";
+            cout.write(data.data(), data.size());
+        }  
+        else {
             string response;
             string responseContentType;
             string responseCode;
@@ -179,7 +187,7 @@ int main(void)
 
             //save the response into cache
            db->put(hash, response);
-//        }
+        }
 
         //we want to send the prefetch message after requesting the original
         //block so that cache_file_fetch can return as possible (leveldb_server

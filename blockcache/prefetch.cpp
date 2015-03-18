@@ -89,7 +89,7 @@ vector<string> pickHashes(Json::Value recent_hashes, LevelDBHelper* db) {
         // if curHash already exists in leveldb, skip it
         if(!db->alreadyExists(curHash)) {
           hashes.push_back(curHash);
-            cout << "push hash " << curHash << "into pull vector" << endl;
+            cout << "push hash " << curHash << " into pull vector" << endl;
         } else {
             cout << "cacheDB already has hash " << curHash << endl;
         }
@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
     cout << "starting prefetcher" << endl;
     
     
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) 
        error("ERROR opening socket");
     bzero((char *) &serv_addr, sizeof(serv_addr));
@@ -114,17 +114,25 @@ int main(int argc, char *argv[]) {
               sizeof(serv_addr)) < 0) 
               error("ERROR on binding");
 
-    // Open the database
-    //zmq::context_t context(1);
-    //zmq::socket_t socket(context, ZMQ_REQ);      
+    if (listen(sockfd, 5) < 0) {
+        HttpHelper::error("Error on listening");
+    }
+
+    // Open the database    
     LevelDBHelper* db = new LevelDBHelper();
 
     char buffer[PREFETCH_MSG_SIZE];
     bzero(buffer, PREFETCH_MSG_SIZE);
     while (1) {
         bzero(buffer, PREFETCH_MSG_SIZE);
-        int recvlen = recvfrom(sockfd, buffer, PREFETCH_MSG_SIZE, 0, 
-                        (struct sockaddr *) &cli_addr, &clilen);
+        clilen = sizeof(cli_addr);
+        newsockfd = accept(sockfd, (struct sockaddr*)&cli_addr, &clilen);
+        if (newsockfd < 0) {
+            HttpHelper::error("Error on Accept");
+            exit(1);
+        }
+        
+        int recvlen = recv(newsockfd, buffer, PREFETCH_MSG_SIZE, 0);
 
         string msg = string(buffer);
 
