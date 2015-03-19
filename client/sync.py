@@ -31,12 +31,15 @@ class readable_dir(argparse.Action):
 parser=argparse.ArgumentParser(description='Sync files in folder.')
 parser.add_argument('-c', help="cache hostname (cache-lndn.raycoll.me or cache-sfo.raycoll.me)", required=True)
 parser.add_argument('-u', help="client username", required=True)
+parser.add_argument('--download', help="File name to download. Will download only this file, will not sync every file")
 #parser.add_argument('-d', action=readable_dir, required=True)
 
 args=parser.parse_args()
 user= args.u
 cache_host= args.c
+download_file=args.download
 #sync_dir= args.d
+
 
 #Does not throw exception
 #Returns: True if status code is 200
@@ -61,7 +64,6 @@ def getBlockList(fi, user):
 
 	print ("***Sending HTTP get to metadata server block_list for file %s***" %fi)
 	r=requests.get('http://metaserver.raycoll.me/block_list', params=params)
-	print ("URL: %s" % r.url)
 
 	if( requestOK(r) == False):
 		return None
@@ -81,9 +83,7 @@ def getBlockQuery(fi, block_list, user_id):
 	headers = {'content-type': 'application/json'}
 	
 	print ("***Sending HTTP request to metadata server block_query for file %s***" %fi)
-	print ("Payload: %s" % payload)
 	r=requests.get('http://metaserver.raycoll.me/block_query', data=payload, headers=headers)
-	print ("URL: %s" % r.url)
 
 	if( requestOK(r) == False):
 		return None
@@ -112,7 +112,6 @@ class FileCommitValues:
 def postFileCommit(fi, block_list, user_id, version):
 	values=FileCommitValues(fi, block_list, user_id, version)
 	payload=json.dumps(vars(values))
-	print payload
 	headers = {'content-type': 'application/json'}
 
 	print ("***Committing file %s to metadata server file_commit***" % fi)
@@ -121,12 +120,11 @@ def postFileCommit(fi, block_list, user_id, version):
 
 	if( requestOK(r) == False):
 		return False
-	print r.content, "\n"
 	file_commit_json= r.json()
 	if(file_commit_json["metadata_updated"]==True):
-		print("md updated")
+		print("Metadata updated")
 		return True
-	print("md not updated")
+	print("Metadata  not updated")
 	return False
 
 
@@ -144,7 +142,7 @@ def upFile(fi, version):
 	#Split into 4MB blocks using bash command
 	process = subprocess.Popen("split -b 4m "+fi+" "+blockDir+fi+"_", shell=True)
 	output = process.communicate()[0]
-	print ("***Split file %s into 4MB files in %s***\n" % (fi, blockDir) )
+	#print ("***Split file %s into 4MB files in %s***\n" % (fi, blockDir) )
 
 	#For every block create a hash
 	for (dir, subdirs, files) in os.walk(blockDir):
@@ -166,7 +164,7 @@ def upFile(fi, version):
 					buf= fbuf.read(BUF_SIZE)
 
 			block_hash=format(sha.hexdigest())
-			print("sha256 for %s: %s \n" % (path, block_hash))
+			print("sha256 for %s: %s" % (path, block_hash))
 			file_hashes.append(block_hash)
 			hash_to_file[block_hash]=path
 		
@@ -189,9 +187,8 @@ def upFile(fi, version):
 
 
 	elif (block_query_json["nb"] == True):
-		print("Need to send blocks")
 		needed_blocks=block_query_json["needed_blocks"]
-		print needed_blocks, "\n"
+		print ("Need to send blocks %s \n" % needed_blocks)
 
 		for blck_hash in needed_blocks:
 			file_store=postBlockStore(hash_to_file[blck_hash], blck_hash, user)
@@ -212,7 +209,7 @@ def upFile(fi, version):
 
 
 #Send cache server block_fetch request
-#Returns: HTML confirming hash and data
+#Returns: HTML confirming hash 
 def getBlockFetch(fi,block_hash, user, save_here):
 	print ("***Getting block from cache block_fetch for %s***" % block_hash)
 	params={'hash': block_hash, 'user': user}
@@ -249,7 +246,7 @@ def downFile(fi, block_list):
 	process = subprocess.Popen("cat "+blockDir+fi+"_* > "+fi, shell=True)
 	output = process.communicate()[0]
 
-	#clearDir(blockDir)
+	clearDir(blockDir)
 
 	print("DOWNLOADED %s \n" % fi)
 	return True
@@ -275,13 +272,77 @@ if not os.path.isfile('versions.json'):
 		outfile.close()
 
 
+#Used download option. Download single file, if it exists
+if(download_file != None):
+	block_list_json=getBlockList(download_file, user)
+
+	if (block_list_json== None): 
+		print("Error calling block list for file %s" % download_file)
+	else:
+		block_list=block_list_json["block_list"]
+		if(block_list==None):
+			print("File %s does not exist. Stopping attempted download" % download_file)
+			sys.exit(1)
+		block_list_version=block_list_json["version"]
+
+		ver_file= open('versions.json', 'r+')
+		version_json=json.load(ver_file)
+		ver_file.close()
+
+		try:
+			version_saved=version_json[download_file]["version"]
+			mod_time_saved=version_json[download_file]["mod_time"]
+		except KeyError:
+			if(downFile(download_file, block_list)==True):
+				#Update version file
+				addToVersionFile(download_file, block_list_version)
+				shutil.rmtree("blocks", ignore_errors=True)
+				sys.exit(1)
+			else:
+				#Download failed
+				print("File %s failed to download\n" % download_file)
+				shutil.rmtree("blocks", ignore_errors=True)
+				sys.exit(1)
+
+		if os.path.isfile(download_file):
+			(mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime) = os.stat(download_file)
+			mod_time_actual=time.ctime(mtime)
+			saved_mod_time = datetime.datetime.strptime(mod_time_saved, "%a %b %d %H:%M:%S %Y")
+			actual_mod_time = datetime.datetime.strptime(mod_time_actual, "%a %b %d %H:%M:%S %Y") 
+
+			if(saved_mod_time >= actual_mod_time):
+				#If metadata version is greater than the version saved in client's version file
+				if (block_list_version > version_saved):	
+					#Download file	
+					if(downFile(fi, block_list)==True):
+						#Upate version file
+						print("Successfully downloaded %s\n" % download_file)
+						addToVersionFile(fi, meta_version)
+					else:
+						#Download failed
+						print("File %s failed to download\n" % download_file)
+				else:
+					#Client version is less than or equal to metadata version
+					print("File %s already in sync\n" % download_file)
+		else:
+			if(downFile(download_file, block_list)==True):
+				#Upate version file
+				print("Successfully downloaded %s\n" % download_file)
+				addToVersionFile(download_file, meta_version)
+			else:
+				#Download failed
+				print("File %s failed to download\n" % download_file)
+	
+
+	shutil.rmtree("blocks", ignore_errors=True)
+	sys.exit(1)
+
 #For every file in current directory (just this level)
 #Does not sync files in subdirectories
 files = [f for f in os.listdir('.') if os.path.isfile(f)]
 for fi in files:
 	if not (fi =="sync.py" or fi=="versions.json"):
 		print("*************************CHECKING FILE %s" % fi)
-		#path= os.path.join(dire, fi)
 
 		block_list_json= getBlockList(fi, user)
 
@@ -370,6 +431,7 @@ for fi in files:
 						local_failed_files.append(fi)
 		else:
 			#Delete the file (it is in the version file, we caught keyerror earlier if it was not in it)
+			print("Deleted file %s from the file system" % fi)
 			os.remove(fi)
 
 			jsonFile = open('versions.json', "r")
@@ -390,7 +452,6 @@ def getFileList():
 
 	print ("***Sending HTTP get to metadata server file_list for user %s***" % user)
 	r=requests.get('http://metaserver.raycoll.me/file_list', params=params)
-	print ("URL: %s" % r.url)
 
 	if( requestOK(r) == False):
 		return None
@@ -407,6 +468,7 @@ def postFileDelete(fi):
 		return None
 	return r.json()
 
+print("*************************CHECKING FILES FROM METADATA")
 file_list_json = getFileList()
 if (file_list_json == None):
 	print("Error with file_list request")
@@ -469,13 +531,3 @@ if(len(meta_failed_files)>0):
 		print(fail)
 
 shutil.rmtree("blocks", ignore_errors=True)
-
-
-
-
-
-
-			
-
-
-
