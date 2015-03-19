@@ -90,7 +90,7 @@ int sendMsg(string msg) {
         printf("ERROR: connect\n");
         printf("errno: %d\n", errno);
         close(sockfd);
-        exit(1);
+        //exit(1);
     }
 
     char buffer[PREFETCH_MSG_SIZE];
