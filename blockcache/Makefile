@@ -69,6 +69,6 @@ clean:
 	sudo mkdir /var/www/html/cacheDB
 	sudo mkdir /var/www/html/mydb
 	-pkill server
-	/var/www/html/./server cacheDB > leveldb_server.log &
+	nohup /var/www/html/./server cacheDB &
 test: all
 	./leveldb_helper_test
