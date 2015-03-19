@@ -93,7 +93,7 @@ def getBlockQuery(fi, block_list, user_id):
 #Returns: True or False if get good response back
 def postBlockStore(fi,block_hash, user):
 	print ("***Sending block %s to block_store for hash %s***" % (fi, block_hash))
-	process = subprocess.Popen("curl -s 'http://"+cache_host+"/cache_block_store?user="+user+"'", stdout=subprocess.PIPE, stderr=None, shell=True)
+	process = subprocess.Popen("curl -s --data-binary @"+fi+" 'http://"+cache_host+"/cache_block_store?hash="+block_hash+"&user="+user+"'", stdout=subprocess.PIPE, stderr=None, shell=True)
 	response = process.communicate()[0]
 	print (response)
 	if not "200 OK" in response:
@@ -435,10 +435,9 @@ else:
 
 				if(downFile(f, block_list_json["block_list"])==True):
 					addToVersionFile(f, block_list_json["version"])
-					print("Downloaded new file %s from meta data server\n" % f)
 				else:
 					meta_failed_files.append(f)
-					print("Failed to delete file %s from metadata server\n" % f)
+					print("Failed to download file %s from metadata server\n" % f)
 				
 				continue
 
@@ -466,6 +465,8 @@ if(len(local_failed_files) > 0):
 		print(fail)
 if(len(meta_failed_files)>0):
 	print("These files listed by metadata server failed to download")
+	for fail in meta_failed_files:
+		print(fail)
 
 shutil.rmtree("blocks", ignore_errors=True)
 
