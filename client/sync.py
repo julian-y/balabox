@@ -153,7 +153,7 @@ def upFile(fi, version):
 		hash_to_file=dict() #Dictionary maps hash to path to correspoding block
 
 		print ("***Get SHA256 hashes for file %s blocks***" % fi )
-		for f in sort(files):
+		for f in sorted(files):
 
 			path= os.path.join(dir, f)
 			sha= hashlib.sha256()
