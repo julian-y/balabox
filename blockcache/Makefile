@@ -68,6 +68,7 @@ clean:
 	sudo rm -rf fcgid/* temp /var/www/html/mydb /var/www/html/cacheDB
 	sudo mkdir /var/www/html/cacheDB
 	sudo mkdir /var/www/html/mydb
-
+	-pkill server
+	/var/www/html/./server cacheDB > leveldb_server.log &
 test: all
 	./leveldb_helper_test
