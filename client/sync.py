@@ -29,7 +29,7 @@ class readable_dir(argparse.Action):
             raise argparse.ArgumentTypeError("readable_dir:{0} is not a readable dir".format(prospective_dir))
 
 parser=argparse.ArgumentParser(description='Sync files in folder.')
-parser.add_argument('-c', help="cache hostname such as cache-lndn.raycoll.me or cache-sfo.raycoll.me", required=True)
+parser.add_argument('-c', help="cache hostname (cache-lndn.raycoll.me or cache-sfo.raycoll.me)", required=True)
 parser.add_argument('-u', help="client username", required=True)
 #parser.add_argument('-d', action=readable_dir, required=True)
 
@@ -153,7 +153,7 @@ def upFile(fi, version):
 		hash_to_file=dict() #Dictionary maps hash to path to correspoding block
 
 		print ("***Get SHA256 hashes for file %s blocks***" % fi )
-		for f in files:
+		for f in sort(files):
 
 			path= os.path.join(dir, f)
 			sha= hashlib.sha256()
