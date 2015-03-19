@@ -42,11 +42,13 @@ void create_db(const std::string& db_name) {
  * add new key/value to the database
  **/
 bool put(const std::string& key, const std::string& value) {
-  leveldb::Status s = db->Put(leveldb::WriteOptions(),key,value);
+  std::cout << "Putting hash: " << key << std::endl;
+
+    leveldb::Status s = db->Put(leveldb::WriteOptions(),key,value);
   if(!s.ok()) { 
     std::cerr << s.ToString() << std::endl; 
   }
-  //std::string dummy;
+    //std::string dummy;
   //db->Get(leveldb::ReadOptions(),key,&dummy);
   //std::cout << "value::" << value << std::endl;
   //std::cout << "dummy::" << dummy << std::endl;
@@ -57,7 +59,9 @@ bool put(const std::string& key, const std::string& value) {
  * retreive single key/value from the database
  **/
 bool get(const std::string& key, std::string& value) {
-   
+
+
+    std::cout << "Getting hash: " << key << std::endl; 
   leveldb::Status s = db->Get(leveldb::ReadOptions(),key,&value);
   if(!s.ok()) { 
     std::cerr << s.ToString() << std::endl; 
